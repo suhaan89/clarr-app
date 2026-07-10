@@ -78,3 +78,21 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    (`Deno.env`, von Supabase injiziert) — nie im Repo oder Client.
 6. Client ruft im neuen Gerüst noch nichts auf — der Melde-Flow (Foto +
    submit-report) ist offener Client-Task.
+
+## Paket 4 — Vision + Kill-Switch
+
+1. Budgets: global $5/Tag, pro Nutzer $0.50/Tag, Alert bei 80 % — alles in
+   `system_settings` änderbar, ohne Deploy.
+2. Pessimistische Kosten-Reservierung ($0.015/Call) VOR dem API-Call unter
+   globalem Advisory-Lock — race-sicher; bei API-Fehlern bleibt die
+   Schätzung stehen (Budget wird eher über- als unterschätzt).
+3. KILL-SWITCH: bei erreichtem Globallimit keine Vision-Calls mehr; Meldung
+   geht in die Review-Queue (`in_pruefung`), App bleibt nutzbar.
+4. 80%-Alert als audit_log-Eintrag (1×/Tag) — kein Mail-/Push-Versand aus
+   der DB; Betreiber müssen audit_log/Function-Logs beobachten.
+5. „Nur nach submit-report" über Datenlage abgesichert: analyze-photo
+   akzeptiert nur eigene Reports im Zustand `gemeldet` ohne KI-Ergebnis.
+6. Kein-Müll → `abgelehnt`; Confidence <0.6 → `in_pruefung`;
+   Gewalt/Nacktheit → sofort blockiert. Bild wird vor dem Call verkleinert.
+7. `ANTHROPIC_API_KEY` ausschließlich als Supabase Function Secret
+   (`Deno.env`), nie im Client, nie in Logs.

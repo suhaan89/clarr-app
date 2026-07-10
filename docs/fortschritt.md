@@ -42,6 +42,18 @@ Details und Annahmen in `NOTIZEN.md`.
 - `supabase/migrations/004_submit_report.sql`: Spalten/RPCs/Tabellen dafür.
 - Doku: `docs/meldungs-backend.md`.
 
+## Paket 4 — Vision + Kill-Switch ✅
+
+- `supabase/functions/analyze-photo/`: KI-Prüfung nur serverseitig, nur für
+  eigene Reports im Zustand `gemeldet` (also nur nach submit-report).
+  Budgetdeckel pro Nutzer + global (race-sicher, pessimistische Reservierung
+  unter Advisory-Lock), KILL-SWITCH bei Globallimit (Meldung → Review-Queue,
+  App bleibt nutzbar), Alert ab 80 % ins audit_log, Bildverkleinerung vor dem
+  Call, Confidence <0.6 → Review, Gewalt/Nacktheit → Block.
+- `supabase/migrations/005_vision_budget.sql`: `system_settings`-Budgets,
+  Reservierungs-RPCs, Kill-Switch-Zustand.
+- Doku: `docs/vision.md`. Key nur als Supabase Secret.
+
 ## Offene Client-Tasks (neues Gerüst hat noch keine Screens)
 
 - Auth-Screens (Login/Registrierung mit Anti-Enumeration-Verhalten)
