@@ -42,3 +42,21 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    Bestands-Schema aus `001_schema.sql`.
 10. Kein `npm test` im Repo; Migrationen wurden nicht gegen eine Live-DB
     ausgeführt (Vorgabe: kein Live-DB-Zugriff).
+
+## Paket 2 — Auth
+
+1. Enum heißt `user_verification_level` (`neu | mail_verifiziert | aktiv`) —
+   `verification_level` ist schon für die Report-Verifikation vergeben.
+2. `aktiv` = Mail bestätigt UND Community-Regeln in der App bestätigt
+   (`activate_account(true)`, speichert nur `rules_accepted_at`).
+3. `user_profiles` für Clients komplett read-only (REVOKE INSERT/UPDATE/
+   DELETE); alle Schreibpfade sind SECURITY-DEFINER-RPCs.
+4. `reputation_score` INT 0–1000, Start 100, Änderung nur über
+   `adjust_reputation()` (Service-Role only, auditiert).
+5. Rate-Limits liegen in der Auth-Config: `supabase/config.toml` für lokal,
+   Dashboard-Checkliste in docs/auth.md (im DEV-Projekt manuell setzen,
+   insb. „Prevent email enumeration"). `project_id` auf `clarr-app` angepasst.
+6. Alters-/Einwilligungslogik nur als TODO-Kommentar „JURISTISCH PRUEFEN"
+   in der Migration — keine Umsetzung ohne juristische Klärung.
+7. Client-Anteil (LoginScreen mit Anti-Enumeration-Meldungen) ist im neuen
+   Gerüst noch nicht vorhanden — offener Client-Task (docs/fortschritt.md).

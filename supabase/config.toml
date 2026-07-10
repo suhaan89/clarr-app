@@ -1,0 +1,23 @@
+# Supabase-Konfiguration fuer LOKALE Entwicklung (supabase start).
+# Fuer das gehostete DEV-Projekt muessen dieselben Auth-Einstellungen im
+# Dashboard gesetzt werden — Checkliste in docs/auth.md.
+project_id = "clarr-app"
+
+[auth]
+# E-Mail-Bestaetigung ist Pflicht: Gate vor der ersten wertbaren Meldung.
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+# Doppelte Bestaetigung bei E-Mail-Wechsel (alte + neue Adresse).
+double_confirm_changes = true
+
+[auth.rate_limit]
+# Registrierungen/Logins pro 5 Minuten und IP — bremst Massen-Registrierung.
+sign_in_sign_ups = 10
+# Bestaetigungs-/Magic-Link-Mails pro Stunde (Supabase-Default-SMTP ist eng
+# limitiert; eigener SMTP noetig fuer mehr).
+email_sent = 4
+# OTP-/Link-Verifikationen pro 5 Minuten und IP.
+token_verifications = 30

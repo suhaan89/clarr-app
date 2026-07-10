@@ -19,6 +19,17 @@ Details und Annahmen in `NOTIZEN.md`.
   wird `points_ledger`.
 - Doku: `docs/fundament.md`, Bestandsaufnahme `docs/schema-ist.md`.
 
+## Paket 2 — Auth ✅
+
+- `supabase/migrations/003_auth.sql`: `user_verification_level`
+  (neu → mail_verifiziert → aktiv), `reputation_score` (nur serverseitig via
+  `adjust_reputation`), Trigger auf `auth.users.email_confirmed_at`,
+  RPC `activate_account`; `user_profiles` für Clients read-only;
+  Alters-/Einwilligung nur TODO „JURISTISCH PRUEFEN".
+- `supabase/config.toml`: Rate-Limits für Registrierung/Mails (lokal);
+  Dashboard-Checkliste für das DEV-Projekt in `docs/auth.md`
+  (u. a. „Prevent email enumeration").
+
 ## Offene Client-Tasks (neues Gerüst hat noch keine Screens)
 
 - Auth-Screens (Login/Registrierung mit Anti-Enumeration-Verhalten)
