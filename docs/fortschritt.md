@@ -66,6 +66,17 @@ Details und Annahmen in `NOTIZEN.md`.
 - Löschung entfernt Original + Derivate; Signed URLs kurzlebig.
 - Doku: `docs/foto-pipeline.md`.
 
+## Paket 6 — Reward-Engine ✅
+
+- `supabase/migrations/007_rewards.sql`: `award_points()` (nur Service-Role),
+  idempotent per `booking_key`, Regeln: Meldung 10 / Bestätigung 3 /
+  Fallabschluss mit Nachher-Foto 25, Degression (Halbierung je Wiederholung
+  am selben Ort, 30 Tage), Tagesdeckel 50 mit Teilbuchung; Saldo/Level als
+  View `points_level`. Keine Streaks, kein Zufall.
+- `supabase/tests/rewards.test.sql` (pgTAP, `supabase test db`): Idempotenz,
+  Tagesdeckel, „Client kann nicht buchen".
+- Doku: `docs/rewards.md`. `user_profiles.credits` bleibt unangetastet.
+
 ## Offene Client-Tasks (neues Gerüst hat noch keine Screens)
 
 - Auth-Screens (Login/Registrierung mit Anti-Enumeration-Verhalten)

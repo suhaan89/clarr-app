@@ -115,3 +115,19 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    Derivate.
 6. Offen: Storage-Objekte gelöschter Accounts werden von ON DELETE CASCADE
    nicht erfasst — separater Aufräum-Job nötig (dokumentiert).
+
+## Paket 6 — Reward-Engine
+
+1. Punktwerte: report_verified 10, case_confirmed 3, case_closed_after 25;
+   Tagesdeckel 50 (`system_settings.points_daily_cap`).
+2. Degression als Halbierung pro Wiederholung (Bit-Shift) im selben
+   Geohash-7 (~150 m) über 30 Tage — deterministisch, kein Zufall,
+   keine Streaks.
+3. Idempotenz über eindeutigen `booking_key` (Schnellpfad + Unique-Index
+   gegen Races) — keine Doppelbuchung möglich.
+4. Teilbuchung am Deckel: bei 45/50 gibt eine 10-Punkte-Buchung noch 5.
+5. Saldo/Level als View (`points_level`); Clients können nicht buchen
+   (kein Grant, RLS, append-only-Trigger).
+6. Tests als pgTAP (`supabase test db`): Idempotenz, Tagesdeckel,
+   „Client kann nicht buchen". Kein npm-Test-Runner im Projekt; gegen die
+   Live-DB wurde nichts ausgeführt (Vorgabe).
