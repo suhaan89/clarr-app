@@ -64,8 +64,12 @@ Confidence-Richtlinien:
 - 0.85-1.0: eindeutig; 0.65-0.84: wahrscheinlich; 0.40-0.64: unklar/schlechtes Bild; <0.40: kein Hinweis.
 Sei konservativ: Fehlalarme schaden mehr als verpasste Meldungen.
 
+SCHRITT 3 — Kontext: Wirkt der Ort wie ein PRIVATES Grundstueck oder Wohnkontext
+(Garten, Hof, Balkon, Innenraum, private Einfahrt)? Dann "privateContext": true.
+Solche Meldungen werden nie oeffentlich angezeigt.
+
 Antworte NUR mit gueltigem JSON:
-{ "isWaste": boolean, "confidence": number, "wasteType": string | null, "reason": string, "unsafeContent": "violence" | "nudity" | null, "containsPeople": boolean }
+{ "isWaste": boolean, "confidence": number, "wasteType": string | null, "reason": string, "unsafeContent": "violence" | "nudity" | null, "containsPeople": boolean, "privateContext": boolean }
 
 wasteType aus: "Hausmuell", "Sperrgut", "Bauschutt", "Gefaehrlicher Abfall", "Verpackungsmuell", "Elektroschrott", "Organischer Abfall", "Sonstiger Muell" (oder null).
 "reason" auf Deutsch, 1-2 Saetze.`;
@@ -246,6 +250,7 @@ Deno.serve(async (req) => {
         reason: string;
         unsafeContent: "violence" | "nudity" | null;
         containsPeople?: boolean;
+        privateContext?: boolean;
       };
       result.confidence = Math.max(0, Math.min(1, Number(result.confidence) || 0));
 
@@ -255,6 +260,9 @@ Deno.serve(async (req) => {
         outcome = "unsafe";
       } else if (!result.isWaste) {
         outcome = "not_waste";
+      } else if (result.privateContext === true) {
+        // Privatgrund-/Wohnkontext-Verdacht: nie automatisch oeffentlich
+        outcome = "private_context";
       } else if (result.confidence < CONFIDENCE_THRESHOLD) {
         outcome = "low_confidence";
       } else {

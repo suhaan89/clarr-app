@@ -155,3 +155,21 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    - Es gehen keine Melder-Daten/Originalfotos raus (nur public-blurred).
 3. Kein Cron im Repo: Scheduling (wöchentlich) muss im Dashboard/pg_cron
    konfiguriert werden — dokumentiert in docs/real-world-loop.md.
+
+## Paket 8 — Trust & Safety
+
+1. Aus clar-app2 portiert (Stand 9fcbc57), Migrationsdatei hier als
+   `010_trust_safety.sql` umnummeriert (009 ist der Behörden-Digest).
+2. Einzige nicht rein additive Änderung: Policy `reports_select_all`
+   (SELECT true, Altlast aus 001) wird ersetzt durch „veröffentlicht ODER
+   eigene ODER Moderator" — ohne das wäre Fail-safe-Flagging wirkungslos.
+   Folge: unverifizierte Alt-Meldungen sind nicht mehr öffentlich sichtbar.
+3. Flag → Meldung sofort unsichtbar (Trigger setzt Status zurück in
+   Review), fail-safe; Review-Queue nur für geflaggt / Confidence /
+   ~5%-Stichprobe / Privatgrund. Stichprobe versteckt nichts (nur QA).
+4. Privatgrund bleibt dauerhaft privat; Entscheidung `privat` vergibt
+   trotzdem Punkte (Meldung war korrekt). Kein „Verursacher"-Feld —
+   geprüft, es existiert keines und keines kommt dazu.
+5. Moderation (`moderate_report`, `approve_photo`) rollen-geschützt
+   (moderator/partner) + audit_log; bis ein Admin-Screen existiert via
+   Dashboard/SQL nutzbar.

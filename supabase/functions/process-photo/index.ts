@@ -335,6 +335,16 @@ Deno.serve(async (req) => {
         // Kennzeichen werden automatisch freigegeben.
         const autoApprove = regions.length === 0 && !peopleVisible;
 
+        if (!autoApprove) {
+          // Pruefschritt (Paket 8): Mensch sichtet das gepixelte Foto,
+          // bevor es oeffentlich wird. Ein Duplikat-Fehler (offener
+          // Eintrag existiert schon) wird bewusst ignoriert.
+          await admin.from("review_queue").insert({
+            report_id: reportId,
+            reason: "personen_im_bild",
+          });
+        }
+
         await admin.from("report_photos").update({
           phash,
           blurred_path: blurredPath,
