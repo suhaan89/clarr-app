@@ -216,3 +216,21 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
 3. Seeds: `is_seed`-Flag statt separater Tabellen; Seed-Meldungen sind
    nicht punktefähig und laufen durch die normale Prüfung. Skript
    verweigert URLs, die nach prod aussehen.
+
+## Paket 11 — Betroffenenrechte
+
+1. Consents als append-only-Journal (wie points_ledger, inkl.
+   Service-Role-Trigger) — „nachweisbar" heißt: Historie mit Zeitstempel
+   und Policy-Version, letzte Zeile gewinnt (View `current_consents`).
+2. `behoerden_weitergabe`-Consent wird erhoben/gespeichert, aber technisch
+   NICHT als Digest-Filter durchgesetzt: der Digest enthält keine
+   personenbezogenen Daten (nur Fallort/Titel/geblurrtes Foto). Ob das
+   reicht → docs/legal/data-flows.md, JURISTISCH PRUEFEN.
+3. delete-account löscht Storage explizit (CASCADE erfasst Objekte nicht):
+   erst public-blurred-Derivate (Pfade aus report_photos), dann
+   originals/<uid>/ seitenweise, dann auth-User. Bestätigungsstring im
+   Body verhindert versehentliche Aufrufe. Audit ohne Inhalte.
+4. Export liefert Original-Fotos als 1h-Signed-URLs statt Bytes
+   (Function-Response klein halten); Hinweis steht in der Antwort.
+5. Legal-Screens sind sichtbar als ENTWURF markiert (rote Warnzeile) —
+   bewusst, damit niemand sie versehentlich für final hält.

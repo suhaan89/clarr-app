@@ -25,6 +25,8 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ title: 'Anmelden', headerShown: false }} />
           <Stack.Screen name="case/[id]" options={{ title: 'Fall' }} />
+          <Stack.Screen name="legal/datenschutz" options={{ title: 'Datenschutz' }} />
+          <Stack.Screen name="legal/impressum" options={{ title: 'Impressum' }} />
         </Stack>
       </ThemeProvider>
     </SessionProvider>
