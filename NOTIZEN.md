@@ -96,3 +96,22 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    Gewalt/Nacktheit → sofort blockiert. Bild wird vor dem Call verkleinert.
 7. `ANTHROPIC_API_KEY` ausschließlich als Supabase Function Secret
    (`Deno.env`), nie im Client, nie in Logs.
+
+## Paket 5 — Foto-Pipeline
+
+1. Gesichts-/Kennzeichen-Erkennung über das Vision-Modell (Bounding-Boxes)
+   statt klassischer CV-Lib (in Deno-Edge-Functions nicht verfügbar).
+   Konsequenz: zweiter (budgetierter) Vision-Call pro Foto, und die
+   Erkennung ist FEHLBAR — im Code markiert; Fotos mit erkannten Personen/
+   Kennzeichen werden trotz Pixelierung NICHT auto-freigegeben (Review).
+2. Pixelierung (Mosaik 24 px) statt Gaussian Blur — unumkehrbar, ohne
+   Zusatz-Lib umsetzbar.
+3. pHash als dHash (64 bit) für Duplikat-Erkennung.
+4. Fail-safe: ohne erfolgreichen Pipeline-Lauf (Budget/Kill-Switch/Fehler)
+   bleibt das Foto privat (`approved = false`).
+5. Buckets: `originals` (privat, nur Eigentümer), `public-blurred`
+   (öffentlich lesbar, nur Service schreibt). Anzeige nur aus
+   public-blurred; Signed URLs kurzlebig; Löschung entfernt Original +
+   Derivate.
+6. Offen: Storage-Objekte gelöschter Accounts werden von ON DELETE CASCADE
+   nicht erfasst — separater Aufräum-Job nötig (dokumentiert).

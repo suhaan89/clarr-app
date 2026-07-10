@@ -54,6 +54,18 @@ Details und Annahmen in `NOTIZEN.md`.
   Reservierungs-RPCs, Kill-Switch-Zustand.
 - Doku: `docs/vision.md`. Key nur als Supabase Secret.
 
+## Paket 5 — Foto-Pipeline ✅
+
+- `supabase/functions/process-photo/`: EXIF/GPS strippen, dHash (pHash)
+  speichern, Gesichter/Kennzeichen pixelieren (Vision-Bounding-Boxes;
+  FEHLBAR — im Code markiert, Review-Schritt davor), Ablage nach
+  `public-blurred`; Fail-safe: ohne erfolgreichen Lauf bleibt das Foto privat.
+- `supabase/migrations/006_photo_pipeline.sql`: Buckets `originals`
+  (privat) + `public-blurred` (öffentlich, nur Service schreibt) inkl.
+  Storage-Policies; Metadaten-Spalten auf `report_photos`.
+- Löschung entfernt Original + Derivate; Signed URLs kurzlebig.
+- Doku: `docs/foto-pipeline.md`.
+
 ## Offene Client-Tasks (neues Gerüst hat noch keine Screens)
 
 - Auth-Screens (Login/Registrierung mit Anti-Enumeration-Verhalten)

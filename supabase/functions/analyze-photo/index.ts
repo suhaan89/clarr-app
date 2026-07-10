@@ -185,10 +185,21 @@ Deno.serve(async (req) => {
     const usageId = reservation.usage_id;
 
     try {
-      // Bild laden + serverseitig verkleinern
-      const imgResponse = await fetch(photoUrl);
-      if (!imgResponse.ok) throw new Error(`photo fetch failed: ${imgResponse.status}`);
-      const original = new Uint8Array(await imgResponse.arrayBuffer());
+      // Bild laden + serverseitig verkleinern. Seit Paket 5 enthaelt
+      // photo_urls Storage-PFADE im privaten originals-Bucket; Alt-Reports
+      // koennen noch volle URLs enthalten.
+      let original: Uint8Array;
+      if (photoUrl.startsWith("http")) {
+        const imgResponse = await fetch(photoUrl);
+        if (!imgResponse.ok) throw new Error(`photo fetch failed: ${imgResponse.status}`);
+        original = new Uint8Array(await imgResponse.arrayBuffer());
+      } else {
+        const { data: blob, error: dlError } = await admin.storage
+          .from("originals")
+          .download(photoUrl);
+        if (dlError || !blob) throw new Error("photo download failed");
+        original = new Uint8Array(await blob.arrayBuffer());
+      }
       const resized = await downscaleImage(original);
 
       const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
