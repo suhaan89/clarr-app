@@ -60,3 +60,21 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    in der Migration — keine Umsetzung ohne juristische Klärung.
 7. Client-Anteil (LoginScreen mit Anti-Enumeration-Meldungen) ist im neuen
    Gerüst noch nicht vorhanden — offener Client-Task (docs/fortschritt.md).
+
+## Paket 3 — Meldungs-Backend
+
+1. „~30m-Geohash" umgesetzt als: `geohash8` (~38×19 m) gespeichert, Bündelung
+   über Haversine-Distanz ≤ 40 m zum nächsten OFFENEN Fall, Advisory-Lock pro
+   Geohash-6-Zelle gegen Doppel-Fälle bei Races. Kein PostGIS nötig.
+2. Mock-Location/Speed: Meldung wird NICHT abgelehnt, sondern
+   `location_suspect = true` + Reputationsabzug (−10 Mock, −5 Speed >200 km/h)
+   — fail-safe Richtung Review statt harter Ablehnung.
+3. Rate-Limit: 5 Einreichungen/10 min pro Konto ODER Gerät ODER IP; nur
+   SHA-256-Hashes gespeichert; Install-ID ist eine zufällige AsyncStorage-ID
+   (bewusst keine Hardware-ID — Datenminimierung).
+4. Tagesquota (10/Tag) + globales Tageslimit als `consume_report_quota()` —
+   einzelnes bedingtes UPDATE, dadurch atomar/race-sicher.
+5. Der Service-Role-Key steht NUR in der Edge-Function-Umgebung
+   (`Deno.env`, von Supabase injiziert) — nie im Repo oder Client.
+6. Client ruft im neuen Gerüst noch nichts auf — der Melde-Flow (Foto +
+   submit-report) ist offener Client-Task.

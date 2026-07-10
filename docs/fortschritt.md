@@ -30,6 +30,18 @@ Details und Annahmen in `NOTIZEN.md`.
   Dashboard-Checkliste für das DEV-Projekt in `docs/auth.md`
   (u. a. „Prevent email enumeration").
 
+## Paket 3 — Meldungs-Backend ✅
+
+- `supabase/functions/submit-report/`: einziger Schreibpfad für Meldungen
+  (Clients haben kein INSERT auf `reports` mehr). Auth-Pflicht + Level
+  `aktiv`, Geo/Zeit serverseitig, Quota 10/Tag pro Nutzer + globales Limit
+  (atomar via `consume_report_quota`), Bündelung an offene Fälle im
+  ~30-m-Umkreis (Geohash + Haversine, Advisory-Lock), Mock-Location/Speed
+  ⇒ `location_suspect` + Reputationsabzug, Rate-Limit Konto/Gerät/IP
+  (nur SHA-256-Hashes).
+- `supabase/migrations/004_submit_report.sql`: Spalten/RPCs/Tabellen dafür.
+- Doku: `docs/meldungs-backend.md`.
+
 ## Offene Client-Tasks (neues Gerüst hat noch keine Screens)
 
 - Auth-Screens (Login/Registrierung mit Anti-Enumeration-Verhalten)
