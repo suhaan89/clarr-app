@@ -202,3 +202,17 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    AsyncStorage, NetInfo, supabase-js u. a.).
 7. `.env` in .gitignore ergänzt (war nur `.env*.local`); `.env.example`
    dokumentiert die EXPO_PUBLIC_-Variablen. Nur anon-Key im Client.
+
+## Paket 10 — Events + Cold-Start
+
+1. Zweite dokumentierte Policy-Ausnahme: `events_insert_own` ersetzt durch
+   `events_insert_team_partner` — jeder durfte bisher Events anlegen;
+   öffentliche Treffpunkte + minderjährige Zielgruppe brauchen eine
+   verantwortliche Orga.
+2. Gebündelter Event-Abschluss vergibt Punkte an die ABSCHLIESSENDE Person
+   (Team/Partner) über den bestehenden idempotenten Pfad — KEINE
+   automatische Verteilung an Teilnehmende (Kollusions-/Farming-Risiko;
+   Teilnehmende punkten über eigene Meldungen/Bestätigungen).
+3. Seeds: `is_seed`-Flag statt separater Tabellen; Seed-Meldungen sind
+   nicht punktefähig und laufen durch die normale Prüfung. Skript
+   verweigert URLs, die nach prod aussehen.
