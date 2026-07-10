@@ -173,3 +173,32 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
 5. Moderation (`moderate_report`, `approve_photo`) rollen-geschützt
    (moderator/partner) + audit_log; bis ein Admin-Screen existiert via
    Dashboard/SQL nutzbar.
+
+## Paket 9 — Frontend
+
+1. Migration 011: `reports.client_key` (Unique je Nutzer) für
+   Offline-Idempotenz; `reports.source`/`points_eligible` — Galerie-Fotos
+   geben KEINE Punkte, durchgesetzt in `award_points` (Guard), nicht nur im
+   UI. `submit_report_tx_v2` ist ein additiver Wrapper; `award_points`
+   wurde per CREATE OR REPLACE um den Guard ergänzt (Rumpf sonst identisch
+   zu 007 — gleiche Signatur/Parameternamen).
+2. „Vorher/Nachher" ist als Flow getrennt: Vorher-Fotos im Melde-Tab,
+   Nachher-Fotos im Fall-Detail über den Abschluss-Flow (close-case,
+   kind `after`) — kein eigener Toggle im Melde-Screen nötig.
+3. Leaderboard: Opt-in-Spalte + frei wählbares Pseudonym (2–24 Zeichen,
+   Zeichen-Whitelist; Missbrauch fängt die Moderation), View
+   `leaderboard_week` mit Owner-Rechten (bewusst KEIN security_invoker:
+   sie zeigt nur aggregierte, freiwillig geteilte Daten). Wochen-Reset =
+   Zeitfenster der View, das Ledger bleibt unangetastet.
+4. Login-Screen im Client gebaut (war offener Client-Task aus Teil 1):
+   neutrale Fehlermeldungen (Anti-Enumeration), signUp-Antwort immer gleich.
+5. Template aufgeräumt: ungenutzte Expo-Beispiel-Komponenten entfernt,
+   `typedRoutes`-Experiment deaktiviert (generierte Typen waren stale und
+   ohne Dev-Server nicht reproduzierbar); `supabase/` vom App-Typecheck
+   ausgenommen (Deno-Code). `npx tsc --noEmit` läuft sauber.
+6. Der Commit enthält auch package.json/package-lock mit dem vom Betreiber
+   begonnenen SDK-54-Stand (war uncommitted) + neuen Abhängigkeiten
+   (expo-camera, expo-location, expo-image-picker, react-native-maps,
+   AsyncStorage, NetInfo, supabase-js u. a.).
+7. `.env` in .gitignore ergänzt (war nur `.env*.local`); `.env.example`
+   dokumentiert die EXPO_PUBLIC_-Variablen. Nur anon-Key im Client.

@@ -81,6 +81,12 @@ Deno.serve(async (req) => {
     const description = typeof body.description === "string" ? body.description : "";
     const mocked = body.mocked === true;
     const deviceId = typeof body.deviceId === "string" ? body.deviceId.slice(0, 128) : null;
+    // Offline-Sync: clientseitiger Idempotenz-Schluessel (Paket 9).
+    const clientKey = typeof body.clientKey === "string" && /^[A-Za-z0-9-]{8,64}$/.test(body.clientKey)
+      ? body.clientKey
+      : null;
+    // Foto-Quelle: nur In-App-Kamera ist wertbar; Galerie geht ohne Punkte.
+    const source = body.source === "gallery" ? "gallery" : "camera";
     const photoPaths: string[] = Array.isArray(body.photoPaths)
       ? body.photoPaths.filter((p: unknown) => typeof p === "string").slice(0, MAX_PHOTOS)
       : [];
@@ -167,7 +173,7 @@ Deno.serve(async (req) => {
     });
 
     // 6. Quota + Fall-Buendelung + Insert, atomar. Zeitstempel = Server-NOW.
-    const { data: result, error: txError } = await admin.rpc("submit_report_tx", {
+    const { data: result, error: txError } = await admin.rpc("submit_report_tx_v2", {
       p_user_id: user.id,
       p_lat: latitude,
       p_lng: longitude,
@@ -175,6 +181,8 @@ Deno.serve(async (req) => {
       p_photo_paths: photoPaths,
       p_location_suspect: locationSuspect,
       p_device_hash: deviceHash,
+      p_client_key: clientKey,
+      p_source: source,
     });
     if (txError) throw txError;
 
