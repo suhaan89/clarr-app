@@ -131,3 +131,27 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
 6. Tests als pgTAP (`supabase test db`): Idempotenz, Tagesdeckel,
    „Client kann nicht buchen". Kein npm-Test-Runner im Projekt; gegen die
    Live-DB wurde nichts ausgeführt (Vorgabe).
+
+## Paket 7 — Real-World-Loop (Teil 2, 2026-07-10)
+
+1. Basis (Statusmaschine, close-case, Push-Opt-in, Partner-Rolle) aus
+   clar-app2 portiert (Stand 926186c); Annahmen von dort gelten:
+   Abschluss-Radius 100 m, Nachher-Foto als eigener Abschluss-Report
+   (kind `after`, läuft durch die Anonymisierungs-Pipeline), Mock-Location
+   beim Abschluss = harte Ablehnung, Punkte per booking_key an den FALL
+   gebunden (Anti-Kollusion: wechselseitiges Abschluss-Farmen unmöglich).
+2. NEU — Wochen-Digest an Behörde: Migration 009 + Edge Functions
+   `authority-digest`/`confirm-case-done`. Entscheidungen:
+   - Digest verschickt nur Fälle im Status `geprueft` und setzt sie danach
+     auf `weitergeleitet` (regulärer Statusmaschinen-Übergang).
+   - Rücklauf-Token = 256 bit Zufall, nur SHA-256-Hash in der DB, TTL 30
+     Tage (Setting), Einlösung einmalig/atomar per bedingtem UPDATE.
+   - Mail-Versand über Resend, weil Supabase keinen ausgehenden
+     Mail-Dienst für eigene Inhalte hat; OHNE `RESEND_API_KEY` wird nur
+     protokolliert — DEV läuft ohne Mail-Provider. Empfänger-Adresse ist
+     ein Setting (leer = aus), nichts hardcodiert.
+   - `confirm-case-done` braucht Deploy mit `--no-verify-jwt` (Behörde hat
+     keinen Account). Kein Enumerations-Orakel: neutrale Fehlerseite.
+   - Es gehen keine Melder-Daten/Originalfotos raus (nur public-blurred).
+3. Kein Cron im Repo: Scheduling (wöchentlich) muss im Dashboard/pg_cron
+   konfiguriert werden — dokumentiert in docs/real-world-loop.md.
