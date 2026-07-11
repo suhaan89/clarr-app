@@ -132,3 +132,28 @@ kleiner Erfolg (Häkchen-Moment) — ohne Konfetti-Kitsch.
 
 **Wirkung:** Gemeinschaft sichtbar machen — „da gehen schon 7 Leute hin" motiviert
 ehrlicher als jeder Countdown.
+
+## Profil / Impact
+
+**Selbstkritik vorher:** Eine lange, ungegliederte Spalte — Punkte, Bestenliste,
+Einwilligungen und Konto-Löschung optisch gleichwertig nebeneinander. Die
+Punkte-Historie war eine nackte Text-Tabelle; „Konto löschen" stand ohne visuelle
+Abgrenzung zwischen Alltagsfunktionen.
+
+**Entscheidungen:**
+- Impact-Held als Grün-Soft-Karte: Blatt-Icon, große Zahl, Level als Badge. Der eigene
+  Beitrag ist das Erste und Emotionalste auf dem Screen — Anerkennung ohne Kirmes.
+- Der Hinweis „Punkte sind nicht einlösbar" bleibt direkt an der Zahl: ehrliche
+  Erwartungssteuerung statt Belohnungs-Illusion.
+- Alle Abschnitte als Cards mit SectionHeader: Aktivität, Bestenliste, Sprache,
+  Datenschutz & Rechte. Scannen statt Lesen.
+- Aktivitätszeilen mit Icons je Grund (Häkchen/Personen/Funkeln) und grüner/roter
+  Delta-Zahl in Tabellenziffern.
+- Bestenliste mit Rang-Bubbles (Top 3 grün hinterlegt) — dezente Anerkennung,
+  kein Podest-Drama; unbekannte Server-Reasons fallen roh statt kaputt aus.
+- Sprachwahl als eigener Abschnitt mit Hinweis, dass Rechtstexte Deutsch bleiben.
+- Export/Löschen mit Icons in der Rechte-Karte; Löschen in Rot, aber gleich
+  erreichbar wie alles andere (Betroffenenrechte dürfen nicht versteckt werden).
+
+**Wirkung:** Stolz auf den eigenen Beitrag + volle Kontrolle über die eigenen Daten —
+beides sichtbar, nichts versteckt.

@@ -62,7 +62,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return {
       lang,
       setLang,
-      t: (key, params) => interpolate(catalog[key] ?? de[key], params),
+      // Fallback-Kette: gewaehlte Sprache -> Deutsch -> Schluessel selbst
+      // (letzteres nur bei Programmierfehlern, verhindert Abstuerze).
+      t: (key, params) => interpolate(catalog[key] ?? de[key] ?? key, params),
       dateLocale,
     };
   }, [lang, setLang]);

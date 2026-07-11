@@ -4,45 +4,46 @@
 // Zielgruppe teils minderjaehrig). Leaderboard nur mit Opt-in, Pseudonym,
 // Wochen-Reset.
 
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   Alert,
+  Pressable,
   ScrollView,
   Share,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
-  Pressable,
-  useColorScheme,
   View,
 } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Badge, Card, Input, LanguagePicker, SectionHeader } from '@/components';
+import { Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { callFunction } from '@/lib/api';
+import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { isValidDisplayName } from '@/lib/validation';
 
-const CONSENT_LABELS: Record<string, string> = {
-  kamera: 'Kamera für Müll-Fotos',
-  standort: 'Standort für Meldungen',
-  behoerden_weitergabe: 'Weitergabe geprüfter Fälle an die Behörde (anonymisiert)',
-};
+const CONSENT_KEYS = ['kamera', 'standort', 'behoerden_weitergabe'] as const;
 
 type LevelRow = { balance: number; level: number; level_name: string } | null;
 type LedgerRow = { id: number; delta: number; reason: string; created_at: string };
 type BoardRow = { display_name: string; points: number; rank: number };
 
-const REASON_LABELS: Record<string, string> = {
-  report_verified: 'Meldung bestätigt',
-  case_confirmed: 'Fall mitbestätigt',
-  case_closed_after: 'Fall aufgeräumt',
+const REASON_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  report_verified: 'checkmark-circle-outline',
+  case_confirmed: 'people-outline',
+  case_closed_after: 'sparkles-outline',
 };
 
+// Unbekannte Server-Reasons werden roh angezeigt statt uebersetzt.
+const KNOWN_REASONS = new Set(['report_verified', 'case_confirmed', 'case_closed_after']);
+
 export default function ProfilScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
+  const { t } = useI18n();
   const { session } = useSession();
   const [level, setLevel] = useState<LevelRow>(null);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
@@ -93,149 +94,202 @@ export default function ProfilScreen() {
   useFocusEffect(load);
 
   async function saveLeaderboardPrefs(nextOptIn: boolean) {
+    const trimmedName = displayName.trim();
+    if (nextOptIn && trimmedName && !isValidDisplayName(trimmedName)) {
+      Alert.alert(t('profil.pseudonym_invalid_title'), t('profil.pseudonym_invalid_body'));
+      return;
+    }
     setOptIn(nextOptIn);
-    await supabase.rpc('set_leaderboard_prefs', {
+    const { error } = await supabase.rpc('set_leaderboard_prefs', {
       p_opt_in: nextOptIn,
-      p_display_name: displayName.trim() || null,
+      p_display_name: trimmedName || null,
     });
+    if (error) {
+      setOptIn(!nextOptIn);
+      Alert.alert(t('profil.error_title'), t('profil.error_body'));
+      return;
+    }
     load();
   }
+
+  const levelName = level?.level_name ?? t('profil.level_default');
 
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.content}>
-      <View
-        style={[styles.impactCard, { backgroundColor: colors.backgroundElement }]}
+      {/* Impact-Held: der eigene Beitrag zuerst, ruhig und stolz. */}
+      <Card
+        tone="soft"
+        style={styles.impactCard}
         accessibilityRole="summary"
-        accessibilityLabel={`Dein Impact: ${level?.balance ?? 0} Punkte, Level ${level?.level_name ?? 'Einsteiger'}`}>
-        <Text style={[styles.points, { color: colors.text }]} allowFontScaling>
+        accessibilityLabel={t('profil.impact_a11y', {
+          points: level?.balance ?? 0,
+          level: levelName,
+        })}>
+        <View style={[styles.impactIcon, { backgroundColor: colors.primary }]}>
+          <Ionicons name="leaf" size={22} color={colors.onPrimary} />
+        </View>
+        <Text style={[styles.points, { color: colors.primaryStrong }]} allowFontScaling>
           {level?.balance ?? 0}
         </Text>
-        <Text style={[styles.pointsLabel, { color: colors.textSecondary }]} allowFontScaling>
-          Impact-Punkte · {level?.level_name ?? 'Einsteiger'}
+        <Text style={[styles.pointsLabel, { color: colors.text }]} allowFontScaling>
+          {t('profil.points_unit')}
         </Text>
+        <Badge label={levelName} tone="success" />
         <Text style={[styles.cosmeticNote, { color: colors.textSecondary }]} allowFontScaling>
-          Punkte zeigen deinen Beitrag — sie sind nicht einlösbar.
+          {t('profil.cosmetic_note')}
         </Text>
-      </View>
+      </Card>
 
-      <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]} allowFontScaling>
-        Letzte Aktivität
-      </Text>
-      {ledger.length === 0 ? (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]} allowFontScaling>
-          Noch keine Punkte — deine erste geprüfte Meldung ändert das.
-        </Text>
-      ) : (
-        ledger.map((entry) => (
-          <View key={entry.id} style={styles.ledgerRow}>
-            <Text style={[styles.ledgerReason, { color: colors.text }]} allowFontScaling>
-              {REASON_LABELS[entry.reason] ?? entry.reason}
-            </Text>
-            <Text
-              style={[styles.ledgerDelta, { color: entry.delta > 0 ? '#1B7A43' : '#C0392B' }]}
-              allowFontScaling>
-              {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
-            </Text>
-          </View>
-        ))
-      )}
-
-      <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]} allowFontScaling>
-        Wochen-Bestenliste
-      </Text>
-      <View style={styles.optInRow}>
-        <Text style={[styles.optInLabel, { color: colors.text }]} allowFontScaling>
-          Teilnehmen (freiwillig, mit Pseudonym)
-        </Text>
-        <Switch
-          accessibilityLabel="An der Wochen-Bestenliste teilnehmen"
-          value={optIn}
-          onValueChange={saveLeaderboardPrefs}
-        />
-      </View>
-      {optIn && (
-        <TextInput
-          accessibilityLabel="Pseudonym für die Bestenliste"
-          placeholder="Pseudonym (2–24 Zeichen)"
-          placeholderTextColor={colors.textSecondary}
-          value={displayName}
-          onChangeText={setDisplayName}
-          onEndEditing={() => saveLeaderboardPrefs(true)}
-          maxLength={24}
-          style={[styles.input, { color: colors.text, backgroundColor: colors.backgroundElement }]}
-        />
-      )}
-      <Text style={[styles.resetNote, { color: colors.textSecondary }]} allowFontScaling>
-        Die Liste startet jeden Montag bei null — es zählt die Woche, nicht der Dauer-Grind.
-      </Text>
-      {board.map((row) => (
-        <View key={`${row.rank}-${row.display_name}`} style={styles.ledgerRow}>
-          <Text style={[styles.ledgerReason, { color: colors.text }]} allowFontScaling>
-            {row.rank}. {row.display_name}
+      <SectionHeader title={t('profil.activity')} />
+      <Card style={styles.sectionCard}>
+        {ledger.length === 0 ? (
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.no_points')}
           </Text>
-          <Text style={[styles.ledgerDelta, { color: colors.text }]} allowFontScaling>
-            {row.points}
-          </Text>
-        </View>
-      ))}
+        ) : (
+          ledger.map((entry) => (
+            <View key={entry.id} style={styles.ledgerRow}>
+              <Ionicons
+                name={REASON_ICONS[entry.reason] ?? 'ellipse-outline'}
+                size={18}
+                color={colors.textSecondary}
+              />
+              <Text style={[styles.ledgerReason, { color: colors.text }]} allowFontScaling>
+                {KNOWN_REASONS.has(entry.reason)
+                  ? t(`reason.${entry.reason}` as TranslationKey)
+                  : entry.reason}
+              </Text>
+              <Text
+                style={[
+                  styles.ledgerDelta,
+                  { color: entry.delta > 0 ? colors.primaryStrong : colors.danger },
+                ]}
+                allowFontScaling>
+                {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
+              </Text>
+            </View>
+          ))
+        )}
+      </Card>
 
-      <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]} allowFontScaling>
-        Datenschutz & deine Rechte
-      </Text>
-      {Object.entries(CONSENT_LABELS).map(([key, label]) => (
-        <View key={key} style={styles.optInRow}>
+      <SectionHeader title={t('profil.leaderboard')} />
+      <Card style={styles.sectionCard}>
+        <View style={styles.optInRow}>
           <Text style={[styles.optInLabel, { color: colors.text }]} allowFontScaling>
-            {label}
+            {t('profil.optin')}
           </Text>
           <Switch
-            accessibilityLabel={`Einwilligung: ${label}`}
-            value={consents[key] ?? false}
-            onValueChange={async (granted) => {
-              setConsents((c) => ({ ...c, [key]: granted }));
-              // Nachweisbar: jede Aenderung wird serverseitig als neue
-              // Journal-Zeile gespeichert (append-only, Migration 013).
-              await supabase.rpc('record_consent', {
-                p_consent_key: key,
-                p_granted: granted,
-              });
-            }}
+            accessibilityLabel={t('profil.optin_a11y')}
+            value={optIn}
+            onValueChange={saveLeaderboardPrefs}
+            trackColor={{ true: colors.primary }}
           />
         </View>
-      ))}
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Meine Daten exportieren, Artikel 15 DSGVO"
-        onPress={async () => {
-          try {
-            const data = await callFunction('export-my-data', {});
-            await Share.share({
-              title: 'CLAR-Datenexport',
-              message: JSON.stringify(data, null, 2),
-            });
-          } catch {
-            Alert.alert('Fehler', 'Export gerade nicht möglich. Bitte später erneut versuchen.');
-          }
-        }}
-        style={styles.rightsButton}>
-        <Text style={[styles.rightsLabel, { color: colors.text }]} allowFontScaling>
-          Meine Daten exportieren
+        {optIn && (
+          <Input
+            accessibilityLabel={t('profil.pseudonym_a11y')}
+            placeholder={t('profil.pseudonym_placeholder')}
+            value={displayName}
+            onChangeText={setDisplayName}
+            onEndEditing={() => saveLeaderboardPrefs(true)}
+            maxLength={24}
+          />
+        )}
+        <Text style={[styles.resetNote, { color: colors.textSecondary }]} allowFontScaling>
+          {t('profil.reset_note')}
         </Text>
-      </Pressable>
+        {board.map((row) => (
+          <View key={`${row.rank}-${row.display_name}`} style={styles.boardRow}>
+            <View
+              style={[
+                styles.rankBubble,
+                { backgroundColor: row.rank <= 3 ? colors.primarySoft : colors.backgroundSelected },
+              ]}>
+              <Text
+                style={[
+                  styles.rankText,
+                  { color: row.rank <= 3 ? colors.primaryStrong : colors.textSecondary },
+                ]}
+                allowFontScaling>
+                {row.rank}
+              </Text>
+            </View>
+            <Text style={[styles.boardName, { color: colors.text }]} allowFontScaling>
+              {row.display_name}
+            </Text>
+            <Text style={[styles.boardPoints, { color: colors.textSecondary }]} allowFontScaling>
+              {row.points}
+            </Text>
+          </View>
+        ))}
+      </Card>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Konto endgültig löschen, Artikel 17 DSGVO"
-        onPress={() => {
-          Alert.alert(
-            'Konto löschen?',
-            'Das entfernt dein Profil, deine Meldungen, alle Fotos (auch die anonymisierten Kopien) und deine Punkte — endgültig.',
-            [
-              { text: 'Abbrechen', style: 'cancel' },
+      <SectionHeader title={t('profil.language')} />
+      <Card style={styles.sectionCard}>
+        <LanguagePicker />
+        <Text style={[styles.resetNote, { color: colors.textSecondary }]} allowFontScaling>
+          {t('profil.language_hint')}
+        </Text>
+      </Card>
+
+      <SectionHeader title={t('profil.privacy')} />
+      <Card style={styles.sectionCard}>
+        {CONSENT_KEYS.map((key) => {
+          const label = t(`consent.${key}` as TranslationKey);
+          return (
+            <View key={key} style={styles.optInRow}>
+              <Text style={[styles.optInLabel, { color: colors.text }]} allowFontScaling>
+                {label}
+              </Text>
+              <Switch
+                accessibilityLabel={t('consent.a11y', { label })}
+                value={consents[key] ?? false}
+                trackColor={{ true: colors.primary }}
+                onValueChange={async (granted) => {
+                  setConsents((c) => ({ ...c, [key]: granted }));
+                  // Nachweisbar: jede Aenderung wird serverseitig als neue
+                  // Journal-Zeile gespeichert (append-only, Migration 013).
+                  await supabase.rpc('record_consent', {
+                    p_consent_key: key,
+                    p_granted: granted,
+                  });
+                }}
+              />
+            </View>
+          );
+        })}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('profil.export_a11y')}
+          onPress={async () => {
+            try {
+              const data = await callFunction('export-my-data', {});
+              await Share.share({
+                title: t('profil.export_share_title'),
+                message: JSON.stringify(data, null, 2),
+              });
+            } catch {
+              Alert.alert(t('profil.error_generic'), t('profil.export_error'));
+            }
+          }}
+          style={({ pressed }) => [styles.rightsButton, pressed && styles.pressed]}>
+          <Ionicons name="download-outline" size={18} color={colors.text} />
+          <Text style={[styles.rightsLabel, { color: colors.text }]} allowFontScaling>
+            {t('profil.export')}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('profil.delete_a11y')}
+          onPress={() => {
+            Alert.alert(t('profil.delete_title'), t('profil.delete_body'), [
+              { text: t('profil.delete_cancel'), style: 'cancel' },
               {
-                text: 'Endgültig löschen',
+                text: t('profil.delete_confirm'),
                 style: 'destructive',
                 onPress: async () => {
                   try {
@@ -244,39 +298,40 @@ export default function ProfilScreen() {
                     });
                     await supabase.auth.signOut();
                   } catch {
-                    Alert.alert('Fehler', 'Löschung fehlgeschlagen. Bitte später erneut versuchen.');
+                    Alert.alert(t('profil.error_generic'), t('profil.delete_error'));
                   }
                 },
               },
-            ]
-          );
-        }}
-        style={styles.rightsButton}>
-        <Text style={[styles.rightsLabel, { color: '#C0392B' }]} allowFontScaling>
-          Konto löschen
-        </Text>
-      </Pressable>
+            ]);
+          }}
+          style={({ pressed }) => [styles.rightsButton, pressed && styles.pressed]}>
+          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+          <Text style={[styles.rightsLabel, { color: colors.danger }]} allowFontScaling>
+            {t('profil.delete')}
+          </Text>
+        </Pressable>
+      </Card>
 
       <View style={styles.legalLinks}>
-        <Link href="/legal/datenschutz" accessibilityLabel="Datenschutzerklärung öffnen">
-          <Text style={[styles.signOutLabel, { color: colors.textSecondary }]} allowFontScaling>
-            Datenschutz
+        <Link href="/legal/datenschutz" accessibilityLabel={t('profil.datenschutz_a11y')}>
+          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.datenschutz')}
           </Text>
         </Link>
-        <Link href="/legal/impressum" accessibilityLabel="Impressum öffnen">
-          <Text style={[styles.signOutLabel, { color: colors.textSecondary }]} allowFontScaling>
-            Impressum
+        <Link href="/legal/impressum" accessibilityLabel={t('profil.impressum_a11y')}>
+          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.impressum')}
           </Text>
         </Link>
       </View>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Abmelden"
+        accessibilityLabel={t('profil.signout')}
         onPress={() => supabase.auth.signOut()}
-        style={styles.signOut}>
-        <Text style={[styles.signOutLabel, { color: colors.textSecondary }]} allowFontScaling>
-          Abmelden
+        style={({ pressed }) => [styles.signOut, pressed && styles.pressed]}>
+        <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+          {t('profil.signout')}
         </Text>
       </Pressable>
     </ScrollView>
@@ -284,38 +339,60 @@ export default function ProfilScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: Spacing.four, gap: Spacing.two, paddingBottom: Spacing.six },
-  impactCard: {
-    borderRadius: 16,
-    padding: Spacing.four,
+  content: { padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.six },
+  impactCard: { alignItems: 'center', gap: Spacing.one, padding: Spacing.four },
+  impactIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.pill,
     alignItems: 'center',
-    gap: Spacing.one,
+    justifyContent: 'center',
+    marginBottom: Spacing.one,
   },
-  points: { fontSize: 44, fontWeight: '700' },
-  pointsLabel: { fontSize: 15 },
-  cosmeticNote: { fontSize: 12, marginTop: Spacing.one },
-  heading: { fontSize: 17, fontWeight: '600', marginTop: Spacing.four },
+  points: { fontSize: 48, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  pointsLabel: { fontSize: 15, fontWeight: '600', marginBottom: Spacing.one },
+  cosmeticNote: { fontSize: 12, marginTop: Spacing.two, textAlign: 'center' },
+  sectionCard: { gap: Spacing.two },
   emptyText: { fontSize: 14, lineHeight: 20 },
   ledgerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    minHeight: 32,
     alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: 36,
   },
-  ledgerReason: { fontSize: 15, flexShrink: 1 },
-  ledgerDelta: { fontSize: 15, fontWeight: '600' },
+  ledgerReason: { fontSize: 15, flex: 1 },
+  ledgerDelta: { fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
   optInRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     minHeight: 44,
+    gap: Spacing.two,
   },
-  optInLabel: { fontSize: 15, flexShrink: 1, paddingRight: Spacing.two },
-  input: { minHeight: 48, borderRadius: 12, paddingHorizontal: Spacing.three, fontSize: 16 },
+  optInLabel: { fontSize: 15, flexShrink: 1 },
   resetNote: { fontSize: 12, lineHeight: 17 },
-  signOut: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.five },
-  signOutLabel: { fontSize: 15 },
-  rightsButton: { minHeight: 44, justifyContent: 'center' },
+  boardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: 36,
+  },
+  rankBubble: {
+    width: 28,
+    height: 28,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankText: { fontSize: 13, fontWeight: '700' },
+  boardName: { fontSize: 15, flex: 1 },
+  boardPoints: { fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  rightsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: 44,
+  },
   rightsLabel: { fontSize: 15, fontWeight: '600' },
   legalLinks: {
     flexDirection: 'row',
@@ -325,4 +402,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: 'center',
   },
+  signOut: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  footerLabel: { fontSize: 15 },
+  pressed: { opacity: 0.6 },
 });
