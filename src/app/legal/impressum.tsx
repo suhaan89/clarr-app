@@ -1,14 +1,15 @@
-import { ScrollView, StyleSheet, Text, useColorScheme } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Card } from '@/components';
+import { Spacing, useThemeColors } from '@/constants/theme';
 
 // !!! PLATZHALTER — JURISTISCH PRUEFEN !!!
 // Anbieterkennzeichnung (§ 5 DDG) muss vor Release vollstaendig und
 // juristisch geprueft sein. KEINE echten Privatadressen der (schuelerischen)
 // Betreiber ohne Beratung veroeffentlichen — Alternativen pruefen.
+// Bewusst NUR auf Deutsch — Rechtstexte werden nicht maschinell uebersetzt.
 export default function ImpressumScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
@@ -16,14 +17,16 @@ export default function ImpressumScreen() {
       <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]} allowFontScaling>
         Impressum
       </Text>
-      <Text style={[styles.warn, { color: '#C0392B' }]} allowFontScaling>
-        ENTWURF — JURISTISCH PRUEFEN, vor Release ersetzen.
-      </Text>
+      <Card style={{ backgroundColor: colors.dangerSoft }}>
+        <Text style={[styles.warn, { color: colors.danger }]} allowFontScaling>
+          ENTWURF — JURISTISCH PRÜFEN, vor Release ersetzen.
+        </Text>
+      </Card>
       <Text style={[styles.body, { color: colors.text }]} allowFontScaling>
-        Anbieter: [JURISTISCH PRUEFEN — Name/Organisation]{'\n'}
-        Anschrift: [JURISTISCH PRUEFEN — ladungsfähige Anschrift]{'\n'}
-        Kontakt: [JURISTISCH PRUEFEN — E-Mail]{'\n'}
-        Verantwortlich i. S. d. § 18 MStV: [JURISTISCH PRUEFEN]
+        Anbieter: [JURISTISCH PRÜFEN — Name/Organisation]{'\n'}
+        Anschrift: [JURISTISCH PRÜFEN — ladungsfähige Anschrift]{'\n'}
+        Kontakt: [JURISTISCH PRÜFEN — E-Mail]{'\n'}
+        Verantwortlich i. S. d. § 18 MStV: [JURISTISCH PRÜFEN]
       </Text>
     </ScrollView>
   );

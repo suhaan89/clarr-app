@@ -1,11 +1,13 @@
-import { ScrollView, StyleSheet, Text, useColorScheme } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Card } from '@/components';
+import { Spacing, useThemeColors } from '@/constants/theme';
 
 // !!! PLATZHALTER — JURISTISCH PRUEFEN !!!
 // Dieser Text ist KEINE gueltige Datenschutzerklaerung. Vor jedem
 // oeffentlichen Release muss eine juristisch geprüfte Fassung rein
 // (Rechtsgrundlagen, Auftragsverarbeiter, Speicherfristen, Minderjaehrige).
+// Bewusst NUR auf Deutsch — Rechtstexte werden nicht maschinell uebersetzt.
 const SECTIONS: { title: string; body: string }[] = [
   {
     title: 'Was CLAR speichert',
@@ -19,24 +21,23 @@ const SECTIONS: { title: string; body: string }[] = [
     body:
       'Supabase (Hosting/Datenbank/Auth), Anthropic (automatische Foto-Prüfung), ' +
       'optional Expo-Push (Benachrichtigungen) und E-Mail-Versand für den Behörden-Digest ' +
-      '(nur anonymisierte Fallinfos). Details: docs/legal/data-flows.md. [JURISTISCH PRUEFEN]',
+      '(nur anonymisierte Fallinfos). Details: docs/legal/data-flows.md. [JURISTISCH PRÜFEN]',
   },
   {
     title: 'Deine Rechte',
     body:
       'Auskunft (Datenexport im Profil), Löschung (Konto löschen im Profil — entfernt ' +
       'Profil, Meldungen, Fotos samt Kopien und Punkte), Widerruf von Einwilligungen ' +
-      'jederzeit im Profil. [JURISTISCH PRUEFEN: Kontakt/Aufsichtsbehörde ergänzen]',
+      'jederzeit im Profil. [JURISTISCH PRÜFEN: Kontakt/Aufsichtsbehörde ergänzen]',
   },
   {
     title: 'Minderjährige',
-    body: '[JURISTISCH PRUEFEN: Alters-/Einwilligungslogik, Art. 8 DSGVO]',
+    body: '[JURISTISCH PRÜFEN: Alters-/Einwilligungslogik, Art. 8 DSGVO]',
   },
 ];
 
 export default function DatenschutzScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
@@ -44,9 +45,11 @@ export default function DatenschutzScreen() {
       <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]} allowFontScaling>
         Datenschutz
       </Text>
-      <Text style={[styles.warn, { color: '#C0392B' }]} allowFontScaling>
-        ENTWURF — JURISTISCH PRUEFEN, vor Release ersetzen.
-      </Text>
+      <Card style={{ backgroundColor: colors.dangerSoft }}>
+        <Text style={[styles.warn, { color: colors.danger }]} allowFontScaling>
+          ENTWURF — JURISTISCH PRÜFEN, vor Release ersetzen.
+        </Text>
+      </Card>
       {SECTIONS.map((s) => (
         <Text key={s.title} style={[styles.section, { color: colors.text }]} allowFontScaling>
           <Text style={styles.sectionTitle}>{s.title}{'\n'}</Text>
