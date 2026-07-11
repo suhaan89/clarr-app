@@ -6,9 +6,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, LoadingState } from '@/components';
+import { getCaseStatus, isOpenStatus } from '@/constants/status';
 import { Spacing, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
-import { useI18n, type TranslationKey } from '@/lib/i18n';
+import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -20,15 +21,6 @@ type CaseRow = {
 };
 
 type PhotoRow = { id: string; blurred_path: string | null; report_id: string };
-
-// DB-Statuswerte (unveraendert, Backend) -> Badge-Ton der Anzeige.
-const STATUS_TONES: Record<string, 'danger' | 'warning' | 'success' | 'neutral'> = {
-  gemeldet: 'danger',
-  geprueft: 'warning',
-  weitergeleitet: 'warning',
-  erledigt: 'success',
-  geschlossen: 'neutral',
-};
 
 export default function CaseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -127,10 +119,8 @@ export default function CaseDetailScreen() {
     return <LoadingState label={t('case.loading')} />;
   }
 
-  const open = ['gemeldet', 'geprueft', 'weitergeleitet'].includes(caseRow.status);
-  const statusLabel = STATUS_TONES[caseRow.status]
-    ? t(`case.status.${caseRow.status}` as TranslationKey)
-    : caseRow.status;
+  const open = isOpenStatus(caseRow.status);
+  const status = getCaseStatus(caseRow.status, t);
 
   return (
     <ScrollView
@@ -141,8 +131,8 @@ export default function CaseDetailScreen() {
       </Text>
       <View
         style={styles.statusRow}
-        accessibilityLabel={`Status: ${statusLabel}`}>
-        <Badge label={statusLabel} tone={STATUS_TONES[caseRow.status] ?? 'neutral'} dot />
+        accessibilityLabel={`${t('case.status_a11y')}: ${status.label}`}>
+        <Badge label={status.label} tone={status.tone} icon={status.icon} />
         <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
           {t('case.meta', {
             date: new Date(caseRow.created_at).toLocaleDateString(dateLocale),
