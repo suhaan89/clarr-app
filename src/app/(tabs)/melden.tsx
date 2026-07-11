@@ -10,20 +10,21 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  useColorScheme,
   View,
 } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Button, Card, EmptyState, Input } from '@/components';
+import { Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { newClientKey, type PendingReport, type PhotoSource } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { enqueueReport, readQueue, syncQueue } from '@/lib/offline-queue';
 
 type Step = 'foto' | 'details' | 'fertig';
+type Result = 'ok-camera' | 'ok-gallery' | 'offline' | 'error';
 
 export default function MeldenScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
+  const { t } = useI18n();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
 
@@ -32,7 +33,7 @@ export default function MeldenScreen() {
   const [source, setSource] = useState<PhotoSource>('camera');
   const [description, setDescription] = useState('');
   const [busy, setBusy] = useState(false);
-  const [resultText, setResultText] = useState('');
+  const [result, setResult] = useState<Result>('ok-camera');
   const [queueLength, setQueueLength] = useState(0);
 
   useEffect(() => {
@@ -84,18 +85,12 @@ export default function MeldenScreen() {
       // Funkloch verlieren nichts, und der clientKey entdoppelt Retries.
       await enqueueReport(item);
       const sync = await syncQueue();
-      setResultText(
-        sync.remaining === 0
-          ? source === 'camera'
-            ? 'Danke! Deine Meldung ist eingegangen. Punkte gibt es nach der Prüfung.'
-            : 'Danke! Deine Meldung ist eingegangen. (Galerie-Fotos geben keine Punkte.)'
-          : 'Gespeichert! Du bist offline — die Meldung wird automatisch gesendet, sobald du wieder Netz hast.'
+      setResult(
+        sync.remaining === 0 ? (source === 'camera' ? 'ok-camera' : 'ok-gallery') : 'offline'
       );
       setStep('fertig');
     } catch {
-      setResultText(
-        'Standort nicht verfügbar. Bitte erlaube den Standortzugriff in den Einstellungen — ohne Ort können wir den Müll nicht zuordnen.'
-      );
+      setResult('error');
       setStep('fertig');
     } finally {
       setBusy(false);
@@ -105,7 +100,6 @@ export default function MeldenScreen() {
   function reset() {
     setPhotoUri(null);
     setDescription('');
-    setResultText('');
     setStep('foto');
   }
 
@@ -116,56 +110,48 @@ export default function MeldenScreen() {
   if (step === 'foto') {
     if (!permission?.granted) {
       return (
-        <View style={[styles.center, { backgroundColor: colors.background }]}>
-          <Text style={[styles.text, { color: colors.text }]} allowFontScaling>
-            CLAR braucht die Kamera, um Müll zu melden. Fotos werden automatisch anonymisiert
-            (Gesichter und Kennzeichen), bevor sie jemand sieht.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Kamerazugriff erlauben"
-            onPress={requestPermission}
-            style={styles.primaryButton}>
-            <Text style={styles.primaryLabel} allowFontScaling>
-              Kamera erlauben
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Foto aus der Galerie wählen, ohne Punkte"
-            onPress={pickFromGallery}
-            style={styles.linkButton}>
-            <Text style={[styles.link, { color: colors.textSecondary }]} allowFontScaling>
-              Oder aus der Galerie wählen (ohne Punkte)
-            </Text>
-          </Pressable>
+        <View style={[styles.centerScreen, { backgroundColor: colors.background }]}>
+          <EmptyState
+            icon="camera-outline"
+            title={t('report.permission_title')}
+            body={t('report.permission_text')}>
+            <View style={styles.permissionActions}>
+              <Button label={t('report.allow_camera')} onPress={requestPermission} icon="camera" />
+              <Button
+                label={t('report.gallery_link')}
+                accessibilityLabel={t('report.gallery_a11y')}
+                onPress={pickFromGallery}
+                variant="ghost"
+              />
+            </View>
+          </EmptyState>
         </View>
       );
     }
     return (
-      <View style={styles.container}>
+      <View style={styles.cameraContainer}>
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
         <View style={styles.cameraControls}>
           {queueLength > 0 && (
             <Text style={styles.queueBadge} accessibilityLiveRegion="polite" allowFontScaling>
-              {queueLength} Meldung(en) warten auf Sync
+              {t('report.queue_badge', { count: queueLength })}
             </Text>
           )}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Foto aufnehmen — Meldungen mit der Kamera zählen für Punkte"
+            accessibilityLabel={t('report.shutter_a11y')}
             onPress={takePhoto}
-            style={styles.shutter}>
-            <Ionicons name="camera" size={32} color="#000" />
+            style={({ pressed }) => [styles.shutterOuter, pressed && styles.pressed]}>
+            <View style={styles.shutterInner} />
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Foto aus der Galerie wählen, ohne Punkte"
+            accessibilityLabel={t('report.gallery_a11y')}
             onPress={pickFromGallery}
-            style={styles.galleryButton}>
-            <Ionicons name="images-outline" size={22} color="#fff" />
+            style={({ pressed }) => [styles.galleryButton, pressed && styles.pressed]}>
+            <Ionicons name="images-outline" size={20} color="#fff" />
             <Text style={styles.galleryLabel} allowFontScaling>
-              Galerie (ohne Punkte)
+              {t('report.gallery_short')}
             </Text>
           </Pressable>
         </View>
@@ -180,90 +166,78 @@ export default function MeldenScreen() {
         contentContainerStyle={styles.details}
         keyboardShouldPersistTaps="handled">
         {photoUri && (
-          <Image
-            source={{ uri: photoUri }}
-            style={styles.preview}
-            accessibilityLabel="Vorschau deines Fotos"
-          />
+          <Card padded={false}>
+            <Image
+              source={{ uri: photoUri }}
+              style={styles.preview}
+              accessibilityLabel={t('report.preview_a11y')}
+            />
+          </Card>
         )}
         {source === 'gallery' && (
-          <Text style={[styles.galleryHint, { color: colors.textSecondary }]} allowFontScaling>
-            Galerie-Foto: Die Meldung hilft trotzdem — Punkte gibt es nur für Fotos direkt aus
-            der App-Kamera.
-          </Text>
+          <Card style={{ backgroundColor: colors.warningSoft }}>
+            <Text style={[styles.galleryHint, { color: colors.warning }]} allowFontScaling>
+              {t('report.gallery_hint')}
+            </Text>
+          </Card>
         )}
-        <TextInput
-          accessibilityLabel="Beschreibung des Müllfunds, optional"
-          placeholder="Was liegt da? (optional)"
-          placeholderTextColor={colors.textSecondary}
+        <Input
+          accessibilityLabel={t('report.desc_a11y')}
+          placeholder={t('report.desc_placeholder')}
           multiline
           value={description}
           onChangeText={setDescription}
-          style={[styles.input, { color: colors.text, backgroundColor: colors.backgroundElement }]}
         />
-        <Text style={[styles.privacyNote, { color: colors.textSecondary }]} allowFontScaling>
-          Standort und Zeitpunkt werden serverseitig geprüft. Dein Foto wird vor jeder
-          Veröffentlichung anonymisiert; das Original bleibt privat.
-        </Text>
+        <View style={styles.privacyRow}>
+          <Ionicons name="lock-closed-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.privacyNote, { color: colors.textSecondary }]} allowFontScaling>
+            {t('report.privacy_note')}
+          </Text>
+        </View>
         {busy ? (
-          <ActivityIndicator accessibilityLabel="Meldung wird gesendet" />
+          <ActivityIndicator color={colors.primary} accessibilityLabel={t('report.sending')} />
         ) : (
-          <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Meldung absenden"
-              onPress={submit}
-              style={styles.primaryButton}>
-              <Text style={styles.primaryLabel} allowFontScaling>
-                Meldung absenden
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Abbrechen und neues Foto machen"
+          <View style={styles.detailActions}>
+            <Button label={t('report.submit')} onPress={submit} icon="paper-plane-outline" />
+            <Button
+              label={t('report.cancel')}
+              accessibilityLabel={t('report.cancel_a11y')}
               onPress={reset}
-              style={styles.linkButton}>
-              <Text style={[styles.link, { color: colors.textSecondary }]} allowFontScaling>
-                Abbrechen
-              </Text>
-            </Pressable>
-          </>
+              variant="ghost"
+            />
+          </View>
         )}
       </ScrollView>
     );
   }
 
+  const resultView = {
+    'ok-camera': { icon: 'checkmark-circle' as const, title: t('report.done_title'), body: t('report.done_camera') },
+    'ok-gallery': { icon: 'checkmark-circle' as const, title: t('report.done_title'), body: t('report.done_gallery') },
+    offline: { icon: 'cloud-offline-outline' as const, title: t('report.offline_title'), body: t('report.done_offline') },
+    error: { icon: 'location-outline' as const, title: t('report.error_title'), body: t('report.error_location') },
+  }[result];
+
   return (
-    <View style={[styles.center, { backgroundColor: colors.background }]}>
-      <Text
-        style={[styles.text, { color: colors.text }]}
-        accessibilityLiveRegion="polite"
-        allowFontScaling>
-        {resultText}
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Weitere Meldung erfassen"
-        onPress={reset}
-        style={styles.primaryButton}>
-        <Text style={styles.primaryLabel} allowFontScaling>
-          Neue Meldung
-        </Text>
-      </Pressable>
+    <View style={[styles.centerScreen, { backgroundColor: colors.background }]}>
+      <EmptyState icon={resultView.icon} title={resultView.title} body={resultView.body}>
+        <View style={styles.permissionActions}>
+          <Button
+            label={t('report.new')}
+            accessibilityLabel={t('report.new_a11y')}
+            onPress={reset}
+            icon="camera-outline"
+          />
+        </View>
+      </EmptyState>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  text: { fontSize: 16, lineHeight: 23, textAlign: 'center' },
+  cameraContainer: { flex: 1, backgroundColor: '#000' },
+  centerScreen: { flex: 1, justifyContent: 'center' },
+  permissionActions: { alignSelf: 'stretch', gap: Spacing.two, marginTop: Spacing.three },
   cameraControls: {
     position: 'absolute',
     bottom: Spacing.five,
@@ -272,13 +246,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.three,
   },
-  shutter: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#fff',
+  // Klassischer Kamera-Ausloeser: weisser Ring + innerer Kreis.
+  shutterOuter: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 4,
+    borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  shutterInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
   },
   galleryButton: {
     flexDirection: 'row',
@@ -286,37 +268,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 44,
     paddingHorizontal: Spacing.three,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
-  galleryLabel: { color: '#fff', fontSize: 15 },
+  galleryLabel: { color: '#fff', fontSize: 15, fontWeight: '600' },
   queueBadge: {
     color: '#fff',
     backgroundColor: 'rgba(0,0,0,0.6)',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
-    borderRadius: 12,
+    borderRadius: Radius.pill,
     fontSize: 13,
+    overflow: 'hidden',
   },
   details: { padding: Spacing.four, gap: Spacing.three },
-  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: 12 },
+  preview: { width: '100%', aspectRatio: 4 / 3 },
   galleryHint: { fontSize: 14, lineHeight: 20 },
-  input: {
-    minHeight: 80,
-    borderRadius: 12,
-    padding: Spacing.three,
-    fontSize: 16,
-    textAlignVertical: 'top',
-  },
-  privacyNote: { fontSize: 13, lineHeight: 19 },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    backgroundColor: '#1B7A43',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    alignSelf: 'stretch',
-  },
-  primaryLabel: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  linkButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  link: { fontSize: 15 },
+  privacyRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
+  privacyNote: { fontSize: 13, lineHeight: 19, flexShrink: 1 },
+  detailActions: { gap: Spacing.two },
+  pressed: { opacity: 0.7 },
 });

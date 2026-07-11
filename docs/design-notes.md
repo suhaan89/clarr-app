@@ -87,3 +87,28 @@ ist für Screenreader Rauschen. Alles in einer Textzeile gequetscht.
 
 **Wirkung:** „Da passiert wirklich was" — grüne Pins als sichtbarer Beweis, dass Meldungen
 zu aufgeräumten Orten führen.
+
+## Melden (Kamera-Flow)
+
+**Selbstkritik vorher:** Der Berechtigungs-Screen war eine Textwand mit zwei Buttons.
+Der Auslöser war ein weißer Kreis mit Kamera-Icon — unklar, ob das ein Button oder
+Deko ist. Der Erfolgs-Screen war nur ein Satz auf leerem Grund: der emotional
+wichtigste Moment (ich habe etwas beigetragen!) fühlte sich nach nichts an.
+
+**Entscheidungen:**
+- Berechtigung als EmptyState: Kamera-Icon im Grünkreis, Titel, kurzer Text — die
+  Anonymisierungs-Zusage bleibt prominent (Vertrauen VOR der Freigabe).
+- Klassischer Kamera-Auslöser (weißer Ring + innerer Kreis): universell als „Foto
+  machen" lesbar, kein Erklärungsbedarf.
+- Galerie-Button als halbtransparente Pille — sichtbar, aber klar sekundär
+  (Kamera-Fotos sind die gewollten, weil punktefähig).
+- Galerie-Hinweis als gelbe Warn-Karte statt grauem Fließtext: der Punkte-Unterschied
+  ist eine faire, aber wichtige Information.
+- Erfolgs-/Offline-/Fehler-Screen als EmptyState mit passendem Icon (Häkchen, Wolke,
+  Standort) — das Ergebnis wird als Ergebnis-Typ gespeichert und erst beim Rendern
+  übersetzt, damit ein Sprachwechsel auch diesen Screen sofort umstellt.
+- Datenschutz-Zeile mit Schloss-Icon vor dem Absenden: Transparenz am Punkt der
+  Entscheidung, nicht irgendwo im Kleingedruckten.
+
+**Wirkung:** Melden fühlt sich an wie Fotografieren (vertraut), Absenden wie ein
+kleiner Erfolg (Häkchen-Moment) — ohne Konfetti-Kitsch.
