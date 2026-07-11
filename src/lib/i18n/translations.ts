@@ -1297,16 +1297,19 @@ const cs: Catalog = {
   'language.close': 'Zavřít',
 };
 
+// `beta`: Sprache ist waehlbar, aber noch nicht redaktionell geprueft —
+// wird in der Sprachwahl mit einem Beta-Badge angezeigt. Vollstaendig
+// gepflegt sind Deutsch, English und Schwiizerdütsch.
 export const LANGUAGES = [
-  { code: 'de', label: 'Deutsch', dateLocale: 'de-DE' },
-  { code: 'de-AT', label: 'Österreichisches Deutsch', dateLocale: 'de-AT' },
-  { code: 'gsw', label: 'Schwiizerdütsch', dateLocale: 'de-CH' },
-  { code: 'en', label: 'English', dateLocale: 'en-GB' },
-  { code: 'fr', label: 'Français', dateLocale: 'fr-FR' },
-  { code: 'it', label: 'Italiano', dateLocale: 'it-IT' },
-  { code: 'zh', label: '中文', dateLocale: 'zh-CN' },
-  { code: 'nb', label: 'Norsk', dateLocale: 'nb-NO' },
-  { code: 'cs', label: 'Čeština', dateLocale: 'cs-CZ' },
+  { code: 'de', label: 'Deutsch', dateLocale: 'de-DE', beta: false },
+  { code: 'en', label: 'English', dateLocale: 'en-GB', beta: false },
+  { code: 'gsw', label: 'Schwiizerdütsch', dateLocale: 'de-CH', beta: false },
+  { code: 'de-AT', label: 'Österreichisches Deutsch', dateLocale: 'de-AT', beta: true },
+  { code: 'fr', label: 'Français', dateLocale: 'fr-FR', beta: true },
+  { code: 'it', label: 'Italiano', dateLocale: 'it-IT', beta: true },
+  { code: 'zh', label: '中文', dateLocale: 'zh-CN', beta: true },
+  { code: 'nb', label: 'Norsk', dateLocale: 'nb-NO', beta: true },
+  { code: 'cs', label: 'Čeština', dateLocale: 'cs-CZ', beta: true },
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]['code'];

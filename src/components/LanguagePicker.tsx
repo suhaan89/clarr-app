@@ -5,6 +5,8 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native
 import { Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { LANGUAGES, useI18n, type LanguageCode } from '@/lib/i18n';
 
+import { Badge } from './Badge';
+
 type Props = {
   /** 'row' = Zeile mit Label (Profil), 'icon' = runder Globus-Button (Login). */
   variant?: 'row' | 'icon';
@@ -36,6 +38,7 @@ export function LanguagePicker({ variant = 'row' }: Props) {
             <Text style={[styles.rowLabel, { color: colors.text }]} allowFontScaling>
               {current?.label}
             </Text>
+            {current?.beta && <Badge label="Beta" tone="warning" />}
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
         </Pressable>
@@ -74,22 +77,25 @@ export function LanguagePicker({ variant = 'row' }: Props) {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
-                    accessibilityLabel={item.label}
+                    accessibilityLabel={item.beta ? `${item.label} (Beta)` : item.label}
                     onPress={() => choose(item.code)}
                     style={({ pressed }) => [
                       styles.option,
                       active && { backgroundColor: colors.primarySoft },
                       pressed && styles.pressed,
                     ]}>
-                    <Text
-                      style={[
-                        styles.optionLabel,
-                        { color: active ? colors.primaryStrong : colors.text },
-                        active && styles.optionActive,
-                      ]}
-                      allowFontScaling>
-                      {item.label}
-                    </Text>
+                    <View style={styles.optionLeft}>
+                      <Text
+                        style={[
+                          styles.optionLabel,
+                          { color: active ? colors.primaryStrong : colors.text },
+                          active && styles.optionActive,
+                        ]}
+                        allowFontScaling>
+                        {item.label}
+                      </Text>
+                      {item.beta && <Badge label="Beta" tone="warning" />}
+                    </View>
                     {active && <Ionicons name="checkmark" size={20} color={colors.primaryStrong} />}
                   </Pressable>
                 );
@@ -135,6 +141,12 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: Radius.sm,
     paddingHorizontal: Spacing.two,
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    flexShrink: 1,
   },
   optionLabel: { fontSize: 16 },
   optionActive: { fontWeight: '700' },

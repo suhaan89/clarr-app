@@ -182,3 +182,11 @@ gute Ende kann man selbst herbeiführen.
 Nur behutsam angefasst: Theme-Konsistenz und echte Umlaute in sichtbaren Texten
 („JURISTISCH PRÜFEN" statt „PRUEFEN"). Inhaltlich bleiben es markierte Platzhalter —
 Rechtstexte gehören Juristen, nicht Designern. Bewusst nicht übersetzt.
+
+## Nachtrag: Beta-Kennzeichnung der Sprachen
+
+Vollständig gepflegt sind Deutsch, English und Schwiizerdütsch — sie stehen in der
+Sprachwahl oben. Alle übrigen (Österreichisches Deutsch, Français, Italiano, 中文,
+Norsk, Čeština) bleiben wählbar, tragen aber ein gelbes „Beta"-Badge (auch im
+Profil-Eintrag und im Screenreader-Label): ehrliche Erwartungssteuerung statt
+stillem Qualitätsversprechen.
