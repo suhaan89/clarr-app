@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing, useThemeColors } from '@/constants/theme';
@@ -7,12 +8,14 @@ type Tone = 'success' | 'danger' | 'warning' | 'neutral';
 type Props = {
   label: string;
   tone?: Tone;
-  /** Kleiner Farbpunkt vor dem Label (Status-Signal auch ohne Text lesbar). */
+  /** Aussagekräftiges Icon vor dem Label — bevorzugt für Status (nicht nur Farbe). */
+  icon?: keyof typeof Ionicons.glyphMap;
+  /** Kleiner Farbpunkt vor dem Label (Alternative zum Icon). */
   dot?: boolean;
 };
 
 /** Status-Pille, z. B. „Erledigt", „Voll belegt", „Du bist dabei". */
-export function Badge({ label, tone = 'neutral', dot = false }: Props) {
+export function Badge({ label, tone = 'neutral', icon, dot = false }: Props) {
   const colors = useThemeColors();
   const palette = {
     success: { bg: colors.successSoft, fg: colors.primaryStrong },
@@ -23,7 +26,11 @@ export function Badge({ label, tone = 'neutral', dot = false }: Props) {
 
   return (
     <View style={[styles.base, { backgroundColor: palette.bg }]}>
-      {dot && <View style={[styles.dot, { backgroundColor: palette.fg }]} />}
+      {icon ? (
+        <Ionicons name={icon} size={14} color={palette.fg} />
+      ) : dot ? (
+        <View style={[styles.dot, { backgroundColor: palette.fg }]} />
+      ) : null}
       <Text style={[styles.label, { color: palette.fg }]} allowFontScaling>
         {label}
       </Text>

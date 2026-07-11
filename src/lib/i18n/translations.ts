@@ -9,6 +9,8 @@
 
 export const de = {
   // Tab-Leiste
+  'tabs.home': 'Start',
+  'tabs.home_a11y': 'Startseite mit Übersicht',
   'tabs.map': 'Karte',
   'tabs.map_a11y': 'Karte mit gemeldeten Müllfunden',
   'tabs.report': 'Melden',
@@ -17,6 +19,29 @@ export const de = {
   'tabs.events_a11y': 'Cleanup-Aktionen',
   'tabs.impact': 'Impact',
   'tabs.impact_a11y': 'Dein Impact-Profil',
+
+  // Splash
+  'splash.tagline': 'Gemeinsam für saubere Orte',
+
+  // Home / Übersicht
+  'home.greeting_morning': 'Guten Morgen',
+  'home.greeting_day': 'Hallo',
+  'home.greeting_evening': 'Guten Abend',
+  'home.headline': 'Schön, dass du da bist.',
+  'home.subline': 'Zusammen halten wir die Stadt sauber.',
+  'home.cta_title': 'Müll melden',
+  'home.cta_sub': 'Ein Foto genügt.',
+  'home.cta_a11y': 'Müll melden — Kamera öffnen',
+  'home.stat_open': 'offene Fälle',
+  'home.stat_closed': 'aufgeräumt',
+  'home.impact_a11y': 'Dein Impact: {points} Punkte, Level {level}',
+  'home.events_title': 'Nächste Aktionen',
+  'home.see_all': 'Alle',
+  'home.see_all_events': 'Alle Aktionen anzeigen',
+  'home.events_empty': 'Gerade sind keine Aktionen geplant.',
+  'home.recent_title': 'Zuletzt aufgeräumt',
+  'home.recent_empty_title': 'Noch nichts aufgeräumt',
+  'home.recent_empty_body': 'Deine Meldung kann der erste aufgeräumte Ort werden.',
   'stack.login': 'Anmelden',
   'stack.case': 'Fall',
   'stack.datenschutz': 'Datenschutz',
@@ -156,6 +181,7 @@ export const de = {
   'profil.signout': 'Abmelden',
 
   // Fall-Detail
+  'case.status_a11y': 'Status',
   'case.status.gemeldet': 'Gemeldet',
   'case.status.geprueft': 'Geprüft',
   'case.status.weitergeleitet': 'An Behörde weitergeleitet',
@@ -195,6 +221,8 @@ export type TranslationKey = keyof typeof de;
 export type Catalog = Partial<Record<TranslationKey, string>>;
 
 const en: Catalog = {
+  'tabs.home': 'Home',
+  'tabs.home_a11y': 'Home overview',
   'tabs.map': 'Map',
   'tabs.map_a11y': 'Map of reported litter finds',
   'tabs.report': 'Report',
@@ -207,6 +235,27 @@ const en: Catalog = {
   'stack.case': 'Case',
   'stack.datenschutz': 'Privacy',
   'stack.impressum': 'Legal notice',
+
+  'splash.tagline': 'Together for cleaner places',
+
+  'home.greeting_morning': 'Good morning',
+  'home.greeting_day': 'Hello',
+  'home.greeting_evening': 'Good evening',
+  'home.headline': 'Good to see you.',
+  'home.subline': 'Together we keep the city clean.',
+  'home.cta_title': 'Report litter',
+  'home.cta_sub': 'One photo is enough.',
+  'home.cta_a11y': 'Report litter — open the camera',
+  'home.stat_open': 'open cases',
+  'home.stat_closed': 'cleaned up',
+  'home.impact_a11y': 'Your impact: {points} points, level {level}',
+  'home.events_title': 'Next events',
+  'home.see_all': 'All',
+  'home.see_all_events': 'Show all events',
+  'home.events_empty': 'No events are planned right now.',
+  'home.recent_title': 'Recently cleaned up',
+  'home.recent_empty_title': 'Nothing cleaned up yet',
+  'home.recent_empty_body': 'Your report could become the first cleaned-up spot.',
 
   'login.tagline': 'Report litter. Clean up your city.',
   'login.email': 'Email',
@@ -335,6 +384,7 @@ const en: Catalog = {
   'profil.impressum_a11y': 'Open legal notice',
   'profil.signout': 'Sign out',
 
+  'case.status_a11y': 'Status',
   'case.status.gemeldet': 'Reported',
   'case.status.geprueft': 'Verified',
   'case.status.weitergeleitet': 'Forwarded to authority',

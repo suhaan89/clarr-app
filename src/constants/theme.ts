@@ -35,6 +35,15 @@ export const Colors = {
     warning: '#9A6B1B',
     warningSoft: '#F8F0DF',
 
+    // Warmer Zweitakzent — SPARSAM für Freude/Wärme (Begrüßung, kleine
+    // Highlights), nie für Status. Honigton, der das Grün ergänzt.
+    accent: '#C9781C',
+    accentSoft: '#FBEFDD',
+    onAccent: '#FFFFFF',
+
+    // Frischeres Grün für Verläufe/lebendige Flächen (nicht für Text).
+    primaryBright: '#33A15E',
+
     overlay: 'rgba(23, 29, 25, 0.55)',
   },
   dark: {
@@ -60,6 +69,13 @@ export const Colors = {
     warning: '#DFAE5B',
     warningSoft: '#33270F',
 
+    // Warmer Zweitakzent (siehe hell) — hier heller für dunkle Flächen.
+    accent: '#E6B45C',
+    accentSoft: '#332813',
+    onAccent: '#241A05',
+
+    primaryBright: '#3FB56E',
+
     overlay: 'rgba(0, 0, 0, 0.6)',
   },
 } as const;
@@ -71,6 +87,35 @@ export type ThemeColors = (typeof Colors)['light'] | (typeof Colors)['dark'];
 export function useThemeColors(): ThemeColors {
   const scheme = useColorScheme();
   return Colors[scheme === 'dark' ? 'dark' : 'light'];
+}
+
+/**
+ * Sanfte Verläufe für lebendige Flächen (Splash, Home-Held, Melden-CTA).
+ * Bewusst dezent — Tiefe und Wärme, kein Regenbogen. Immer als
+ * `colors={...}`-Array an `expo-linear-gradient` übergeben.
+ */
+export const Gradients = {
+  light: {
+    /** Kräftiger Marken-Verlauf für primäre Aufrufe (weiße Schrift darauf). */
+    brand: ['#1B7A43', '#33A15E'] as const,
+    /** Zarter Wasch-Verlauf hinter Begrüßung/Held (dunkle Schrift darauf). */
+    hero: ['#E9F5EE', '#F5FAF0'] as const,
+  },
+  dark: {
+    brand: ['#1E6B3F', '#2C8A54'] as const,
+    hero: ['#173726', '#111F18'] as const,
+  },
+} as const;
+
+export type GradientSet = {
+  brand: readonly [string, string];
+  hero: readonly [string, string];
+};
+
+/** Verläufe passend zum System-Farbschema. */
+export function useGradients(): GradientSet {
+  const scheme = useColorScheme();
+  return Gradients[scheme === 'dark' ? 'dark' : 'light'];
 }
 
 export const Fonts = Platform.select({
