@@ -112,3 +112,23 @@ wichtigste Moment (ich habe etwas beigetragen!) fühlte sich nach nichts an.
 
 **Wirkung:** Melden fühlt sich an wie Fotografieren (vertraut), Absenden wie ein
 kleiner Erfolg (Häkchen-Moment) — ohne Konfetti-Kitsch.
+
+## Aktionen (Events)
+
+**Selbstkritik vorher:** Alle Infos in einer grauen Meta-Zeile („Mi. 15.07. 16:00 Uhr ·
+3/10 dabei") — Datum, Uhrzeit und Auslastung konkurrieren unlesbar. Kein Ladezustand
+(leere Liste flackerte als „keine Events" auf), Leer-Text ohne jede Gestaltung.
+
+**Entscheidungen:**
+- Datumsblock links (Tag groß, Monat klein, auf Grün-Soft): Events werden auf einen
+  Blick planbar — bewährtes Muster aus Kalender-Apps.
+- Teilnehmer als Fortschrittsbalken + Zahl. Bewusst OHNE „Nur noch 2 Plätze!"-Alarm:
+  der Balken informiert, er drängt nicht (keine künstliche Dringlichkeit).
+- Status als Badge: „Du bist dabei" (grün, mit Punkt) bzw. „Voll belegt" (gelb) —
+  der eigene Zustand ist sofort sichtbar, ohne den Button lesen zu müssen.
+- Abmelden als Ghost-Button, Mitmachen als Primär-Button: die Hierarchie lädt zum
+  Mitmachen ein, macht Abmelden aber nicht schwerer (kein Dark Pattern).
+- LoadingState vor dem ersten Laden, EmptyState mit Icon danach.
+
+**Wirkung:** Gemeinschaft sichtbar machen — „da gehen schon 7 Leute hin" motiviert
+ehrlicher als jeder Countdown.

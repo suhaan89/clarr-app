@@ -1,15 +1,10 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Badge, Button, Card, EmptyState, LoadingState } from '@/components';
+import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -19,44 +14,66 @@ type CleanupEvent = {
   description: string | null;
   event_date: string;
   max_participants: number;
-  signups: { count: number }[];
+  // RLS zeigt nur EIGENE Anmeldungen (Migration 014) — mehr braucht der
+  // Screen nicht; der Gesamtzaehler kommt aus event_signup_counts.
   my_signup: { id: string }[];
+  signup_count: number;
 };
 
 export default function EventsScreen() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
+  const { t, dateLocale } = useI18n();
   const { session } = useSession();
   const [events, setEvents] = useState<CleanupEvent[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
     if (!session) return;
-    supabase
-      .from('cleanup_events')
-      .select(
-        'id, title, description, event_date, max_participants, signups:cleanup_signups(count), my_signup:cleanup_signups(id)'
-      )
-      .eq('my_signup.user_id', session.user.id)
-      .gte('event_date', new Date().toISOString())
-      .order('event_date', { ascending: true })
-      .then(({ data }) => {
-        if (data) setEvents(data as unknown as CleanupEvent[]);
-      });
+    const [{ data: rows }, { data: counts }] = await Promise.all([
+      supabase
+        .from('cleanup_events')
+        .select('id, title, description, event_date, max_participants, my_signup:cleanup_signups(id)')
+        .gte('event_date', new Date().toISOString())
+        .order('event_date', { ascending: true }),
+      supabase.from('event_signup_counts').select('event_id, signup_count'),
+    ]);
+    if (rows) {
+      const countMap = new Map(
+        (counts ?? []).map((c) => [c.event_id as string, c.signup_count as number])
+      );
+      setEvents(
+        (rows as unknown as Omit<CleanupEvent, 'signup_count'>[]).map((e) => ({
+          ...e,
+          signup_count: countMap.get(e.id) ?? 0,
+        }))
+      );
+    }
+    setLoaded(true);
   }, [session]);
 
-  useFocusEffect(load);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   async function toggleSignup(ev: CleanupEvent) {
     if (!session) return;
+    let error;
     if (ev.my_signup.length > 0) {
-      await supabase.from('cleanup_signups').delete().eq('id', ev.my_signup[0].id);
+      ({ error } = await supabase.from('cleanup_signups').delete().eq('id', ev.my_signup[0].id));
     } else {
-      await supabase
+      ({ error } = await supabase
         .from('cleanup_signups')
-        .insert({ event_id: ev.id, user_id: session.user.id });
+        .insert({ event_id: ev.id, user_id: session.user.id }));
+    }
+    if (error) {
+      Alert.alert(t('events.error_title'), t('events.error_body'));
     }
     load();
   }
+
+  if (!loaded) return <LoadingState label={t('events.loading')} />;
 
   return (
     <FlatList
@@ -65,51 +82,83 @@ export default function EventsScreen() {
       data={events}
       keyExtractor={(e) => e.id}
       ListEmptyComponent={
-        <Text style={[styles.empty, { color: colors.textSecondary }]} allowFontScaling>
-          Gerade sind keine Cleanup-Aktionen geplant. Schau bald wieder vorbei!
-        </Text>
+        <EmptyState
+          icon="people-outline"
+          title={t('events.empty_title')}
+          body={t('events.empty_body')}
+        />
       }
       renderItem={({ item }) => {
         const joined = item.my_signup.length > 0;
-        const count = item.signups[0]?.count ?? 0;
+        const count = item.signup_count;
         const full = !joined && count >= item.max_participants;
+        const date = new Date(item.event_date);
+        const fillRatio = Math.min(1, count / Math.max(1, item.max_participants));
         return (
-          <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-            <Text style={[styles.title, { color: colors.text }]} allowFontScaling>
-              {item.title}
-            </Text>
-            <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
-              {new Date(item.event_date).toLocaleString('de-DE', {
-                weekday: 'short',
-                day: '2-digit',
-                month: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}{' '}
-              Uhr · {count}/{item.max_participants} dabei
-            </Text>
+          <Card style={styles.card}>
+            <View style={styles.cardHead}>
+              {/* Datumsblock: Tag gross, Monat klein — auf einen Blick planbar. */}
+              <View style={[styles.dateBlock, { backgroundColor: colors.primarySoft }]}>
+                <Text style={[styles.dateDay, { color: colors.primaryStrong }]} allowFontScaling>
+                  {date.toLocaleDateString(dateLocale, { day: '2-digit' })}
+                </Text>
+                <Text style={[styles.dateMonth, { color: colors.primaryStrong }]} allowFontScaling>
+                  {date.toLocaleDateString(dateLocale, { month: 'short' })}
+                </Text>
+              </View>
+              <View style={styles.headText}>
+                <Text style={[styles.title, { color: colors.text }]} allowFontScaling>
+                  {item.title}
+                </Text>
+                <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
+                  {date.toLocaleString(dateLocale, {
+                    weekday: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </View>
+              {joined && <Badge label={t('events.joined_badge')} tone="success" dot />}
+              {full && <Badge label={t('events.full')} tone="warning" />}
+            </View>
+
             {item.description ? (
               <Text style={[styles.description, { color: colors.text }]} allowFontScaling>
                 {item.description}
               </Text>
             ) : null}
-            <Pressable
-              accessibilityRole="button"
+
+            {/* Teilnehmer-Fortschritt: Balken + Zahl, ehrlich ohne Dringlichkeits-Alarm. */}
+            <View
+              style={styles.capacityRow}
+              accessibilityLabel={t('events.spots', { count, max: item.max_participants })}>
+              <View style={[styles.track, { backgroundColor: colors.backgroundSelected }]}>
+                <View
+                  style={[
+                    styles.fill,
+                    { backgroundColor: colors.primary, width: `${fillRatio * 100}%` },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.capacityText, { color: colors.textSecondary }]} allowFontScaling>
+                {t('events.spots', { count, max: item.max_participants })}
+              </Text>
+            </View>
+
+            <Button
+              label={joined ? t('events.leave') : full ? t('events.full') : t('events.join')}
               accessibilityLabel={
                 joined
-                  ? `Abmelden von ${item.title}`
+                  ? t('events.leave_a11y', { title: item.title })
                   : full
-                    ? `${item.title} ist voll`
-                    : `Anmelden für ${item.title}`
+                    ? t('events.full_a11y', { title: item.title })
+                    : t('events.join_a11y', { title: item.title })
               }
-              disabled={full}
               onPress={() => toggleSignup(item)}
-              style={[styles.button, joined ? styles.leave : styles.join, full && styles.disabled]}>
-              <Text style={joined ? [styles.leaveLabel, { color: colors.text }] : styles.joinLabel} allowFontScaling>
-                {joined ? 'Abmelden' : full ? 'Voll belegt' : 'Mitmachen'}
-              </Text>
-            </Pressable>
-          </View>
+              disabled={full}
+              variant={joined ? 'ghost' : 'primary'}
+            />
+          </Card>
         );
       }}
     />
@@ -117,22 +166,24 @@ export default function EventsScreen() {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: Spacing.three, gap: Spacing.three },
-  empty: { textAlign: 'center', marginTop: Spacing.six, fontSize: 15, lineHeight: 22 },
-  card: { borderRadius: 16, padding: Spacing.three, gap: Spacing.two },
-  title: { fontSize: 18, fontWeight: '600' },
-  meta: { fontSize: 14 },
-  description: { fontSize: 15, lineHeight: 21 },
-  button: {
-    minHeight: 44,
-    borderRadius: 10,
+  list: { padding: Spacing.three, gap: Spacing.three, flexGrow: 1 },
+  card: { gap: Spacing.three },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  dateBlock: {
+    width: 52,
+    height: 56,
+    borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.one,
   },
-  join: { backgroundColor: '#1B7A43' },
-  joinLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  leave: { borderWidth: StyleSheet.hairlineWidth, borderColor: '#888' },
-  leaveLabel: { fontSize: 16 },
-  disabled: { opacity: 0.5 },
+  dateDay: { fontSize: 20, fontWeight: '800', lineHeight: 24 },
+  dateMonth: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
+  headText: { flex: 1, gap: 2 },
+  title: { fontSize: 17, fontWeight: '700' },
+  meta: { fontSize: 14 },
+  description: { fontSize: 15, lineHeight: 21 },
+  capacityRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  track: { flex: 1, height: 6, borderRadius: Radius.pill, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: Radius.pill },
+  capacityText: { fontSize: 13, fontVariant: ['tabular-nums'] },
 });
