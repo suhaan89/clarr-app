@@ -3,6 +3,101 @@
 Selbstkritik, Entscheidungen und angestrebte Wirkung pro Screen.
 Redesign Juli 2026. Regel dabei: nur Frontend/Struktur, keine Backend- oder Sicherheitslogik.
 
+---
+
+# Redesign-Runde 2 (Juli 2026): Wärme, Einstieg, Status-System
+
+**Nutzer-Feedback (ernst genommen):** „Die App wirkt zu schwarz, langweilig, leblos.
+Die Icons sind billig (nur grüner/roter Punkt für erledigt/nicht erledigt). Und man
+landet direkt in der Karte — schlechter erster Eindruck."
+
+## Referenzen (Muster, nicht kopiert)
+
+- **Too Good To Go** — warmer, freundlicher Ton, großzügige Karten, starke primäre CTA
+  („Retten"). Übernommen als *Prinzip*: ein klarer, einladender Hauptknopf („Müll melden")
+  als Held des Home-Screens; weiche, großflächige Karten statt Listenzeilen. CLAR bleibt
+  aber grün-seriös statt TGTG-türkis-verspielt.
+- **FixMyStreet / SeeClickFix** (zivilgesellschaftliche Melde-Apps) — der *Fall-Status* ist
+  das Rückgrat. Übernommen: Status als vollwertige Komponente (Icon + Wort + Farbe), eine
+  nachvollziehbare Reise gemeldet → geprüft → erledigt. CLAR macht daraus zusätzlich Social
+  Proof auf dem Home-Screen („zuletzt aufgeräumt").
+- **Umwelt-/Community-Apps** (Bewegungs-/Impact-Apps) — Wirkung emotional zeigen (Vorher/
+  Nachher, Zahlen). Übernommen: ruhige Impact-Kachel und zwei ehrliche Kennzahlen (offen /
+  aufgeräumt) — ohne Streaks, Countdowns oder Zufallsbelohnungen.
+
+Eigenständig für CLAR: „Vertrauensgrün" als Basis, warmer Honig-Zweitakzent NUR für kleine
+Freude-Momente, sanfte grüne Verläufe für Tiefe — kein Gamification-Bunt.
+
+## Farbwelt: weg vom Schwarz, hin zu Wärme
+
+**Kritik am Vorzustand:** Das System war korrekt, aber flach — flächig dieselben grün-grauen
+Töne, keine Tiefe, keine Verläufe, kein warmer Akzent. „Seriös" war zu „leblos" gekippt.
+
+**Entscheidungen (`theme.ts`):**
+- **Sanfte Verläufe** als neue Tiefe (`Gradients`): ein kräftiger Marken-Verlauf (grün→
+  frischeres Grün) für primäre Aufrufe und den Splash, ein zarter Wasch-Verlauf hinter der
+  Begrüßung. Verläufe bewusst eng benachbart — Tiefe, kein Regenbogen.
+- **Warmer Zweitakzent** (`accent`, Honigton): NUR für kleine Wärme (Begrüßungs-Sonne,
+  Highlights). Nie für Status — Status bleibt in der Semantik-Palette, damit Farbe eindeutig
+  bleibt.
+- `primaryBright` als lebendigeres Grün für die Verlaufsenden.
+- Heller Modus bleibt Standard; alle Verläufe/Akzente sind für beide Modi definiert.
+
+## Splash (`components/BrandSplash.tsx`)
+
+**Vorher:** Nur der native Static-Splash (Icon auf Blau), dann sofort Inhalt — kein
+Marken-Moment.
+
+**Entscheidungen:**
+- Kurzer (~1,9 s), animierter Marken-Splash auf dem Marken-Verlauf: Logo-Kachel steigt
+  sanft auf, ein weicher Ring pulsiert dahinter (Leben ohne Unruhe), Wortmarke + Tagline.
+  Blendet sich selbst aus und gibt an die App ab — wartet NICHT auf Netzwerk.
+- Reanimated statt GIF/Lottie: kein Asset, kein zusätzliches Gewicht, ruhige Kurven
+  (`Easing.out(cubic)`).
+
+**Selbstkritik:** Ein Splash darf nie zur Bremse werden. Deshalb feste kurze Dauer statt
+„bis alles geladen ist", und die App darunter ist bereits gemountet — der Splash ist ein
+Vorhang, keine Ladeschranke.
+
+## Home / Übersicht (`app/(tabs)/index.tsx`) — NEU
+
+**Vorher:** Einstieg direkt in die Vollbild-Karte. Funktional, aber kalt und ohne Kontext —
+„Wo bin ich? Was soll ich tun?"
+
+**Entscheidungen:**
+- **Begrüßung** (tageszeitabhängig) auf zartem Verlauf mit warmer Sonne — freundlicher
+  Empfang, kein Klarname nötig (Datenschutz-Linie bleibt gewahrt).
+- **Müll-melden-CTA** als Held: großflächige Verlaufskarte mit Kamera-Icon und Pfeil, führt
+  direkt in den Melde-Flow. Der wichtigste Weg ist der sichtbarste.
+- **Zwei Kennzahlen** (offene Fälle / aufgeräumt) als Kacheln mit Icon — Wirkung in Zahlen,
+  ehrlich und ohne Druck.
+- **Impact-Kurzkarte** (eigene Punkte + Level) führt tiefer ins Profil.
+- **Nächste Aktionen** (max. 2) und **zuletzt aufgeräumt** (max. 3) als Social Proof — mit
+  „Alle"-Link bzw. Sprung in den Fall. Leere Zustände freundlich illustriert statt leer.
+- Die **Karte** ist jetzt ein eigener Tab (`karte.tsx`), nicht mehr der Start.
+
+**Selbstkritik:** Gefahr, den Home-Screen zu überladen. Gegenmaßnahme: strikte Limits
+(2 Events, 3 Fälle), klare Abschnitte, viel Weißraum. Zweite Gefahr: künstliche Dringlichkeit
+(„nur noch 2 Plätze!") — bewusst weggelassen, die Zahlen informieren, sie drängen nicht.
+
+## Echtes Icon-/Status-System (`constants/status.ts`, `components/Badge.tsx`)
+
+**Vorher (die Feedback-Kernkritik):** Status teils als nackter Farbpunkt / farbiges Wort —
+für Farbfehlsichtige unbrauchbar und billig wirkend.
+
+**Entscheidungen:**
+- Zentrale Status-Zuordnung: jeder DB-Status → **Icon + Wort + Farbton**, an einer Stelle
+  (`getCaseStatus`). gemeldet (Warnkreis, rot) → geprüft (Schild, gelb) → weitergeleitet
+  (Papierflieger, gelb) → erledigt (Doppelhäkchen, grün) → abgeschlossen (Archiv, neutral).
+- `Badge` kann jetzt ein **Icon** statt eines Punktes tragen — Status ist nie nur Farbe
+  (WCAG: nicht allein auf Farbe verlassen).
+- **Karten-Pins** tragen jetzt Icons (Mülltonne = offen, Häkchen = erledigt) statt einfarbiger
+  Punkte; die Legende nutzt Icon-Chips + Wort. `tracksViewChanges` wird nach dem ersten
+  Zeichnen abgeschaltet (Android-Perf bei vielen Markern).
+
+**Selbstkritik:** Unbekannte künftige Server-Status dürfen die UI nicht brechen — sie fallen
+neutral mit ihrem Rohwert als Label aus.
+
 ## Design-System (`src/constants/theme.ts`)
 
 **Kritik am Vorzustand:** Nur 5 Graustufen-Farben, die Markenfarbe `#1B7A43` war 14-mal
@@ -71,7 +166,10 @@ unterscheidbar. Kein Weg, vor dem Einloggen die Sprache zu wechseln.
 
 **Wirkung:** Erster Eindruck = seriös und freundlich; die App fragt wenig und erklärt warum.
 
-## Karte (Home)
+## Karte (eigener Tab, früher Einstieg)
+
+> Runde 2: Die Karte ist nicht mehr der Einstieg (eigener Tab `karte.tsx`); die Pins/Legende
+> tragen jetzt Icons statt nackter Punkte — siehe „Echtes Icon-/Status-System" oben.
 
 **Selbstkritik vorher:** Legende mit Emoji-Kreisen (🔴/🟢) — wirkt verspielt-billig und
 ist für Screenreader Rauschen. Alles in einer Textzeile gequetscht.
