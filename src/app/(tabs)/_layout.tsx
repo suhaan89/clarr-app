@@ -29,6 +29,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          title: t('tabs.home'),
+          headerShown: false,
+          tabBarAccessibilityLabel: t('tabs.home_a11y'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="karte"
+        options={{
           title: t('tabs.map'),
           tabBarAccessibilityLabel: t('tabs.map_a11y'),
           tabBarIcon: ({ color, size, focused }) => (
