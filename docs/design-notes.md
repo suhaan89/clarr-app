@@ -157,3 +157,28 @@ Abgrenzung zwischen Alltagsfunktionen.
 
 **Wirkung:** Stolz auf den eigenen Beitrag + volle Kontrolle über die eigenen Daten —
 beides sichtbar, nichts versteckt.
+
+## Fall-Detail
+
+**Selbstkritik vorher:** Status nur als farbiges Wort — leicht zu übersehen und für
+Farbenblinde unbrauchbar. Der Lade-Spinner hing kommentarlos im Leeren; „Foto wird
+noch geprüft" war eine graue Zeile, die wie ein Fehler wirkte.
+
+**Entscheidungen:**
+- Status als Badge mit Farbpunkt und abgestuftem Ton: gemeldet (rot) -> geprüft/
+  weitergeleitet (gelb) -> erledigt (grün) -> abgeschlossen (neutral). Der Fortschritt
+  eines Falls wird als Reise lesbar.
+- Fotos in randlosen Cards; das „Foto wird geprüft" bekommt eine Sanduhr-Karte —
+  Prüfung ist ein Feature (Vertrauen!), kein Defekt.
+- „Ich habe aufgeräumt" als Primär-Button mit Kamera-Icon und Lade-Zustand im Button
+  statt eingefrorenem Screen.
+- Flag-Funktion als dezente Icon-Zeile: erreichbar, aber nicht alarmierend.
+
+**Wirkung:** Ein Fall ist eine nachvollziehbare Geschichte mit gutem Ende — und das
+gute Ende kann man selbst herbeiführen.
+
+## Rechtstexte (Datenschutz/Impressum)
+
+Nur behutsam angefasst: Theme-Konsistenz und echte Umlaute in sichtbaren Texten
+(„JURISTISCH PRÜFEN" statt „PRUEFEN"). Inhaltlich bleiben es markierte Platzhalter —
+Rechtstexte gehören Juristen, nicht Designern. Bewusst nicht übersetzt.

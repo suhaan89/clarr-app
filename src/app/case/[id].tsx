@@ -1,21 +1,14 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Badge, Button, Card, LoadingState } from '@/components';
+import { Spacing, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
+import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -28,18 +21,19 @@ type CaseRow = {
 
 type PhotoRow = { id: string; blurred_path: string | null; report_id: string };
 
-const STATUS_LABELS: Record<string, string> = {
-  gemeldet: 'Gemeldet',
-  geprueft: 'Geprüft',
-  weitergeleitet: 'An Behörde weitergeleitet',
-  erledigt: 'Erledigt 🎉',
-  geschlossen: 'Abgeschlossen',
+// DB-Statuswerte (unveraendert, Backend) -> Badge-Ton der Anzeige.
+const STATUS_TONES: Record<string, 'danger' | 'warning' | 'success' | 'neutral'> = {
+  gemeldet: 'danger',
+  geprueft: 'warning',
+  weitergeleitet: 'warning',
+  erledigt: 'success',
+  geschlossen: 'neutral',
 };
 
 export default function CaseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
+  const { t, dateLocale } = useI18n();
   const { session } = useSession();
   const [caseRow, setCaseRow] = useState<CaseRow | null>(null);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
@@ -73,17 +67,11 @@ export default function CaseDetailScreen() {
     if (!session || reportIds.length === 0) return;
     // Fail-safe: das Flag nimmt die Meldung SOFORT aus der Öffentlichkeit
     // (Trigger, Paket 8) — bis ein Mensch sie geprüft hat.
-    Alert.alert('Meldung melden', 'Warum sollte sich das jemand ansehen?', [
-      { text: 'Abbrechen', style: 'cancel' },
-      {
-        text: 'Zeigt Personen/Privates',
-        onPress: () => submitFlag('personenbezogene_daten'),
-      },
-      {
-        text: 'Liegt auf Privatgrund',
-        onPress: () => submitFlag('privatgrund_verdacht'),
-      },
-      { text: 'Anderes Problem', onPress: () => submitFlag('sonstiges') },
+    Alert.alert(t('case.flag_title'), t('case.flag_body'), [
+      { text: t('case.flag_cancel'), style: 'cancel' },
+      { text: t('case.flag_privacy'), onPress: () => submitFlag('personenbezogene_daten') },
+      { text: t('case.flag_private_land'), onPress: () => submitFlag('privatgrund_verdacht') },
+      { text: t('case.flag_other'), onPress: () => submitFlag('sonstiges') },
     ]);
   }
 
@@ -95,10 +83,8 @@ export default function CaseDetailScreen() {
       reason,
     });
     Alert.alert(
-      error ? 'Fehler' : 'Danke!',
-      error
-        ? 'Das hat leider nicht geklappt. Bitte versuche es erneut.'
-        : 'Die Meldung ist jetzt unsichtbar, bis unser Team sie geprüft hat.'
+      error ? t('profil.error_generic') : t('case.flag_ok_title'),
+      error ? t('case.flag_err_body') : t('case.flag_ok_body')
     );
     load();
   }
@@ -122,32 +108,29 @@ export default function CaseDetailScreen() {
         photoPaths: [path],
       });
       if (result?.ok) {
-        Alert.alert('Stark! 💪', 'Der Fall ist als erledigt markiert. Danke fürs Aufräumen!');
+        Alert.alert(t('case.close_ok_title'), t('case.close_ok_body'));
       } else {
         Alert.alert(
-          'Das hat nicht geklappt',
-          result?.error === 'too_far_from_case'
-            ? 'Du musst dafür vor Ort sein (max. 100 m entfernt).'
-            : 'Der Fall konnte nicht abgeschlossen werden. Bitte versuche es erneut.'
+          t('case.close_fail_title'),
+          result?.error === 'too_far_from_case' ? t('case.too_far') : t('case.close_fail_body')
         );
       }
       load();
     } catch {
-      Alert.alert('Fehler', 'Abschluss nicht möglich. Prüfe Kamera- und Standortfreigabe.');
+      Alert.alert(t('profil.error_generic'), t('case.close_error'));
     } finally {
       setBusy(false);
     }
   }
 
   if (!caseRow) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator accessibilityLabel="Fall wird geladen" />
-      </View>
-    );
+    return <LoadingState label={t('case.loading')} />;
   }
 
   const open = ['gemeldet', 'geprueft', 'weitergeleitet'].includes(caseRow.status);
+  const statusLabel = STATUS_TONES[caseRow.status]
+    ? t(`case.status.${caseRow.status}` as TranslationKey)
+    : caseRow.status;
 
   return (
     <ScrollView
@@ -156,51 +139,56 @@ export default function CaseDetailScreen() {
       <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]} allowFontScaling>
         {caseRow.title}
       </Text>
-      <Text
-        style={[styles.status, { color: open ? '#C0392B' : '#1B7A43' }]}
-        accessibilityLabel={`Status: ${STATUS_LABELS[caseRow.status] ?? caseRow.status}`}
-        allowFontScaling>
-        {STATUS_LABELS[caseRow.status] ?? caseRow.status}
-      </Text>
-      <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
-        Gemeldet am {new Date(caseRow.created_at).toLocaleDateString('de-DE')} ·{' '}
-        {reportIds.length} Meldung(en)
-      </Text>
+      <View
+        style={styles.statusRow}
+        accessibilityLabel={`Status: ${statusLabel}`}>
+        <Badge label={statusLabel} tone={STATUS_TONES[caseRow.status] ?? 'neutral'} dot />
+        <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
+          {t('case.meta', {
+            date: new Date(caseRow.created_at).toLocaleDateString(dateLocale),
+            count: reportIds.length,
+          })}
+        </Text>
+      </View>
 
       {photos.map((p) => (
-        <Image
-          key={p.id}
-          source={{ uri: blurredPhotoUrl(p.blurred_path!) }}
-          style={styles.photo}
-          accessibilityLabel="Anonymisiertes Foto des Müllfunds"
-        />
+        <Card key={p.id} padded={false}>
+          <Image
+            source={{ uri: blurredPhotoUrl(p.blurred_path!) }}
+            style={styles.photo}
+            accessibilityLabel={t('case.photo_a11y')}
+          />
+        </Card>
       ))}
       {photos.length === 0 && (
-        <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
-          Foto wird noch geprüft/anonymisiert.
-        </Text>
+        <Card style={styles.pendingCard}>
+          <Ionicons name="hourglass-outline" size={18} color={colors.textSecondary} />
+          <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
+            {t('case.photo_pending')}
+          </Text>
+        </Card>
       )}
 
       {open && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Ich habe hier aufgeräumt — Fall mit Nachher-Foto abschließen"
-          disabled={busy}
-          onPress={closeCase}
-          style={[styles.primaryButton, busy && styles.disabled]}>
-          <Text style={styles.primaryLabel} allowFontScaling>
-            {busy ? 'Wird gesendet…' : 'Ich habe aufgeräumt (Nachher-Foto)'}
-          </Text>
-        </Pressable>
+        <View style={styles.closeAction}>
+          <Button
+            label={busy ? t('case.close_busy') : t('case.close')}
+            accessibilityLabel={t('case.close_a11y')}
+            onPress={closeCase}
+            loading={busy}
+            icon="camera-outline"
+          />
+        </View>
       )}
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Diese Meldung dem Moderationsteam melden"
+        accessibilityLabel={t('case.flag_a11y')}
         onPress={flagCase}
-        style={styles.flagButton}>
+        style={({ pressed }) => [styles.flagButton, pressed && styles.pressed]}>
+        <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
         <Text style={[styles.flagLabel, { color: colors.textSecondary }]} allowFontScaling>
-          ⚑ Problem mit dieser Meldung?
+          {t('case.flag')}
         </Text>
       </Pressable>
     </ScrollView>
@@ -208,28 +196,24 @@ export default function CaseDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: Spacing.four, gap: Spacing.two, paddingBottom: Spacing.six },
+  content: { padding: Spacing.four, gap: Spacing.three, paddingBottom: Spacing.six },
   title: { fontSize: 22, fontWeight: '700' },
-  status: { fontSize: 16, fontWeight: '600' },
-  meta: { fontSize: 14, lineHeight: 20 },
-  photo: {
-    width: '100%',
-    aspectRatio: 4 / 3,
-    borderRadius: 12,
-    marginTop: Spacing.two,
-    backgroundColor: '#8884',
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },
+  meta: { fontSize: 14, lineHeight: 20, flexShrink: 1 },
+  photo: { width: '100%', aspectRatio: 4 / 3 },
+  pendingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
   },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    backgroundColor: '#1B7A43',
+  closeAction: { marginTop: Spacing.two },
+  flagButton: {
+    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.four,
+    gap: Spacing.one + 2,
   },
-  primaryLabel: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  disabled: { opacity: 0.6 },
-  flagButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.two },
   flagLabel: { fontSize: 14 },
+  pressed: { opacity: 0.6 },
 });
