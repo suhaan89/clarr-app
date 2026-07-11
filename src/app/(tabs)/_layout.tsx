@@ -1,13 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Redirect, Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { useThemeColors } from '@/constants/theme';
+import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
 export default function TabLayout() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const colors = useThemeColors();
+  const { t } = useI18n();
   const { session, loading } = useSession();
 
   if (loading) return null;
@@ -16,49 +16,53 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#1B7A43',
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: { backgroundColor: colors.background },
+        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
         headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.text,
+        headerTitleStyle: { fontWeight: '700' },
+        headerShadowVisible: false,
         // Touch-Ziele der Tabbar sind systemseitig >= 48dp; Labels bleiben
         // sichtbar (nicht nur Icons) — Screenreader & Verstaendlichkeit.
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Karte',
-          tabBarAccessibilityLabel: 'Karte mit gemeldeten Müllfunden',
-          tabBarIcon: ({ color, size }) => <Ionicons name="map-outline" color={color} size={size} />,
+          title: t('tabs.map'),
+          tabBarAccessibilityLabel: t('tabs.map_a11y'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'map' : 'map-outline'} color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="melden"
         options={{
-          title: 'Melden',
-          tabBarAccessibilityLabel: 'Müll melden',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera-outline" color={color} size={size} />
+          title: t('tabs.report'),
+          tabBarAccessibilityLabel: t('tabs.report_a11y'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'camera' : 'camera-outline'} color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
-          title: 'Aktionen',
-          tabBarAccessibilityLabel: 'Cleanup-Aktionen',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" color={color} size={size} />
+          title: t('tabs.events'),
+          tabBarAccessibilityLabel: t('tabs.events_a11y'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
-          title: 'Impact',
-          tabBarAccessibilityLabel: 'Dein Impact-Profil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="leaf-outline" color={color} size={size} />
+          title: t('tabs.impact'),
+          tabBarAccessibilityLabel: t('tabs.impact_a11y'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'leaf' : 'leaf-outline'} color={color} size={size} />
           ),
         }}
       />
