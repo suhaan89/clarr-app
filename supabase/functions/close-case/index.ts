@@ -29,6 +29,20 @@ function json(status: number, body: unknown): Response {
   });
 }
 
+// Nachher-Foto-Pfade muessen unter dem eigenen User-Prefix liegen
+// (originals/<uid>/...) — verhindert SSRF/Cross-Tenant-Verweise.
+// Backstop bleibt der DB-Trigger enforce_photo_path_owner (Migration 014).
+function isOwnStoragePath(path: unknown, uid: string): path is string {
+  return (
+    typeof path === "string" &&
+    path.length > 0 &&
+    path.length <= 256 &&
+    !path.includes("..") &&
+    path.startsWith(`${uid}/`) &&
+    /^[A-Za-z0-9/_.-]+$/.test(path)
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -64,6 +78,10 @@ Deno.serve(async (req) => {
     if (!caseId) return json(400, { error: "case_id_required" });
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
       return json(400, { error: "invalid_location" });
+    }
+    // Nur eigene Storage-Pfade zulassen (leere Liste = Partner-Abschluss ok).
+    if (!photoPaths.every((p) => isOwnStoragePath(p, user.id))) {
+      return json(400, { error: "invalid_photo_path" });
     }
     // Beim Abschluss sind Punkte im Spiel: Mock-Location wird hart abgelehnt.
     if (body.mocked === true) {

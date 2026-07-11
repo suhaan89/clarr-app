@@ -50,6 +50,23 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return 2 * 6371 * Math.asin(Math.sqrt(a));
 }
 
+// Foto-Pfade muessen Storage-Objektschluessel UNTER dem eigenen User-Prefix
+// sein (Konvention originals/<uid>/...). Das verhindert am Rand:
+//   * SSRF: keine http(s)-/interne URLs, die der Server spaeter fetch()t
+//   * Cross-Tenant: kein Verweis auf fremde Originale (<andere-uid>/...)
+//   * Path-Traversal: kein ".."
+// (Der DB-Trigger enforce_photo_path_owner, Migration 014, ist der Backstop.)
+function isOwnStoragePath(path: unknown, uid: string): path is string {
+  return (
+    typeof path === "string" &&
+    path.length > 0 &&
+    path.length <= 256 &&
+    !path.includes("..") &&
+    path.startsWith(`${uid}/`) &&
+    /^[A-Za-z0-9/_.-]+$/.test(path)
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -78,7 +95,8 @@ Deno.serve(async (req) => {
 
     const latitude = Number(body.latitude);
     const longitude = Number(body.longitude);
-    const description = typeof body.description === "string" ? body.description : "";
+    // Serverseitiger Laengendeckel — dem Client-Limit (500) nicht vertrauen.
+    const description = typeof body.description === "string" ? body.description.slice(0, 1000) : "";
     const mocked = body.mocked === true;
     const deviceId = typeof body.deviceId === "string" ? body.deviceId.slice(0, 128) : null;
     // Offline-Sync: clientseitiger Idempotenz-Schluessel (Paket 9).
@@ -96,6 +114,10 @@ Deno.serve(async (req) => {
     }
     if (photoPaths.length === 0) {
       return json(400, { error: "photo_required" });
+    }
+    // Jeder Pfad MUSS unter dem eigenen User-Prefix liegen (SSRF/Cross-Tenant).
+    if (!photoPaths.every((p) => isOwnStoragePath(p, user.id))) {
+      return json(400, { error: "invalid_photo_path" });
     }
 
     // 2. Nur 'aktiv' darf wertbare Meldungen einreichen

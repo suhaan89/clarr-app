@@ -194,6 +194,14 @@ Deno.serve(async (req) => {
       // koennen noch volle URLs enthalten.
       let original: Uint8Array;
       if (photoUrl.startsWith("http")) {
+        // SSRF-Schutz: nur der eigene Supabase-Storage-Host darf serverseitig
+        // gefetcht werden. Alt-Reports (Paket <5) koennen volle Storage-URLs
+        // enthalten; beliebige/interne URLs (z. B. Metadata-Endpoints) werden
+        // NICHT geladen — die Meldung geht dann in die Review (Catch unten).
+        const storageBase = `${Deno.env.get("SUPABASE_URL")!}/storage/`;
+        if (!photoUrl.startsWith(storageBase)) {
+          throw new Error("untrusted_photo_url");
+        }
         const imgResponse = await fetch(photoUrl);
         if (!imgResponse.ok) throw new Error(`photo fetch failed: ${imgResponse.status}`);
         original = new Uint8Array(await imgResponse.arrayBuffer());
