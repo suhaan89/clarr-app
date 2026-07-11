@@ -70,3 +70,20 @@ unterscheidbar. Kein Weg, vor dem Einloggen die Sprache zu wechseln.
   nicht mehr ins Abschneiden.
 
 **Wirkung:** Erster Eindruck = seriös und freundlich; die App fragt wenig und erklärt warum.
+
+## Karte (Home)
+
+**Selbstkritik vorher:** Legende mit Emoji-Kreisen (🔴/🟢) — wirkt verspielt-billig und
+ist für Screenreader Rauschen. Alles in einer Textzeile gequetscht.
+
+**Entscheidungen:**
+- Legende als Karten-Komponente mit echten Farbpunkten (Token-Farben, identisch mit den
+  Pin-Farben) + getrenntem Zähler rechts. Bricht bei großer Schrift sauber um.
+- Pin-Farben kommen jetzt aus dem Theme statt Hex im Screen — Dunkelmodus bekommt
+  automatisch das hellere Grün.
+- Bewusst KEIN zusätzliches UI über der Karte (Filter, Suchleiste): die Karte selbst
+  ist der Held; erledigte (grüne) Pins neben offenen (roten) erzählen die
+  Wirkungs-Geschichte von allein.
+
+**Wirkung:** „Da passiert wirklich was" — grüne Pins als sichtbarer Beweis, dass Meldungen
+zu aufgeräumten Orten führen.
