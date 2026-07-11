@@ -83,6 +83,14 @@ export const de = {
     'Standort nicht verfügbar. Bitte erlaube den Standortzugriff in den Einstellungen — ohne Ort können wir den Müll nicht zuordnen.',
   'report.new': 'Neue Meldung',
   'report.new_a11y': 'Weitere Meldung erfassen',
+  // On-Device-Bilderkennung (Advisory, blockiert nie)
+  'report.vision_analyzing': 'Analysiere Foto …',
+  'report.vision_trash': 'Müll erkannt',
+  'report.vision_no_trash': 'Kein Müll erkannt',
+  'report.vision_uncertain': 'Unsicher',
+  'report.vision_confidence': 'Sicherheit {percent} %',
+  'report.vision_advisory_note': 'Nur ein Hinweis – du kannst trotzdem melden.',
+  'report.vision_unavailable': 'Automatische Analyse gerade nicht verfügbar.',
 
   // Aktionen (Events)
   'events.empty_title': 'Noch nichts geplant',
@@ -258,6 +266,13 @@ const en: Catalog = {
     'Location unavailable. Please allow location access in settings — without it we cannot place the litter.',
   'report.new': 'New report',
   'report.new_a11y': 'Create another report',
+  'report.vision_analyzing': 'Analysing photo …',
+  'report.vision_trash': 'Litter detected',
+  'report.vision_no_trash': 'No litter detected',
+  'report.vision_uncertain': 'Not sure',
+  'report.vision_confidence': '{percent}% confidence',
+  'report.vision_advisory_note': 'Just a hint — you can still report.',
+  'report.vision_unavailable': 'Automatic analysis is currently unavailable.',
 
   'events.empty_title': 'Nothing planned yet',
   'events.empty_body': 'No cleanup events are planned right now. Check back soon!',

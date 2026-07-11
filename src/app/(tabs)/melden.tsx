@@ -14,10 +14,13 @@ import {
 } from 'react-native';
 
 import { Button, Card, EmptyState, Input } from '@/components';
-import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { Radius, Spacing, Type, useThemeColors } from '@/constants/theme';
 import { newClientKey, type PendingReport, type PhotoSource } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { enqueueReport, readQueue, syncQueue } from '@/lib/offline-queue';
+import { useVision, type VisionResult, type VisionStatus } from '@/lib/vision';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 type Step = 'foto' | 'details' | 'fertig';
 type Result = 'ok-camera' | 'ok-gallery' | 'offline' | 'error';
@@ -35,6 +38,7 @@ export default function MeldenScreen() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result>('ok-camera');
   const [queueLength, setQueueLength] = useState(0);
+  const vision = useVision();
 
   useEffect(() => {
     readQueue().then((q) => setQueueLength(q.length));
@@ -47,6 +51,8 @@ export default function MeldenScreen() {
       setPhotoUri(photo.uri);
       setSource('camera');
       setStep('details');
+      // Advisory-Analyse on-device — rein informativ, blockiert nie die Meldung.
+      vision.analyze(photo.uri);
     }
   }
 
@@ -58,9 +64,11 @@ export default function MeldenScreen() {
       quality: 0.7,
     });
     if (!res.canceled && res.assets[0]?.uri) {
-      setPhotoUri(res.assets[0].uri);
+      const uri = res.assets[0].uri;
+      setPhotoUri(uri);
       setSource('gallery');
       setStep('details');
+      vision.analyze(uri);
     }
   }
 
@@ -101,6 +109,7 @@ export default function MeldenScreen() {
     setPhotoUri(null);
     setDescription('');
     setStep('foto');
+    vision.reset();
   }
 
   useEffect(() => {
@@ -174,6 +183,7 @@ export default function MeldenScreen() {
             />
           </Card>
         )}
+        <VisionAdvisory status={vision.status} result={vision.result} />
         {source === 'gallery' && (
           <Card style={{ backgroundColor: colors.warningSoft }}>
             <Text style={[styles.galleryHint, { color: colors.warning }]} allowFontScaling>
@@ -234,6 +244,95 @@ export default function MeldenScreen() {
   );
 }
 
+/**
+ * Advisory-Hinweis der On-Device-Erkennung. Rein informativ: er zeigt „Müll
+ * erkannt" / „kein Müll" / „unsicher" mit Confidence, blockiert die Meldung
+ * aber nie. Fehlt das Modell, erscheint ein dezenter „nicht verfügbar"-Hinweis.
+ */
+function VisionAdvisory({ status, result }: { status: VisionStatus; result: VisionResult | null }) {
+  const colors = useThemeColors();
+  const { t } = useI18n();
+
+  if (status === 'idle') return null;
+
+  if (status === 'analyzing') {
+    return (
+      <Card style={{ backgroundColor: colors.backgroundElement }}>
+        <View style={styles.visionRow} accessibilityLiveRegion="polite">
+          <ActivityIndicator color={colors.primary} />
+          <Text style={[styles.visionTitle, { color: colors.text }]} allowFontScaling>
+            {t('report.vision_analyzing')}
+          </Text>
+        </View>
+      </Card>
+    );
+  }
+
+  if (status === 'unavailable' || !result) {
+    return (
+      <Card style={{ backgroundColor: colors.backgroundElement }}>
+        <View style={styles.visionRow}>
+          <Ionicons name="flash-off-outline" size={18} color={colors.textSecondary} />
+          <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
+            {t('report.vision_unavailable')}
+          </Text>
+        </View>
+      </Card>
+    );
+  }
+
+  const percent = Math.round(result.confidence * 100);
+  const meta: Record<
+    VisionResult['verdict'],
+    { icon: IoniconName; bg: string; fg: string; title: string; showPct: boolean }
+  > = {
+    trash: {
+      icon: 'checkmark-circle',
+      bg: colors.successSoft,
+      fg: colors.primaryStrong,
+      title: t('report.vision_trash'),
+      showPct: true,
+    },
+    'no-trash': {
+      icon: 'information-circle',
+      bg: colors.warningSoft,
+      fg: colors.warning,
+      title: t('report.vision_no_trash'),
+      showPct: true,
+    },
+    uncertain: {
+      icon: 'help-circle',
+      bg: colors.backgroundSelected,
+      fg: colors.textSecondary,
+      title: t('report.vision_uncertain'),
+      showPct: false,
+    },
+  };
+  const m = meta[result.verdict];
+  const confidenceText = t('report.vision_confidence', { percent });
+  const a11yLabel = m.showPct ? `${m.title}. ${confidenceText}. ${t('report.vision_advisory_note')}` : m.title;
+
+  return (
+    <Card style={{ backgroundColor: m.bg }}>
+      <View
+        style={styles.visionRow}
+        accessible
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={a11yLabel}>
+        <Ionicons name={m.icon} size={22} color={m.fg} />
+        <View style={styles.visionText}>
+          <Text style={[styles.visionTitle, { color: m.fg }]} allowFontScaling>
+            {m.title}
+          </Text>
+          <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
+            {m.showPct ? `${confidenceText} · ${t('report.vision_advisory_note')}` : t('report.vision_advisory_note')}
+          </Text>
+        </View>
+      </View>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   cameraContainer: { flex: 1, backgroundColor: '#000' },
   centerScreen: { flex: 1, justifyContent: 'center' },
@@ -283,6 +382,10 @@ const styles = StyleSheet.create({
   },
   details: { padding: Spacing.four, gap: Spacing.three },
   preview: { width: '100%', aspectRatio: 4 / 3 },
+  visionRow: { flexDirection: 'row', gap: Spacing.two + 2, alignItems: 'center' },
+  visionText: { flex: 1, gap: 2 },
+  visionTitle: { ...Type.heading, flexShrink: 1 },
+  visionNote: { ...Type.caption, flexShrink: 1 },
   galleryHint: { fontSize: 14, lineHeight: 20 },
   privacyRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   privacyNote: { fontSize: 13, lineHeight: 19, flexShrink: 1 },
