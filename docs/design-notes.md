@@ -50,3 +50,23 @@ entschieden — 8 kleine, lesbare Komponenten decken alles ab und bleiben wartba
 
 **Wirkung:** Sprache ist Vertrauen. Wer die App in der eigenen Sprache (oder Mundart)
 bedienen kann, fühlt sich ernst genommen — gerade Jugendliche.
+
+## Login
+
+**Selbstkritik vorher:** Nur ein Textblock „CLAR" ohne jedes visuelle Markenzeichen —
+wirkte wie ein Prototyp. Fehlermeldungen als nackter Text, kaum vom Erfolgsfall
+unterscheidbar. Kein Weg, vor dem Einloggen die Sprache zu wechseln.
+
+**Entscheidungen:**
+- Logo-Kachel (Blatt-Icon auf Grün) + gesperrter Schriftzug: sofortige Marken-Anmutung
+  ohne Asset-Abhängigkeit.
+- Meldungen als farbige Karten: Grün-Soft für „Mail geschickt" (Info), Rot-Soft für
+  Fehler — Farbe + Fläche statt nur Text.
+- Vertrauens-Hinweis („Kein Klarname nötig …") mit Schild-Icon direkt unter den Buttons:
+  das wichtigste Gefühl (Sicherheit) bekommt ein Symbol.
+- Globus-Button oben rechts: Sprachwahl VOR dem Login — wer kein Deutsch spricht,
+  darf nicht erst einloggen müssen.
+- ScrollView statt starrem Zentrieren: kleine Screens + große Systemschrift laufen
+  nicht mehr ins Abschneiden.
+
+**Wirkung:** Erster Eindruck = seriös und freundlich; die App fragt wenig und erklärt warum.
