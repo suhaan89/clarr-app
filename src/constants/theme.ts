@@ -1,10 +1,17 @@
 /**
- * CLAR Design-System — zentrale Quelle für Farben, Abstände, Typografie,
+ * CLAR Design-System – zentrale Quelle für Farben, Abstände, Typografie,
  * Radien und Schatten. Screens verwenden NUR diese Tokens, keine festen
  * Hex-Werte. Hell- und Dunkelmodus sind vollständig abgedeckt.
  *
- * Markenidee: „Vertrauensgrün" — ruhig, seriös, naturnah. Kein grelles
- * Gamification-Bunt; die App soll wie ein verlässliches Werkzeug wirken.
+ * Markenidee: „warm & lebendig" – vertrauenswürdig, nicht klinisch.
+ *  • GRÜN = Marke, Aktion, Erfolg („Clean"): primäre Buttons, Navigation,
+ *    Held-Flächen, erledigte Fälle. Die Leitfarbe, etwas satter/wärmer.
+ *  • BERNSTEIN/SAND (accent) = Belohnung & Wärme: Punkte, Level, Datumsblöcke,
+ *    Begrüßung. Gibt der App Wärme und trennt Reward klar von Aktion. Nie Status.
+ *  • TEAL (water) = nur noch kleiner „Locate"-Akzent auf der Karte.
+ * Neutraltöne sind warm (Creme hell, warmes Anthrazit dunkel) – einladend statt
+ * kühl. Kein grelles Gamification-Bunt; die App soll wie ein verlässliches,
+ * freundliches Werkzeug wirken. Kein KI-Blau/Lila.
  */
 
 import '@/global.css';
@@ -13,68 +20,82 @@ import { Platform, useColorScheme } from 'react-native';
 
 export const Colors = {
   light: {
-    // Basis
-    text: '#171D19',
-    textSecondary: '#5C665F',
-    background: '#FAFBF9',
-    backgroundElement: '#F0F3F0',
-    backgroundSelected: '#E2E7E2',
-    border: '#E2E7E2',
+    // Basis – warme Creme: einladend, nicht klinisch.
+    text: '#221E17',
+    textSecondary: '#6E6558',
+    background: '#FBF7F1',
+    backgroundElement: '#F2EBDF',
+    backgroundSelected: '#EADFCE',
+    border: '#EAE0D0',
 
-    // Marke
-    primary: '#1B7A43',
+    // Marke – Grün: Aktion, Erfolg, Held-Flächen („Clean"). Etwas satter/wärmer.
+    primary: '#1C8146',
     onPrimary: '#FFFFFF',
-    primarySoft: '#E5F2EA',
-    primaryStrong: '#0E5A2F',
+    primarySoft: '#E6F3E9',
+    primaryStrong: '#0F5C31',
 
-    // Semantik
-    success: '#1B7A43',
-    successSoft: '#E5F2EA',
-    danger: '#B3362A',
-    dangerSoft: '#F9EBE8',
+    // Wasser – Teal: NUR noch kleiner „Locate"-Akzent auf der Karte.
+    water: '#0E6E78',
+    waterStrong: '#08525A',
+    waterSoft: '#DCEEF0',
+    waterBright: '#16A3AF',
+    onWater: '#FFFFFF',
+
+    // Semantik (warm abgestimmt)
+    success: '#1C8146',
+    successSoft: '#E6F3E9',
+    danger: '#C23A2A',
+    dangerSoft: '#FAEAE6',
     warning: '#9A6B1B',
-    warningSoft: '#F8F0DF',
+    warningSoft: '#F7EEDB',
 
-    // Warmer Zweitakzent — SPARSAM für Freude/Wärme (Begrüßung, kleine
-    // Highlights), nie für Status. Honigton, der das Grün ergänzt.
-    accent: '#C9781C',
-    accentSoft: '#FBEFDD',
+    // Belohnung & Wärme – Bernstein/Sand: Punkte, Level, Datumsblöcke,
+    // Begrüßung. Eigene Stimme für Reward, klar getrennt von Aktion. Nie Status.
+    accent: '#C0761A',
+    accentSoft: '#FBEEDA',
     onAccent: '#FFFFFF',
 
     // Frischeres Grün für Verläufe/lebendige Flächen (nicht für Text).
-    primaryBright: '#33A15E',
+    primaryBright: '#37AE60',
 
-    overlay: 'rgba(23, 29, 25, 0.55)',
+    overlay: 'rgba(34, 26, 16, 0.55)',
   },
   dark: {
-    // Basis
-    text: '#F1F4F1',
-    textSecondary: '#A6B1A9',
-    background: '#0E120F',
-    backgroundElement: '#1A211C',
-    backgroundSelected: '#252E27',
-    border: '#2A332C',
+    // Basis – warmes Anthrazit: gemütlich statt kalt-schwarz.
+    text: '#F3EEE6',
+    textSecondary: '#ABA193',
+    background: '#161311',
+    backgroundElement: '#221D19',
+    backgroundSelected: '#2D2823',
+    border: '#332C26',
 
-    // Marke
-    primary: '#4CC183',
+    // Marke – Grün.
+    primary: '#4FC384',
     onPrimary: '#04220F',
-    primarySoft: '#153524',
+    primarySoft: '#173626',
     primaryStrong: '#8FE0B4',
 
+    // Wasser – Teal (nur Karte), hier heller für dunkle Flächen.
+    water: '#35BFCB',
+    waterStrong: '#7FE0E7',
+    waterSoft: '#0E2E31',
+    waterBright: '#4FD0DB',
+    onWater: '#04262A',
+
     // Semantik
-    success: '#4CC183',
-    successSoft: '#153524',
+    success: '#4FC384',
+    successSoft: '#173626',
     danger: '#E5786A',
     dangerSoft: '#3A1B16',
     warning: '#DFAE5B',
     warningSoft: '#33270F',
 
-    // Warmer Zweitakzent (siehe hell) — hier heller für dunkle Flächen.
-    accent: '#E6B45C',
-    accentSoft: '#332813',
+    // Belohnung & Wärme – Bernstein/Sand, heller für dunkle Flächen.
+    accent: '#E8B45E',
+    accentSoft: '#352A15',
     onAccent: '#241A05',
 
-    primaryBright: '#3FB56E',
+    primaryBright: '#43B972',
 
     overlay: 'rgba(0, 0, 0, 0.6)',
   },
@@ -91,25 +112,29 @@ export function useThemeColors(): ThemeColors {
 
 /**
  * Sanfte Verläufe für lebendige Flächen (Splash, Home-Held, Melden-CTA).
- * Bewusst dezent — Tiefe und Wärme, kein Regenbogen. Immer als
+ * Bewusst dezent – Tiefe und Wärme, kein Regenbogen. Immer als
  * `colors={...}`-Array an `expo-linear-gradient` übergeben.
  */
 export const Gradients = {
   light: {
-    /** Kräftiger Marken-Verlauf für primäre Aufrufe (weiße Schrift darauf). */
-    brand: ['#1B7A43', '#33A15E'] as const,
-    /** Zarter Wasch-Verlauf hinter Begrüßung/Held (dunkle Schrift darauf). */
-    hero: ['#E9F5EE', '#F5FAF0'] as const,
+    /** Kräftiger Marken-Verlauf (Grün) für primäre Aufrufe/Held (weiße Schrift). */
+    brand: ['#1C8146', '#37AE60'] as const,
+    /** Zarter warmer Creme-Wasch hinter weichen Flächen (dunkle Schrift darauf). */
+    hero: ['#FDF6EA', '#FBF7F1'] as const,
+    /** Wasser-Verlauf – nur „Locate"/Karte (weiße Schrift darauf). */
+    water: ['#0E6E78', '#16A3AF'] as const,
   },
   dark: {
-    brand: ['#1E6B3F', '#2C8A54'] as const,
-    hero: ['#173726', '#111F18'] as const,
+    brand: ['#1E7A46', '#2C965A'] as const,
+    hero: ['#221D19', '#161311'] as const,
+    water: ['#0E6E78', '#188C98'] as const,
   },
 } as const;
 
 export type GradientSet = {
   brand: readonly [string, string];
   hero: readonly [string, string];
+  water: readonly [string, string];
 };
 
 /** Verläufe passend zum System-Farbschema. */
@@ -143,6 +168,20 @@ export const Fonts = Platform.select({
   },
 });
 
+/**
+ * Display-Schrift (Bricolage Grotesque) – die Eigenstimme der Marke. NUR für
+ * Wortmarke, Überschriften und Impact-Zahlen; Fließtext bleibt System
+ * (beste Lesbarkeit & Performance). Die Namen entsprechen den in
+ * `_layout.tsx` via expo-font geladenen Keys. Solange die Schrift lädt (oder
+ * auf Plattformen ohne sie), trägt der danebenstehende fontWeight den Fallback.
+ */
+export const DisplayFont = {
+  /** SemiBold (600) – Titel, Abschnittsüberschriften. */
+  regular: 'Bricolage-SemiBold',
+  /** ExtraBold (800) – Wortmarke, große Zahlen, Display. */
+  bold: 'Bricolage-ExtraBold',
+} as const;
+
 export const Spacing = {
   half: 2,
   one: 4,
@@ -166,9 +205,20 @@ export const Radius = {
  * Systemschriftgrößen respektiert werden.
  */
 export const Type = {
-  display: { fontSize: 40, fontWeight: '800' as const, letterSpacing: -0.5 },
-  title: { fontSize: 24, fontWeight: '700' as const },
-  heading: { fontSize: 17, fontWeight: '700' as const },
+  display: {
+    fontFamily: DisplayFont.bold,
+    fontSize: 40,
+    fontWeight: '800' as const,
+    letterSpacing: -0.5,
+  },
+  title: { fontFamily: DisplayFont.regular, fontSize: 24, fontWeight: '700' as const },
+  heading: { fontFamily: DisplayFont.regular, fontSize: 17, fontWeight: '700' as const },
+  /** Große Impact-Zahlen (Punkte, Zähler) – Display-Schrift, tabellarische Ziffern. */
+  numeric: {
+    fontFamily: DisplayFont.bold,
+    fontWeight: '800' as const,
+    fontVariant: ['tabular-nums'] as const,
+  },
   body: { fontSize: 15, lineHeight: 22 },
   bodyLarge: { fontSize: 16, lineHeight: 23 },
   label: { fontSize: 16, fontWeight: '600' as const },

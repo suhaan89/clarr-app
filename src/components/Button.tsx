@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { PressableScale } from './PressableScale';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
@@ -45,20 +46,19 @@ export function Button({
       ? { borderWidth: StyleSheet.hairlineWidth, borderColor: variant === 'destructive' ? colors.danger : colors.border }
       : null;
 
+  // Primäre/destruktive Aktionen bekommen ein kräftigeres Tap-Gefühl.
+  const haptic = variant === 'primary' || variant === 'destructive' ? 'medium' : 'light';
+
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: Boolean(disabled || loading), busy: Boolean(loading) }}
       disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        { backgroundColor: background },
-        borderStyle,
-        disabled && styles.disabled,
-        pressed && styles.pressed,
-      ]}>
+      haptic={haptic}
+      containerStyle={styles.stretch}
+      style={[styles.base, { backgroundColor: background }, borderStyle, disabled && styles.disabled]}>
       {loading ? (
         <ActivityIndicator color={labelColor} />
       ) : (
@@ -69,21 +69,20 @@ export function Button({
           </Text>
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
+  stretch: { alignSelf: 'stretch' },
   base: {
     minHeight: 52,
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,
-    alignSelf: 'stretch',
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   label: { fontSize: 17, fontWeight: '600' },
   disabled: { opacity: 0.4 },
-  pressed: { opacity: 0.75 },
 });

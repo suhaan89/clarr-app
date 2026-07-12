@@ -288,3 +288,59 @@ Sprachwahl oben. Alle übrigen (Österreichisches Deutsch, Français, Italiano, 
 Norsk, Čeština) bleiben wählbar, tragen aber ein gelbes „Beta"-Badge (auch im
 Profil-Eintrag und im Screenreader-Label): ehrliche Erwartungssteuerung statt
 stillem Qualitätsversprechen.
+
+---
+
+# Redesign-Runde 3 (Juli 2026): warm & lebendig, Haptik, ehrliche Korrektur
+
+**Ehrliche Vorgeschichte:** Zwischen Runde 2 und hier war die Palette in eine
+*kühle* „Bodensee/Seenebel"-Richtung gedreht worden (Teal als zweite Leitfarbe,
+fast-schwarzer Dunkelmodus `#081314`). Nutzer-Feedback dazu klar: „sieht aus wie
+AI-Slop, zu schwarz, leblos, will Effekte beim Drücken." Runde 3 korrigiert das
+zurück zu **warm & lebendig** und ergänzt echtes Interaktions-Feedback.
+
+## Kritik am kühlen Zwischenstand (schonungslos)
+- **Zu kalt.** Kühler „Seenebel" (Hintergrund `#F5F9F9`, Dunkel `#081314`) wirkte
+  klinisch statt einladend. Für eine Nachbarschafts-Bewegung gegen Müll das
+  falsche Gefühl.
+- **Teal zu dominant.** Der große Teal-Home-Header war kühl auf kühl — leblos.
+- **Belohnung unklar.** Punkte/Impact in Grün verschwammen mit den grünen
+  Aktions-Buttons; Reward hatte keine eigene Stimme.
+- **Flache Interaktion.** Nur Opacity-Wechsel beim Tippen, kein taktiles Feedback.
+
+## Barrierefreiheit (diese Runde geprüft)
+- Warmer Text `#221E17` auf Creme `#FBF7F1` ≈ 13:1 (weit über AA).
+- Weiß auf Marken-Grün und auf dem Bernstein-Akzent ≥ 4.5:1 (Akzenttöne bewusst
+  dunkel genug).
+- „Nicht nur Farbe" bleibt Pflicht; Status unverändert Icon + Wort + Farbe.
+- Bewegung < 500ms, dezent, kein Loop. Haptik rein additiv, lautloser Fallback
+  auf Geräten ohne Motor. Offen/notiert: `AccessibilityInfo.isReduceMotionEnabled`
+  respektieren.
+
+## Referenz: Too Good To Go (Muster, nicht kopiert)
+Abgeschaut: **Wärme über die Neutraltöne** (Creme statt Kaltgrau) und ein
+**eigener Belohnungs-Akzent** statt alles in einer Farbe. Nicht übernommen:
+deren konkrete Grün-/Bildsprache. CLAR bleibt eigenständig grün-seriös.
+
+## Entscheidungen Runde 3 (`theme.ts` + Interaktion)
+- **Warme Creme-Neutraltöne** hell (`#FBF7F1` / Sand `#F2EBDF`), **warmes
+  Anthrazit** dunkel (`#161311`) statt Teal-Schwarz.
+- **Grün bleibt Leitfarbe**, etwas satter/wärmer (`#1C8146`), inkl. lebendigem
+  `primaryBright` für Verläufe.
+- **Bernstein/Sand (`accent`) wird Reward-/Impact-Farbe**: Punkte, Level,
+  Datumsblöcke, Begrüßung. Trennt Belohnung klar von Aktion (Grün).
+- **Teal nur noch auf der Karte** (kleiner „Locate"-Akzent). Home-Header jetzt
+  grün (Marke) statt teal.
+- **Interaktions-System:** `PressableScale` (Feder-Skalierung + Haptik) als
+  taktiles Grundelement, app-weit über den `Button` und die Home-Karten;
+  `Counter` lässt Impact-Zahlen hochzählen; Header fährt beim Öffnen sanft ein.
+- **Typografie:** Bricolage Grotesque (Display) für Wortmarke/Überschriften/
+  Impact-Zahlen bleibt; Fließtext System.
+- **Textpflege:** englische Em-Dashes (`—`) app-weit durch den deutschen
+  Halbgeviertstrich (`–`) ersetzt.
+
+## Umsetzungs-Log Runde 3
+- `theme.ts`: warme Palette (Creme, wärmeres Grün, Bernstein-Reward, Teal→Karte).
+- `PressableScale`, `Counter` neu; `Button` darauf umgestellt (app-weite Haptik).
+- Home: grüner Marken-Header, warme Datumsblöcke, hochzählende Zahlen, Eingang.
+- _(weitere Screens folgen, Commit pro Screen)_
