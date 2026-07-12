@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, LoadingState } from '@/components';
-import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -14,7 +14,7 @@ type CleanupEvent = {
   description: string | null;
   event_date: string;
   max_participants: number;
-  // RLS zeigt nur EIGENE Anmeldungen (Migration 014) — mehr braucht der
+  // RLS zeigt nur EIGENE Anmeldungen (Migration 014) – mehr braucht der
   // Screen nicht; der Gesamtzaehler kommt aus event_signup_counts.
   my_signup: { id: string }[];
   signup_count: number;
@@ -97,12 +97,12 @@ export default function EventsScreen() {
         return (
           <Card style={styles.card}>
             <View style={styles.cardHead}>
-              {/* Datumsblock: Tag gross, Monat klein — auf einen Blick planbar. */}
-              <View style={[styles.dateBlock, { backgroundColor: colors.primarySoft }]}>
-                <Text style={[styles.dateDay, { color: colors.primaryStrong }]} allowFontScaling>
+              {/* Datumsblock in warmem Bernstein (Wann) – Tag gross, Monat klein. */}
+              <View style={[styles.dateBlock, { backgroundColor: colors.accentSoft }]}>
+                <Text style={[styles.dateDay, { color: colors.accent }]} allowFontScaling>
                   {date.toLocaleDateString(dateLocale, { day: '2-digit' })}
                 </Text>
-                <Text style={[styles.dateMonth, { color: colors.primaryStrong }]} allowFontScaling>
+                <Text style={[styles.dateMonth, { color: colors.accent }]} allowFontScaling>
                   {date.toLocaleDateString(dateLocale, { month: 'short' })}
                 </Text>
               </View>
@@ -176,10 +176,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dateDay: { fontSize: 20, fontWeight: '800', lineHeight: 24 },
+  dateDay: { fontFamily: DisplayFont.bold, fontSize: 20, fontWeight: '800', lineHeight: 24 },
   dateMonth: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
   headText: { flex: 1, gap: 2 },
-  title: { fontSize: 17, fontWeight: '700' },
+  title: { fontFamily: DisplayFont.regular, fontSize: 17, fontWeight: '700' },
   meta: { fontSize: 14 },
   description: { fontSize: 15, lineHeight: 21 },
   capacityRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
