@@ -6,6 +6,7 @@ export { Card } from './Card';
 export { Celebration } from './Celebration';
 export { Confetti } from './Confetti';
 export { Counter } from './Counter';
+export { GlassSurface } from './GlassSurface';
 export { Mascot, type MascotPose } from './Mascot';
 export { EmptyState } from './EmptyState';
 export { Input } from './Input';

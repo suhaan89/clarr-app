@@ -428,3 +428,78 @@ So blockiert die fehlende Grafik nicht die Mechanik.
   Teilchenzahl senken. Auf echtem Gerät prüfen (60fps). Skia bliebe eine Option für später.
 - **Community-Zähler ist RLS-begrenzt.** Die Wochen-Challenge zählt nur sichtbare Fälle,
   ist also eine Näherung der echten Gemeinschaftsaktivität. Ehrlich, aber nicht exakt.
+
+---
+
+# Redesign-Runde 5 (Juli 2026): Home neu im „Liquid Glass"-Stil
+
+**Auftrag:** Nur der Home-Screen, komplett neu: minimalistisch, premium, „Liquid
+Glass". Sehr viel Ruhe und Weissraum, wenige schwebende Glas-Elemente, Wow beim
+Reinkommen. Der Rest der App bleibt unangetastet. In dieser Runde bewusst OHNE
+jeden Gedankenstrich.
+
+## Haltung: weniger ist mehr
+Der bisherige Home war reich (Wochenziel, zwei Kennzahl-Kacheln, Impact-Karte,
+Event-Liste, Liste zuletzt aufgeraeumter Faelle). Gut, aber dicht. Der neue Home
+zeigt nur noch: eine warme Begruessung, EINEN grossen Held-Wert, die zentrale
+Aktion (Muell melden) als glaenzendes Glas, und darunter zwei kompakte Chips
+(offen in der Naehe, naechste Aktion). Alles andere ist bewusst weg, die Karte
+bleibt ein eigener Tab.
+
+## Werkzeuge (nur bereits installierte, kein neuer Dev-Build)
+- **expo-glass-effect** (schon in den Deps) liefert auf iOS 26+ echtes Liquid
+  Glass. `GlassSurface` (neue Komponente) nutzt es, wenn `isLiquidGlassAvailable()`
+  wahr ist, und faellt sonst (Android, aeltere iOS) auf eine gefrostete,
+  transluzente Flaeche mit feinem Rand und Kanten-Highlight zurueck. So sieht es
+  ueberall premium aus, ohne neues natives Paket.
+- **expo-linear-gradient** fuer den weichen Hintergrundverlauf und die
+  Licht-Waesche.
+- **react-native-reanimated** fuer alle Mikroanimationen (UI-Thread, 60fps).
+- **expo-haptics** ueber `PressableScale` fuer das Press-Feedback.
+- Skia bewusst nicht genutzt: der Effekt traegt auch ohne, und Skia haette einen
+  neuen Dev-Build und mehr Testaufwand bedeutet.
+
+## Neue Tokens (theme.ts)
+`Glass` (tint, fallbackBg, fallbackBgStrong, border, highlight, blobGreen,
+blobAmber, je hell/dunkel), `HomeGradient` (drei weiche Stopps), `GlassShadow`
+(weicher, groSSflaechiger Schatten), plus Hooks `useGlass` und `useHomeGradient`.
+Keine harten Werte im Screen.
+
+## Der Held-Wert
+Gewaehlt: die Orte, die DU sauber gemacht hast (eigene Abschluss-Buchungen aus
+dem points_ledger, reason case_closed_after). Das ist der emotionalste, echte
+Real-World-Wert und passt zu „dein Impact". Bei 0 traegt eine warme Zeile
+(„Dein erster Ort wartet auf dich."), damit der Einstieg nie kalt wirkt. Die
+Quelle ist bewusst an einer Stelle gekapselt und laesst sich in einer Zeile auf
+einen anderen Wert umstellen (z. B. Gemeinschaftssumme oder Impact-Punkte).
+
+## Mikroanimationen (alle Reduce-Motion-fest)
+- Elemente setzen sich beim Laden sanft und gestaffelt (Fade plus Aufsteigen).
+- Zwei sehr langsame Licht-Blobs driften im Hintergrund, leichter Parallax beim
+  Scrollen.
+- Der Melden-Knopf hat einen langsam wandernden Licht-Sheen (danach kurze Pause).
+- Der Held-Wert zaehlt weich hoch (Counter).
+- Clari wippt ganz dezent.
+- „Bewegung reduzieren" schaltet alle Bewegung ab (kein Blob-Drift, kein Sheen,
+  kein Wippen, Balken/Werte erscheinen direkt), Inhalt und Haptik bleiben.
+
+## Barrierefreiheit
+- „Transparenz reduzieren" (iOS) wird respektiert: `GlassSurface` nimmt dann die
+  opakere Fallback-Flaeche, damit Text auf Glas sicher lesbar bleibt.
+- Held-Wert und Aktionen tragen Screenreader-Labels, Touch-Ziele bleiben gross.
+- Text steht auf ausreichend deckenden Flaechen bzw. dem hellen Verlauf (Kontrast
+  gewahrt), nicht auf reinem Glas ueber unruhigem Grund.
+
+## Selbstkritik
+- **Glas ohne echten Blur auf Android.** Der Fallback ist eine transluzente
+  Farbflaeche, kein echter Refraktions-Blur. Auf dem sanften Verlauf liest sich
+  das als „Frosted Glass", ist aber nicht dasselbe wie natives Liquid Glass. Fuer
+  echten Blur ueberall braeuchte es expo-blur (nativer Build) oder Skia.
+- **Blobs sind einfache Kreise.** Ohne Blur/Skia haben sie theoretisch eine harte
+  Kante; durch niedrige Deckkraft, groSSe Flaeche und Rand-Positionierung faellt
+  das nicht auf. Bei Bedarf spaeter mit Skia zu echten weichen Glows aufwerten.
+- **Wochen-Challenge ist vom Home verschwunden.** Der Minimal-Auftrag laesst dafuer
+  keinen Platz; die Komponente (`WeeklyChallenge`) bleibt im Code und koennte in
+  Events oder Profil wandern. Bewusste Entscheidung, hier notiert.
+- **Auf echtem Geraet noch zu pruefen** (60fps, Glas-Lesbarkeit, Sheen-Timing):
+  verifiziert sind nur tsc und eslint, nicht ein Live-Lauf.

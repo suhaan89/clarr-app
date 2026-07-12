@@ -238,5 +238,55 @@ export const Shadow = Platform.select({
   default: {},
 }) as object;
 
+/**
+ * Glas-/Blur-/Highlight-Tokens fuer den „Liquid Glass"-Look (Home). Auf iOS 26+
+ * traegt echtes Liquid Glass (expo-glass-effect) die Optik; ueberall sonst
+ * greift die gefrostete Fallback-Flaeche (`fallbackBg` + `border` + `highlight`).
+ * `*Strong` ist die opakere Variante fuer „Transparenz reduzieren".
+ */
+export const Glass = {
+  light: {
+    tint: 'rgba(255,255,255,0.22)',
+    fallbackBg: 'rgba(255,255,255,0.55)',
+    fallbackBgStrong: 'rgba(255,255,255,0.82)',
+    border: 'rgba(255,255,255,0.7)',
+    highlight: 'rgba(255,255,255,0.9)',
+    blobGreen: 'rgba(55,174,96,0.20)',
+    blobAmber: 'rgba(192,118,26,0.16)',
+  },
+  dark: {
+    tint: 'rgba(20,18,16,0.22)',
+    fallbackBg: 'rgba(36,31,26,0.5)',
+    fallbackBgStrong: 'rgba(36,31,26,0.85)',
+    border: 'rgba(255,255,255,0.14)',
+    highlight: 'rgba(255,255,255,0.22)',
+    blobGreen: 'rgba(79,195,132,0.16)',
+    blobAmber: 'rgba(232,180,94,0.14)',
+  },
+} as const;
+
+/** Sanfter, warmer Hintergrundverlauf des Home (drei Stopps, dezent). */
+export const HomeGradient = {
+  light: ['#FDF8F0', '#F4EFE6', '#E9F2EC'] as const,
+  dark: ['#161311', '#191512', '#111E18'] as const,
+};
+
+/** Weicher, groSSflaechiger Schatten fuer schwebende Glas-Elemente. */
+export const GlassShadow = Platform.select({
+  ios: { shadowColor: '#0B1F12', shadowOpacity: 0.14, shadowRadius: 24, shadowOffset: { width: 0, height: 14 } },
+  android: { elevation: 8 },
+  default: {},
+}) as object;
+
+export function useGlass() {
+  const scheme = useColorScheme();
+  return Glass[scheme === 'dark' ? 'dark' : 'light'];
+}
+
+export function useHomeGradient(): readonly [string, string, string] {
+  const scheme = useColorScheme();
+  return HomeGradient[scheme === 'dark' ? 'dark' : 'light'];
+}
+
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
