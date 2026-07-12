@@ -1,16 +1,16 @@
-// Home / Übersicht — der einladende Einstieg (statt direkt in die Karte).
+// Home / Übersicht – der einladende Einstieg (statt direkt in die Karte).
 // Nur Anzeige: liest serverseitige Views/Tabellen, schreibt nichts. Bewusst
-// ohne Streaks/Countdowns — ehrliche Motivation über sichtbare Wirkung.
+// ohne Streaks/Countdowns – ehrliche Motivation über sichtbare Wirkung.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Card, EmptyState, SectionHeader } from '@/components';
+import { Badge, Card, Counter, EmptyState, PressableScale, SectionHeader } from '@/components';
 import { getCaseStatus } from '@/constants/status';
-import { Radius, Shadow, Spacing, Type, useGradients, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Radius, Shadow, Spacing, Type, useGradients, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -46,9 +46,7 @@ function StatTile({
       <View style={[styles.statIcon, { backgroundColor: bg }]}>
         <Ionicons name={icon} size={18} color={fg} />
       </View>
-      <Text style={[styles.statValue, { color: colors.text }]} allowFontScaling>
-        {value}
-      </Text>
+      <Counter value={value} style={[styles.statValue, { color: colors.text }]} />
       <Text style={[styles.statLabel, { color: colors.textSecondary }]} allowFontScaling>
         {label}
       </Text>
@@ -68,6 +66,13 @@ export default function HomeScreen() {
   const [closedCount, setClosedCount] = useState(0);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [closedCases, setClosedCases] = useState<CaseRow[]>([]);
+
+  // Header fährt beim Öffnen einmal sanft ein (Fade + leichtes Aufsteigen).
+  const enter = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(enter, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+  }, [enter]);
+  const heroRise = enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] });
 
   useFocusEffect(
     useCallback(() => {
@@ -109,35 +114,45 @@ export default function HomeScreen() {
     <ScrollView
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.content}>
-      {/* Begrüßung auf zartem Verlauf — warmer, ruhiger Empfang. */}
-      <LinearGradient
-        colors={grad.hero}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.hero}>
-        <View style={styles.greetRow}>
-          <Ionicons name="sunny" size={18} color={colors.accent} />
-          <Text style={[styles.greet, { color: colors.textSecondary }]} allowFontScaling>
-            {t(greetingKey())}
+      {/* Marken-Header (Grün): warme, einladende Begrüßungsfläche mit Wortmarke
+          in Bricolage, weißer Text darauf. */}
+      <Animated.View style={{ opacity: enter, transform: [{ translateY: heroRise }] }}>
+        <LinearGradient
+          colors={grad.brand}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}>
+          <View style={styles.heroBrandRow}>
+            <View style={styles.heroMark}>
+              <Ionicons name="leaf" size={15} color="#fff" />
+            </View>
+            <Text style={styles.heroWordmark} allowFontScaling>
+              CLAR
+            </Text>
+          </View>
+          <View style={styles.greetRow}>
+            <Ionicons name="partly-sunny" size={16} color="rgba(255,255,255,0.9)" />
+            <Text style={styles.greet} allowFontScaling>
+              {t(greetingKey())}
+            </Text>
+          </View>
+          <Text accessibilityRole="header" style={styles.heroTitle} allowFontScaling>
+            {t('home.headline')}
           </Text>
-        </View>
-        <Text
-          accessibilityRole="header"
-          style={[styles.heroTitle, { color: colors.text }]}
-          allowFontScaling>
-          {t('home.headline')}
-        </Text>
-        <Text style={[styles.heroSub, { color: colors.textSecondary }]} allowFontScaling>
-          {t('home.subline')}
-        </Text>
-      </LinearGradient>
+          <Text style={styles.heroSub} allowFontScaling>
+            {t('home.subline')}
+          </Text>
+        </LinearGradient>
+      </Animated.View>
 
       {/* Primärer Aufruf: Müll melden. Der Held des Screens. */}
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={t('home.cta_a11y')}
         onPress={() => router.push('/melden')}
-        style={({ pressed }) => [styles.ctaWrap, pressed && styles.pressed]}>
+        haptic="medium"
+        scaleTo={0.97}
+        style={styles.ctaWrap}>
         <LinearGradient
           colors={grad.brand}
           start={{ x: 0, y: 0 }}
@@ -156,7 +171,7 @@ export default function HomeScreen() {
           </View>
           <Ionicons name="arrow-forward" size={22} color="rgba(255,255,255,0.9)" />
         </LinearGradient>
-      </Pressable>
+      </PressableScale>
 
       {/* Wirkung in Zahlen: offene vs. aufgeräumte Fälle. */}
       <View style={styles.statRow}>
@@ -176,32 +191,33 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Eigener Impact, kompakt — führt tiefer ins Profil. */}
-      <Pressable
+      {/* Eigener Impact, kompakt – führt tiefer ins Profil. */}
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={t('home.impact_a11y', {
           points: level?.balance ?? 0,
           level: level?.level_name ?? t('profil.level_default'),
         })}
-        onPress={() => router.push('/profil')}
-        style={({ pressed }) => pressed && styles.pressed}>
+        onPress={() => router.push('/profil')}>
         <Card tone="soft" style={styles.impactCard}>
-          <View style={[styles.impactIcon, { backgroundColor: colors.primary }]}>
-            <Ionicons name="leaf" size={20} color={colors.onPrimary} />
+          <View style={[styles.impactIcon, { backgroundColor: colors.accent }]}>
+            <Ionicons name="sparkles" size={20} color={colors.onAccent} />
           </View>
           <View style={styles.impactText}>
-            <Text style={[styles.impactValue, { color: colors.primaryStrong }]} allowFontScaling>
-              {level?.balance ?? 0} {t('profil.points_unit')}
-            </Text>
+            <Counter
+              value={level?.balance ?? 0}
+              suffix={` ${t('profil.points_unit')}`}
+              style={[styles.impactValue, { color: colors.accent }]}
+            />
             <Text style={[styles.impactLevel, { color: colors.textSecondary }]} allowFontScaling>
               {level?.level_name ?? t('profil.level_default')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </Card>
-      </Pressable>
+      </PressableScale>
 
-      {/* Nächste Aktionen — Gemeinschaft sichtbar machen. */}
+      {/* Nächste Aktionen – Gemeinschaft sichtbar machen. */}
       <View style={styles.sectionHead}>
         <SectionHeader title={t('home.events_title')} />
         <Pressable
@@ -224,18 +240,18 @@ export default function HomeScreen() {
         events.map((ev) => {
           const date = new Date(ev.event_date);
           return (
-            <Pressable
+            <PressableScale
               key={ev.id}
               accessibilityRole="button"
               accessibilityLabel={ev.title}
-              onPress={() => router.push('/events')}
-              style={({ pressed }) => pressed && styles.pressed}>
+              onPress={() => router.push('/events')}>
               <Card style={styles.eventRow}>
-                <View style={[styles.dateBlock, { backgroundColor: colors.primarySoft }]}>
-                  <Text style={[styles.dateDay, { color: colors.primaryStrong }]} allowFontScaling>
+                {/* Datumsblock in warmem Bernstein: einladend, „save the date". */}
+                <View style={[styles.dateBlock, { backgroundColor: colors.accentSoft }]}>
+                  <Text style={[styles.dateDay, { color: colors.accent }]} allowFontScaling>
                     {date.toLocaleDateString(dateLocale, { day: '2-digit' })}
                   </Text>
-                  <Text style={[styles.dateMonth, { color: colors.primaryStrong }]} allowFontScaling>
+                  <Text style={[styles.dateMonth, { color: colors.accent }]} allowFontScaling>
                     {date.toLocaleDateString(dateLocale, { month: 'short' })}
                   </Text>
                 </View>
@@ -253,12 +269,12 @@ export default function HomeScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </Card>
-            </Pressable>
+            </PressableScale>
           );
         })
       )}
 
-      {/* Zuletzt aufgeräumt — ehrlicher Beweis, dass Melden wirkt. */}
+      {/* Zuletzt aufgeräumt – ehrlicher Beweis, dass Melden wirkt. */}
       <SectionHeader title={t('home.recent_title')} />
       {closedCases.length === 0 ? (
         <EmptyState
@@ -270,12 +286,11 @@ export default function HomeScreen() {
         closedCases.map((c) => {
           const status = getCaseStatus(c.status, t);
           return (
-            <Pressable
+            <PressableScale
               key={c.id}
               accessibilityRole="button"
-              accessibilityLabel={`${c.title} — ${status.label}`}
-              onPress={() => router.push({ pathname: '/case/[id]', params: { id: c.id } })}
-              style={({ pressed }) => pressed && styles.pressed}>
+              accessibilityLabel={`${c.title} – ${status.label}`}
+              onPress={() => router.push({ pathname: '/case/[id]', params: { id: c.id } })}>
               <Card style={styles.caseRow}>
                 <View style={[styles.caseIcon, { backgroundColor: colors.successSoft }]}>
                   <Ionicons name={status.icon} size={18} color={colors.primaryStrong} />
@@ -288,7 +303,7 @@ export default function HomeScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </Card>
-            </Pressable>
+            </PressableScale>
           );
         })
       )}
@@ -301,12 +316,43 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: Radius.lg,
     padding: Spacing.four,
+    paddingTop: Spacing.four + 4,
     gap: Spacing.one,
+    overflow: 'hidden',
+    ...Shadow,
+  },
+  heroBrandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one + 2,
+    marginBottom: Spacing.two,
+  },
+  heroMark: {
+    width: 28,
+    height: 28,
+    borderRadius: Radius.sm,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroWordmark: {
+    fontFamily: DisplayFont.bold,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 3,
+    color: '#fff',
   },
   greetRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one + 2 },
-  greet: { ...Type.label, fontWeight: '600' },
-  heroTitle: { ...Type.title, marginTop: Spacing.one },
-  heroSub: { ...Type.body },
+  greet: { ...Type.label, fontWeight: '600', color: 'rgba(255,255,255,0.92)' },
+  heroTitle: {
+    fontFamily: DisplayFont.bold,
+    fontSize: 26,
+    fontWeight: '800',
+    lineHeight: 31,
+    marginTop: Spacing.one,
+    color: '#fff',
+  },
+  heroSub: { ...Type.body, color: 'rgba(255,255,255,0.88)' },
 
   ctaWrap: { borderRadius: Radius.lg, ...Shadow },
   cta: {
@@ -338,7 +384,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.one,
   },
-  statValue: { fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  statValue: { fontFamily: DisplayFont.bold, fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
   statLabel: { ...Type.caption },
 
   impactCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
@@ -365,7 +411,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dateDay: { fontSize: 19, fontWeight: '800', lineHeight: 22 },
+  dateDay: { fontFamily: DisplayFont.bold, fontSize: 19, fontWeight: '800', lineHeight: 22 },
   dateMonth: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase' },
   eventText: { flex: 1, gap: 2 },
   eventTitle: { ...Type.label, fontWeight: '700' },
