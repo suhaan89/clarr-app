@@ -13,6 +13,7 @@ import {
   Card,
   Counter,
   EmptyState,
+  Mascot,
   PressableScale,
   SectionHeader,
   WeeklyChallenge,
@@ -138,26 +139,34 @@ export default function HomeScreen() {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}>
-          <View style={styles.heroBrandRow}>
-            <View style={styles.heroMark}>
-              <Ionicons name="leaf" size={15} color="#fff" />
+          <View style={styles.heroRow}>
+            <View style={styles.heroText}>
+              <View style={styles.heroBrandRow}>
+                <View style={styles.heroMark}>
+                  <Ionicons name="leaf" size={15} color="#fff" />
+                </View>
+                <Text style={styles.heroWordmark} allowFontScaling>
+                  CLAR
+                </Text>
+              </View>
+              <View style={styles.greetRow}>
+                <Ionicons name="partly-sunny" size={16} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.greet} allowFontScaling>
+                  {t(greetingKey())}
+                </Text>
+              </View>
+              <Text accessibilityRole="header" style={styles.heroTitle} allowFontScaling>
+                {t('home.headline')}
+              </Text>
+              <Text style={styles.heroSub} allowFontScaling>
+                {t('home.subline')}
+              </Text>
             </View>
-            <Text style={styles.heroWordmark} allowFontScaling>
-              CLAR
-            </Text>
+            {/* Clari begrueSt: auf heller Scheibe, damit er auf Gruen klar liest. */}
+            <View style={styles.heroMascot}>
+              <Mascot pose="idle" size={72} accessibilityLabel={t('home.mascot_a11y')} />
+            </View>
           </View>
-          <View style={styles.greetRow}>
-            <Ionicons name="partly-sunny" size={16} color="rgba(255,255,255,0.9)" />
-            <Text style={styles.greet} allowFontScaling>
-              {t(greetingKey())}
-            </Text>
-          </View>
-          <Text accessibilityRole="header" style={styles.heroTitle} allowFontScaling>
-            {t('home.headline')}
-          </Text>
-          <Text style={styles.heroSub} allowFontScaling>
-            {t('home.subline')}
-          </Text>
         </LinearGradient>
       </Animated.View>
 
@@ -336,9 +345,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.four,
     paddingTop: Spacing.four + 4,
-    gap: Spacing.one,
     overflow: 'hidden',
     ...Shadow,
+  },
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  heroText: { flex: 1, gap: Spacing.one },
+  heroMascot: {
+    width: 88,
+    height: 88,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   heroBrandRow: {
     flexDirection: 'row',

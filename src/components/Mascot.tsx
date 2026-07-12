@@ -1,17 +1,25 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Radius, Shadow, useGradients } from '@/constants/theme';
-
 /**
- * CLAR-Maskottchen „Clari". PLATZHALTER: rendert vorerst die Marken-Kachel
- * (Blatt), damit Layout und Auftritte schon stehen. Sobald die gerenderten
- * 3D-PNGs unter assets/mascot/ liegen (clari-idle/celebrate/levelup/hint),
- * wird hier nur der Innenteil gegen ein <Image> je `pose` getauscht, die
- * Schnittstelle (pose, size, accessibilityLabel) bleibt gleich.
+ * CLAR-Maskottchen „Clari": der freundliche Spross vom Ufer. Rendert die
+ * freigestellte 3D-Grafik (transparentes PNG). Die `pose` bleibt in der
+ * Schnittstelle, damit spaeter dedizierte Renders (celebrate/levelup/hint)
+ * ohne Aenderung am Aufrufcode ergaenzt werden koennen: neue Datei in
+ * assets/mascot/ ablegen und in SOURCES eintragen. Solange es nur die
+ * Idle-Pose gibt, nutzen alle Auftritte dieselbe Grafik.
  */
 export type MascotPose = 'idle' | 'celebrate' | 'levelup' | 'hint';
+
+const IDLE = require('../../assets/mascot/clari-idle.png');
+
+// Sobald es weitere Posen gibt: hier die jeweilige Datei eintragen.
+const SOURCES: Record<MascotPose, number> = {
+  idle: IDLE,
+  celebrate: IDLE,
+  levelup: IDLE,
+  hint: IDLE,
+};
 
 type Props = {
   pose?: MascotPose;
@@ -20,38 +28,23 @@ type Props = {
   accessibilityLabel?: string;
 };
 
-const POSE_ICON: Record<MascotPose, keyof typeof Ionicons.glyphMap> = {
-  idle: 'leaf',
-  celebrate: 'sparkles',
-  levelup: 'trophy',
-  hint: 'chatbubble-ellipses',
-};
-
 export function Mascot({ pose = 'idle', size = 96, style, accessibilityLabel }: Props) {
-  const grad = useGradients();
-  const inner = Math.round(size * 0.46);
-
   return (
     <View
       accessibilityRole="image"
-      accessibilityLabel={accessibilityLabel ?? 'CLAR'}
-      style={[
-        styles.tile,
-        Shadow,
-        { width: size, height: size, borderRadius: Radius.xl + 4 },
-        style,
-      ]}>
-      <LinearGradient
-        colors={grad.brand}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: Radius.xl + 4 }]}
+      accessibilityLabel={accessibilityLabel ?? 'Clari, das CLAR-Maskottchen'}
+      style={[{ width: size, height: size }, style]}>
+      <Image
+        source={SOURCES[pose]}
+        style={styles.img}
+        contentFit="contain"
+        accessible={false}
+        transition={200}
       />
-      <Ionicons name={POSE_ICON[pose]} size={inner} color="#FFFFFF" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tile: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  img: { width: '100%', height: '100%' },
 });

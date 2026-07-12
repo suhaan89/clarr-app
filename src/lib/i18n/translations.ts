@@ -47,6 +47,7 @@ export const de = {
   'home.challenge_remaining': 'Noch {count} bis zum gemeinsamen Ziel',
   'home.challenge_reached': 'Ziel erreicht. Danke euch! 🎉',
   'home.challenge_a11y': 'Gemeinschaftsziel diese Woche: {count} von {target} Fällen',
+  'home.mascot_a11y': 'Clari, das CLAR-Maskottchen, winkt dir zu',
   'stack.login': 'Anmelden',
   'stack.case': 'Fall',
   'stack.datenschutz': 'Datenschutz',
@@ -306,6 +307,7 @@ const en: Catalog = {
   'home.challenge_remaining': '{count} more to reach the shared goal',
   'home.challenge_reached': 'Goal reached. Thank you all! 🎉',
   'home.challenge_a11y': 'Community goal this week: {count} of {target} cases',
+  'home.mascot_a11y': 'Clari, the CLAR mascot, waving at you',
 
   'login.tagline': 'Report litter. Clean up your city.',
   'login.email': 'Email',
