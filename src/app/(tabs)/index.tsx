@@ -8,12 +8,21 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Card, Counter, EmptyState, PressableScale, SectionHeader } from '@/components';
+import {
+  Badge,
+  Card,
+  Counter,
+  EmptyState,
+  PressableScale,
+  SectionHeader,
+  WeeklyChallenge,
+} from '@/components';
 import { getCaseStatus } from '@/constants/status';
 import { DisplayFont, Radius, Shadow, Spacing, Type, useGradients, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { startOfIsoWeek } from '@/lib/week';
 
 type LevelRow = { balance: number; level_name: string } | null;
 type CaseRow = { id: string; title: string; status: string; created_at: string };
@@ -64,6 +73,7 @@ export default function HomeScreen() {
   const [level, setLevel] = useState<LevelRow>(null);
   const [openCount, setOpenCount] = useState(0);
   const [closedCount, setClosedCount] = useState(0);
+  const [weekCount, setWeekCount] = useState(0);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [closedCases, setClosedCases] = useState<CaseRow[]>([]);
 
@@ -93,6 +103,12 @@ export default function HomeScreen() {
         .select('id', { count: 'exact', head: true })
         .in('status', ['erledigt', 'geschlossen'])
         .then(({ count }) => setClosedCount(count ?? 0));
+      // Gemeinschaftsziel: diese Woche gemeldete Fälle (ab Montag).
+      supabase
+        .from('cases')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', startOfIsoWeek().toISOString())
+        .then(({ count }) => setWeekCount(count ?? 0));
       supabase
         .from('cleanup_events')
         .select('id, title, event_date')
@@ -172,6 +188,9 @@ export default function HomeScreen() {
           <Ionicons name="arrow-forward" size={22} color="rgba(255,255,255,0.9)" />
         </LinearGradient>
       </PressableScale>
+
+      {/* Gemeinsames Wochenziel: motiviert über ein geteiltes Ziel, ohne Druck. */}
+      <WeeklyChallenge count={weekCount} />
 
       {/* Wirkung in Zahlen: offene vs. aufgeräumte Fälle. */}
       <View style={styles.statRow}>

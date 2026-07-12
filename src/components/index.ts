@@ -1,11 +1,18 @@
+export { AchievementMedal, Badges } from './Badges';
 export { Badge } from './Badge';
 export { BrandSplash } from './BrandSplash';
 export { Button } from './Button';
 export { Card } from './Card';
+export { Celebration } from './Celebration';
+export { Confetti } from './Confetti';
 export { Counter } from './Counter';
+export { Mascot, type MascotPose } from './Mascot';
 export { EmptyState } from './EmptyState';
 export { Input } from './Input';
 export { LanguagePicker } from './LanguagePicker';
+export { LevelProgress } from './LevelProgress';
 export { LoadingState } from './LoadingState';
 export { PressableScale, type HapticKind } from './PressableScale';
+export { ProgressBar } from './ProgressBar';
 export { SectionHeader } from './SectionHeader';
+export { WeeklyChallenge, WEEKLY_GOAL } from './WeeklyChallenge';

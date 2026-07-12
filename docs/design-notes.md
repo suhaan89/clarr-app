@@ -344,3 +344,87 @@ deren konkrete Grün-/Bildsprache. CLAR bleibt eigenständig grün-seriös.
 - `PressableScale`, `Counter` neu; `Button` darauf umgestellt (app-weite Haptik).
 - Home: grüner Marken-Header, warme Datumsblöcke, hochzählende Zahlen, Eingang.
 - _(weitere Screens folgen, Commit pro Screen)_
+
+---
+
+# Redesign-Runde 4 (Juli 2026): faire Gamification (Fortschritt, Abzeichen, Challenge, Feier)
+
+**Auftrag:** Sichtbare, motivierende Gamification, die zu ECHTER Handlung führt,
+ohne Suchtmechanik. Harte Vorgabe: Reward- und Backend-Logik NICHT anfassen. Alles
+in dieser Runde ist eine reine Anzeige-Schicht auf den vorhandenen Serverdaten
+(View `points_level`, `points_ledger`, `cases`, `cleanup_signups`).
+
+**Schreibweise:** In dieser Runde bewusst OHNE jeden Gedankenstrich (kein langer,
+kein kurzer), passend zum Auftrag. Stattdessen Komma, Punkt, Doppelpunkt, Klammern.
+
+## Referenzen (Muster als PRINZIP, nicht kopiert)
+- **Duolingo:** charaktervolle Figur und gesunde Motivation. Übernommen als Prinzip:
+  ein freundliches Maskottchen (Clari), das Erfolge mitfeiert. NICHT übernommen:
+  Verlust-Angst, Strafen, aggressive Erinnerungen.
+- **Strava:** Impact und Gemeinschaft sichtbar machen. Übernommen: persönlicher
+  Fortschritt plus ein geteiltes Wochenziel für die Gemeinschaft. NICHT übernommen:
+  Wettkampf-Druck als Dauerzustand.
+- **Things/Linear:** Ruhe und Präzision. Der Fortschrittsbalken ist schlank und
+  ruhig, kein blinkendes Kirmes-Element.
+
+## Ethische Leitplanken (verbindlich, altersgerecht)
+- Belohnung ist Status und Anerkennung, KEIN Geldwert (Hinweis bleibt an der Zahl).
+- KEINE Zufalls-/Lootbox-Mechanik: Abzeichen sind deterministisch aus echten Zahlen
+  abgeleitet, die Bedingung ist immer sichtbar (Fortschritt x von Ziel).
+- KEINE bestrafenden Streaks, kein Countdown, kein FOMO. Die Wochen-Challenge ist ein
+  Gemeinschaftsziel ohne Timer, das Level kennt keinen Rückschritt.
+- Stärkster Reward bleibt echte Wirkung: der Feier-Moment feiert den aufgeräumten Ort
+  am Bodensee, nicht die Punktzahl.
+
+## Entscheidungen pro Baustein
+
+**Level-Fortschritt (`components/LevelProgress.tsx`, `constants/levels.ts`)**
+- `constants/levels.ts` spiegelt die Server-Formel (Level = Saldo/100 + 1, Ränge bei
+  0/100/250/500) NUR für die Anzeige, klar als Spiegel dokumentiert. Der Client rechnet
+  nur Fortschritt aus, er bucht nichts.
+- Balken in Bernstein (Reward-Farbe), zeigt den klaren nächsten Schritt ("noch X Punkte
+  bis Level N") plus den nächsten Rang. Immer ein sichtbares Ziel, nie ein leerer Blick.
+- `accessibilityRole="progressbar"` mit Wert, damit Screenreader den Fortschritt ansagen.
+
+**Abzeichen (`lib/achievements.ts`, `components/Badges.tsx`)**
+- Ableitung in einer RN-freien, getesteten Lib (`achievements.test.ts`): erste Meldung,
+  erste Bestätigung, erster Abschluss, erstes Event, 5 und 25 Meldungen, 5 Orte sauber,
+  Bronze/Silber/Gold. Werte spiegeln die Reward-Regeln.
+- Medaillon verdient (warmes Bernstein plus Häkchen) gegen ruhig gedämpft mit Fortschritt.
+  Nicht verdiente Abzeichen zeigen das Ziel, drängen aber nicht.
+- Defensiv gegen kaputte/negative Serverwerte (NaN wird zu 0), damit die Anzeige nie bricht.
+
+**Wochen-Challenge (`components/WeeklyChallenge.tsx`, `lib/week.ts`)**
+- Gemeinschaftsziel "20 Fälle am Bodensee diese Woche" mit geteiltem, grünem Balken
+  (Grün = Aktion und Gemeinschaft). Woche startet Montag (`startOfIsoWeek`).
+- Bewusst ohne Zeitdruck: der Text sagt "noch X bis zum gemeinsamen Ziel", kein Countdown.
+
+**Feier-Momente (`components/Celebration.tsx`, `Confetti.tsx`, `Mascot.tsx`)**
+- Ausgelöst bei Fallabschluss (Fall-Detail) und bei echtem Level-Anstieg (Profil erkennt
+  den Sprung zwischen zwei Ladevorgängen, nie beim ersten Laden, keine künstlichen Trigger).
+- Konfetti auf dem UI-Thread (Reanimated), Erfolgs-Haptik, kurze Botschaft, jederzeit per
+  Tipp schließbar (kein Zwang), automatischer Abschluss nach wenigen Sekunden.
+
+## Maskottchen: bewusster Platzhalter
+`components/Mascot.tsx` rendert vorerst die Marken-Kachel je Pose (idle, celebrate, levelup,
+hint). Die Schnittstelle (pose, size, Label) steht, damit die gerenderten 3D-PNGs von Clari
+(claude.ai/design, transparent, nach `assets/mascot/`) später ohne Umbau eingesetzt werden.
+So blockiert die fehlende Grafik nicht die Mechanik.
+
+## Barrierefreiheit (diese Runde)
+- "Bewegung reduzieren" (System) wird respektiert: `useReducedMotion` schaltet Konfetti und
+  Einschwing-Animation ab, Balken springt direkt auf den Wert. Botschaft und Haptik bleiben.
+- Fortschritt und Feier tragen Screenreader-Labels; das Feier-Overlay ist `role="alert"`.
+- Kontraste über die vorhandenen Token (Bernstein dunkel genug für weiße Schrift).
+
+## Selbstkritik
+- **Client spiegelt Server-Formeln.** Level- und Rang-Schwellen liegen doppelt vor (Server
+  und `constants/levels.ts`). Bewusst in Kauf genommen, weil die Anzeige sonst nicht ohne
+  neue Endpunkte ginge, und klar als Spiegel markiert. Ändert sich die Server-Regel, muss
+  hier nachgezogen werden.
+- **Abzeichen zählen Ledger-Zeilen.** Eine verifizierte Meldung ohne Punktebuchung (z. B.
+  Tagesdeckel erreicht) fehlt in der Zählung. Für ein kosmetisches Abzeichen vertretbar.
+- **Konfetti ist Views, kein Skia.** Bei sehr vielen Teilchen auf schwachen Geräten ggf.
+  Teilchenzahl senken. Auf echtem Gerät prüfen (60fps). Skia bliebe eine Option für später.
+- **Community-Zähler ist RLS-begrenzt.** Die Wochen-Challenge zählt nur sichtbare Fälle,
+  ist also eine Näherung der echten Gemeinschaftsaktivität. Ehrlich, aber nicht exakt.

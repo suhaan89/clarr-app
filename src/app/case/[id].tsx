@@ -5,9 +5,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Button, Card, LoadingState } from '@/components';
+import { Badge, Button, Card, Celebration, LoadingState } from '@/components';
 import { getCaseStatus, isOpenStatus } from '@/constants/status';
-import { Spacing, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Spacing, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
@@ -31,6 +31,7 @@ export default function CaseDetailScreen() {
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
   const [reportIds, setReportIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -58,7 +59,7 @@ export default function CaseDetailScreen() {
   function flagCase() {
     if (!session || reportIds.length === 0) return;
     // Fail-safe: das Flag nimmt die Meldung SOFORT aus der Öffentlichkeit
-    // (Trigger, Paket 8) — bis ein Mensch sie geprüft hat.
+    // (Trigger, Paket 8) – bis ein Mensch sie geprüft hat.
     Alert.alert(t('case.flag_title'), t('case.flag_body'), [
       { text: t('case.flag_cancel'), style: 'cancel' },
       { text: t('case.flag_privacy'), onPress: () => submitFlag('personenbezogene_daten') },
@@ -84,7 +85,7 @@ export default function CaseDetailScreen() {
   async function closeCase() {
     setBusy(true);
     try {
-      // Nachher-Foto MUSS frisch aus der Kamera kommen (Anti-Kollusion) —
+      // Nachher-Foto MUSS frisch aus der Kamera kommen (Anti-Kollusion) –
       // der Server verlangt zusaetzlich Standort <= 100 m am Fall.
       const photo = await ImagePicker.launchCameraAsync({ quality: 0.7 });
       if (photo.canceled || !photo.assets[0]?.uri) return;
@@ -100,7 +101,9 @@ export default function CaseDetailScreen() {
         photoPaths: [path],
       });
       if (result?.ok) {
-        Alert.alert(t('case.close_ok_title'), t('case.close_ok_body'));
+        // Feier-Moment statt trockenem Alert: der stärkste Reward ist echte
+        // Wirkung („dein gemeldeter Müll ist weg").
+        setCelebrate(true);
       } else {
         Alert.alert(
           t('case.close_fail_title'),
@@ -181,13 +184,21 @@ export default function CaseDetailScreen() {
           {t('case.flag')}
         </Text>
       </Pressable>
+
+      <Celebration
+        visible={celebrate}
+        onDone={() => setCelebrate(false)}
+        title={t('celebrate.close_title')}
+        message={t('celebrate.close_message')}
+        pose="celebrate"
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   content: { padding: Spacing.four, gap: Spacing.three, paddingBottom: Spacing.six },
-  title: { fontSize: 22, fontWeight: '700' },
+  title: { fontFamily: DisplayFont.regular, fontSize: 22, fontWeight: '700' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },
   meta: { fontSize: 14, lineHeight: 20, flexShrink: 1 },
   photo: { width: '100%', aspectRatio: 4 / 3 },

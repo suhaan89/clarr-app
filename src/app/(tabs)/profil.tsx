@@ -1,12 +1,12 @@
 // Impact-Profil (Paket 9): zeigt den SERVERSEITIGEN Punktestand (View
-// points_level) — der Client setzt nie Punkte. Bewusst OHNE Streaks,
+// points_level) – der Client setzt nie Punkte. Bewusst OHNE Streaks,
 // Tages-Serien oder Zufallsbelohnungen (keine Grind-/Dark-Patterns,
 // Zielgruppe teils minderjaehrig). Leaderboard nur mit Opt-in, Pseudonym,
 // Wochen-Reset.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -18,8 +18,9 @@ import {
   View,
 } from 'react-native';
 
-import { Badge, Card, Input, LanguagePicker, SectionHeader } from '@/components';
-import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { Badge, Badges, Card, Celebration, Input, LanguagePicker, LevelProgress, SectionHeader } from '@/components';
+import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { computeAchievements, earnedCount } from '@/lib/achievements';
 import { callFunction } from '@/lib/api';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
@@ -51,6 +52,11 @@ export default function ProfilScreen() {
   const [displayName, setDisplayName] = useState('');
   const [board, setBoard] = useState<BoardRow[]>([]);
   const [consents, setConsents] = useState<Record<string, boolean>>({});
+  const [counts, setCounts] = useState({ reports: 0, confirms: 0, closes: 0, events: 0 });
+  const [levelUp, setLevelUp] = useState<number | null>(null);
+  // Zuletzt gesehene Stufe; erst ein ECHTER Anstieg (nicht der erste Ladevorgang)
+  // löst die Feier aus. Keine künstlichen Trigger.
+  const lastLevel = useRef<number | null>(null);
 
   const load = useCallback(() => {
     if (!session) return;
@@ -59,7 +65,15 @@ export default function ProfilScreen() {
       .select('*')
       .eq('user_id', session.user.id)
       .maybeSingle()
-      .then(({ data }) => setLevel(data as LevelRow));
+      .then(({ data }) => {
+        const row = data as LevelRow;
+        setLevel(row);
+        const lvl = row?.level ?? null;
+        if (lvl != null) {
+          if (lastLevel.current != null && lvl > lastLevel.current) setLevelUp(lvl);
+          lastLevel.current = lvl;
+        }
+      });
     supabase
       .from('points_ledger')
       .select('id, delta, reason, created_at')
@@ -89,6 +103,22 @@ export default function ProfilScreen() {
         for (const row of data ?? []) map[row.consent_key] = row.granted;
         setConsents(map);
       });
+    // Zaehlwerte fuer die Abzeichen (nur eigene Zeilen via RLS). Reine
+    // Anzeige, keine Reward-Buchung.
+    const uid = session.user.id;
+    Promise.all([
+      supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'report_verified'),
+      supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'case_confirmed'),
+      supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'case_closed_after'),
+      supabase.from('cleanup_signups').select('id', { count: 'exact', head: true }).eq('user_id', uid),
+    ]).then(([r, c, cl, ev]) => {
+      setCounts({
+        reports: r.count ?? 0,
+        confirms: c.count ?? 0,
+        closes: cl.count ?? 0,
+        events: ev.count ?? 0,
+      });
+    });
   }, [session]);
 
   useFocusEffect(load);
@@ -113,6 +143,14 @@ export default function ProfilScreen() {
   }
 
   const levelName = level?.level_name ?? t('profil.level_default');
+  const achievements = computeAchievements({
+    balance: level?.balance ?? 0,
+    reportsVerified: counts.reports,
+    casesConfirmed: counts.confirms,
+    casesClosed: counts.closes,
+    events: counts.events,
+  });
+  const earned = earnedCount(achievements);
 
   return (
     <ScrollView
@@ -140,6 +178,21 @@ export default function ProfilScreen() {
         <Text style={[styles.cosmeticNote, { color: colors.textSecondary }]} allowFontScaling>
           {t('profil.cosmetic_note')}
         </Text>
+      </Card>
+
+      {/* Fortschritt zur naechsten Stufe – klarer naechster Schritt, aus dem
+          Saldo abgeleitet (keine Reward-Logik im Client). */}
+      <LevelProgress balance={level?.balance ?? 0} levelName={levelName} />
+
+      {/* Sammelbare Abzeichen fuer echte Meilensteine (kein Geldwert). */}
+      <View style={styles.badgesHead}>
+        <SectionHeader title={t('profil.badges')} />
+        <Text style={[styles.badgesCount, { color: colors.textSecondary }]} allowFontScaling>
+          {t('profil.badges_count', { earned, total: achievements.length })}
+        </Text>
+      </View>
+      <Card style={styles.sectionCard}>
+        <Badges items={achievements} />
       </Card>
 
       <SectionHeader title={t('profil.activity')} />
@@ -334,6 +387,14 @@ export default function ProfilScreen() {
           {t('profil.signout')}
         </Text>
       </Pressable>
+
+      <Celebration
+        visible={levelUp != null}
+        onDone={() => setLevelUp(null)}
+        title={t('celebrate.levelup_title', { level: levelUp ?? 0 })}
+        message={t('celebrate.levelup_message')}
+        pose="levelup"
+      />
     </ScrollView>
   );
 }
@@ -349,10 +410,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.one,
   },
-  points: { fontSize: 48, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  points: { fontFamily: DisplayFont.bold, fontSize: 48, fontWeight: '800', fontVariant: ['tabular-nums'] },
   pointsLabel: { fontSize: 15, fontWeight: '600', marginBottom: Spacing.one },
   cosmeticNote: { fontSize: 12, marginTop: Spacing.two, textAlign: 'center' },
   sectionCard: { gap: Spacing.two },
+  badgesHead: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
+  badgesCount: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
   emptyText: { fontSize: 14, lineHeight: 20 },
   ledgerRow: {
     flexDirection: 'row',
