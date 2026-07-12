@@ -1,5 +1,5 @@
 /**
- * On-Device-Bilderkennung — öffentliche Typen.
+ * On-Device-Bilderkennung – öffentliche Typen.
  *
  * Diese Datei enthält KEINE nativen Imports und ist damit frei test- und
  * importierbar. Die konkrete Modell-Implementierung (TensorFlow.js, siehe
@@ -17,12 +17,12 @@ export type Prediction = {
 };
 
 /**
- * Das für den Nutzer sichtbare Urteil. Bewusst dreiwertig — „unsicher" ist
+ * Das für den Nutzer sichtbare Urteil. Bewusst dreiwertig – „unsicher" ist
  * ein eigener, ehrlicher Zustand und keine erzwungene Ja/Nein-Antwort.
  */
 export type VisionVerdict = 'trash' | 'no-trash' | 'uncertain';
 
-/** Ergebnis einer Analyse — reiner Datencontainer, UI-unabhängig. */
+/** Ergebnis einer Analyse – reiner Datencontainer, UI-unabhängig. */
 export type VisionResult = {
   verdict: VisionVerdict;
   /** Konfidenz in das gezeigte Urteil, 0..1. */
@@ -37,7 +37,7 @@ export type VisionResult = {
  * Austauschbare Modell-Schnittstelle. Eine Implementierung lädt EINMAL ihr
  * Modell (`load`) und liefert dann für Bilddaten Top-k-Vorhersagen
  * (`classify`). Die Zuordnung „Label → Müll" und die Schwellen liegen bewusst
- * NICHT hier, sondern in `labels.ts`/`verdict.ts` — so bleibt der Modelltausch
+ * NICHT hier, sondern in `labels.ts`/`verdict.ts` – so bleibt der Modelltausch
  * unabhängig von der Produktlogik.
  */
 export interface VisionClassifier {

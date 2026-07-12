@@ -4,7 +4,7 @@ import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 import { Radius, Spacing, useThemeColors } from '@/constants/theme';
 
 /**
- * Themed-Textfeld mit sichtbarem Fokus-Rahmen (Grün) — Orientierungshilfe
+ * Themed-Textfeld mit sichtbarem Fokus-Rahmen (Grün) – Orientierungshilfe
  * auch ohne Farbwahrnehmung, da sich zusätzlich die Rahmenstärke ändert.
  */
 export function Input({ style, multiline, onFocus, onBlur, ...rest }: TextInputProps) {

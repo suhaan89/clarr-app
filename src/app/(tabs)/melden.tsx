@@ -51,7 +51,7 @@ export default function MeldenScreen() {
       setPhotoUri(photo.uri);
       setSource('camera');
       setStep('details');
-      // Advisory-Analyse on-device — rein informativ, blockiert nie die Meldung.
+      // Advisory-Analyse on-device – rein informativ, blockiert nie die Meldung.
       vision.analyze(photo.uri);
     }
   }
@@ -80,7 +80,7 @@ export default function MeldenScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
       const item: PendingReport = {
-        clientKey: newClientKey(), // EINMAL erzeugt — verhindert Doppel-Sync
+        clientKey: newClientKey(), // EINMAL erzeugt – verhindert Doppel-Sync
         description: description.trim().slice(0, 500),
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,

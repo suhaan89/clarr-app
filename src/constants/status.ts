@@ -3,7 +3,7 @@
  *
  * Grundregel (Barrierefreiheit): Status wird NIE nur über Farbe kommuniziert.
  * Jeder Zustand hat ein aussagekräftiges Icon + ein Text-Label + einen Farbton.
- * Rot/Grün allein reicht nicht (Farbfehlsichtigkeit) — deshalb immer Icon + Wort.
+ * Rot/Grün allein reicht nicht (Farbfehlsichtigkeit) – deshalb immer Icon + Wort.
  *
  * Die DB-Statuswerte (`gemeldet`, `geprueft`, …) sind Backend und bleiben
  * unverändert; hier wird nur die ANZEIGE zugeordnet.

@@ -17,13 +17,13 @@ export { VisionUnavailableError } from './types';
 export { useVision } from './useVision';
 export type { UseVision, VisionStatus } from './useVision';
 
-/** Aktive Modell-Implementierung — hier tauschbar. */
+/** Aktive Modell-Implementierung – hier tauschbar. */
 const classifier: VisionClassifier = tfliteClassifier;
 
 /**
  * Lädt das Modell vorab (idempotent). Optional beim Betreten des Melde-Flows,
  * damit die erste Analyse schneller ist. Wirft `VisionUnavailableError`, wenn
- * das Modell nicht verfügbar ist — Aufrufer behandeln das als „Analyse aus".
+ * das Modell nicht verfügbar ist – Aufrufer behandeln das als „Analyse aus".
  */
 export async function warmUpVision(): Promise<void> {
   await classifier.load();

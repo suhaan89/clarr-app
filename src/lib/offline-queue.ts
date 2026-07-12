@@ -15,7 +15,7 @@ const DEVICE_ID_KEY = 'clar.install_id.v1';
 let syncing = false;
 
 export async function getDeviceId(): Promise<string> {
-  // Zufaellige Install-ID (KEINE Hardware-ID — Datenminimierung). Dient nur
+  // Zufaellige Install-ID (KEINE Hardware-ID – Datenminimierung). Dient nur
   // dem serverseitigen Rate-Limit; der Server speichert davon nur den Hash.
   let id = await AsyncStorage.getItem(DEVICE_ID_KEY);
   if (!id) {

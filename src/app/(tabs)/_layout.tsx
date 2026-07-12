@@ -24,7 +24,7 @@ export default function TabLayout() {
         headerTitleStyle: { fontWeight: '700' },
         headerShadowVisible: false,
         // Touch-Ziele der Tabbar sind systemseitig >= 48dp; Labels bleiben
-        // sichtbar (nicht nur Icons) — Screenreader & Verstaendlichkeit.
+        // sichtbar (nicht nur Icons) – Screenreader & Verstaendlichkeit.
       }}>
       <Tabs.Screen
         name="index"

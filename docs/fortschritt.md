@@ -77,8 +77,64 @@ Details und Annahmen in `NOTIZEN.md`.
   Tagesdeckel, „Client kann nicht buchen".
 - Doku: `docs/rewards.md`. `user_profiles.credits` bleibt unangetastet.
 
-## Offene Client-Tasks (neues Gerüst hat noch keine Screens)
+---
 
-- Auth-Screens (Login/Registrierung mit Anti-Enumeration-Verhalten)
-- Melde-Flow (submit-report + process-photo aufrufen statt Direkt-Insert)
-- Rewards-Anzeige (View `points_level` lesen, nicht `user_profiles.credits`)
+# Teil 2 (Pakete 7–13) — Stand 2026-07-10
+
+## Fertig ✅
+
+- **Paket 7 — Real-World-Loop**: Fall-Statusmaschine (Trigger + audit_log,
+  gilt auch für Service-Role), close-case (Nachher-Foto, ≤100 m,
+  Anti-Kollusion, Punkte 1× pro Fall), Push an Melder (Opt-in). NEU:
+  Wochen-Digest an Behörde (Kartenlink + geblurrtes Foto, keine
+  Melder-Daten) mit einmaligem, signiertem „erledigt"-Rücklauf-Token
+  (nur Hash in DB) → Migrationen 008/009, Functions authority-digest,
+  confirm-case-done.
+- **Paket 8 — Trust & Safety**: Flag → sofort unsichtbar bis Review
+  (fail-safe); Review-Queue nur geflaggt/Confidence/5%-Stichprobe/
+  Privatgrund; Privatgrund bleibt privat; kein „Verursacher"-Feld;
+  Moderation rollen-geschützt + audit_log (Migration 010).
+- **Paket 9 — Frontend**: Karte (geprüft + geblurrt, geschlossene Fälle
+  grün), Melde-Flow (In-App-Kamera=wertbar, Galerie=ohne Punkte —
+  serverseitig erzwungen), Fall-Detail (Flag, Abschluss), Impact-Profil
+  (Server-Punkte, ohne Streaks/Grind, Opt-in-Leaderboard mit
+  Wochen-Reset), Events, Login (Anti-Enumeration). OFFLINE-Queue mit
+  Client-Idempotenz-Key (Migration 011, kein Doppel-Sync). A11y: Labels,
+  Touch-Ziele, dynamische Schrift, Kontraste. `tsc` sauber.
+- **Paket 10 — Events + Cold-Start**: Events nur Team/Partner (RLS),
+  gebündelter Fall-Abschluss (Punkte idempotent pro Fall), Admin-Seeding
+  mit is_seed-Markierung (Migration 012, close-event-cases,
+  scripts/seed-admin.mjs).
+- **Paket 11 — Betroffenenrechte**: granulare Consents nachweisbar
+  (append-only, Migration 013), Datenexport (Art. 15) + Konto-Löschung
+  (Art. 17, inkl. Original+Derivate), Screens Datenschutz/Impressum als
+  ENTWURF (JURISTISCH PRUEFEN), docs/legal/data-flows.md.
+- **Paket 12 — Tests & Umgebungen**: `npm test` läuft (Jest, 10 Tests:
+  Offline-Queue kein Doppel-Sync, Auth-Validierung); pgTAP rewards + auth;
+  supabase/seed.sql (synthetisch, dev/staging); docs/ops.md
+  (Migrations-Workflow, Deploys, Secrets, Scheduling).
+- **Paket 13 — Security-Härtung**: RLS-Gesamtaudit (alle 16 Tabellen
+  default-deny, Tabelle in docs/security-review.md), Secrets-Scan sauber,
+  Quotas/Kill-Switch verifiziert, Abuse-Cases dokumentiert; Migration 014:
+  Flag-Tageslimit, Teilnehmerlisten privat, Legacy-Bucket-Schreibweg zu,
+  Pfad-Besitz-Trigger.
+- **Bugfix-Lauf 2026-07-11**: `tsc` wieder sauber (events.tsx), verwaiste
+  Fälle im Behörden-Digest bei fehlgeschlagenem Token-Insert behoben,
+  Event-Kapazität serverseitig durchgesetzt (Migration 015), Pseudonym-
+  Validierung Client/Server angeglichen + Fehler werden jetzt angezeigt
+  statt verschluckt (Migration 016), `npm run lint` lauffähig gemacht
+  (eslint-Setup fehlte). Details: NOTIZEN.md „Bugfix-Lauf 2026-07-11".
+
+## Offen ⏳
+
+- **Juristisch**: Datenschutz/Impressum-Texte, Alters-/Einwilligungslogik
+  (Art. 8), Consent-Gating des Behörden-Digests, AVV Supabase/Anthropic
+  (alles als JURISTISCH PRUEFEN markiert).
+- **Betreiber-Aktionen**: Auth-Dashboard-Checkliste (docs/auth.md) im
+  DEV-Projekt setzen; Digest-Scheduling (wöchentlich) einrichten;
+  `RESEND_API_KEY`/Behörden-Adresse konfigurieren; Legacy-Bucket
+  `report-photos` sichten (Alt-Fotos nicht anonymisiert!); Migrationen
+  008–016 + Functions gegen DEV ausrollen (docs/ops.md).
+- **Technisch (spätere Pakete)**: pHash-Duplikatabgleich automatisieren,
+  Storage-Aufräum-Job für verwaiste Objekte, Moderations-Frontend,
+  Push-Token-UI (expo-notifications), pgTAP-Lauf via Docker/CI.

@@ -1,7 +1,7 @@
 /**
  * Übersetzt Modell-Rohvorhersagen in ein nutzerfreundliches, ehrliches Urteil.
  *
- * REIN und testbar — keine nativen Imports. Kern der Advisory-Logik: lieber
+ * REIN und testbar – keine nativen Imports. Kern der Advisory-Logik: lieber
  * „unsicher" als ein falsches Ja/Nein, weil das Basismodell nicht müll-
  * spezifisch ist. Das Ergebnis ist ein HINWEIS und blockiert nie die Meldung.
  */
@@ -46,7 +46,7 @@ export function deriveVerdict(predictions: Prediction[]): VisionResult {
     return { verdict: 'uncertain', confidence: trashScore, trashLabel, predictions: sorted };
   }
   if (top.probability < Thresholds.sceneMin) {
-    // Modell erkennt gar nichts deutlich — ehrlich „unsicher".
+    // Modell erkennt gar nichts deutlich – ehrlich „unsicher".
     return { verdict: 'uncertain', confidence: top.probability, trashLabel: null, predictions: sorted };
   }
   // Etwas Nicht-Müll wurde klar erkannt.

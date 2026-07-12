@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -54,11 +55,24 @@ function AppStack() {
 }
 
 export default function RootLayout() {
+  // Marken-Display-Schrift (Bricolage Grotesque). Body bleibt System.
+  const [fontsLoaded, fontError] = useFonts({
+    'Bricolage-SemiBold': require('../../assets/fonts/BricolageGrotesque-SemiBold.ttf'),
+    'Bricolage-ExtraBold': require('../../assets/fonts/BricolageGrotesque-ExtraBold.ttf'),
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
     // Offline-Queue automatisch syncen, sobald Netz da ist.
     return startAutoSync();
   }, []);
+
+  useEffect(() => {
+    // Nativen Splash erst schließen, wenn die Schrift steht (oder scheitert) –
+    // vermeidet ein kurzes Umspringen der Überschriften vom System-Fallback.
+    if (fontsLoaded || fontError) SplashScreen.hideAsync();
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <SessionProvider>

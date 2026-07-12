@@ -1,5 +1,5 @@
 // Aufrufe der CLAR-Edge-Functions. Der Client schreibt NIE direkt in
-// reports/points_ledger — alles laeuft serverseitig validiert.
+// reports/points_ledger – alles laeuft serverseitig validiert.
 
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
@@ -75,7 +75,7 @@ export async function submitReport(item: PendingReport, deviceId: string | null)
     }
   );
 
-  // Anonymisierungs-Pipeline anstossen — best effort; ohne Erfolg bleibt
+  // Anonymisierungs-Pipeline anstossen – best effort; ohne Erfolg bleibt
   // das Foto ohnehin privat (fail-safe, Paket 5).
   if (result?.report_id && !result.idempotent) {
     for (const path of photoPaths) {

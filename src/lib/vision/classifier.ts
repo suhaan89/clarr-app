@@ -4,7 +4,7 @@
  * Diese Datei ist der EINZIGE Ort mit nativen/modell-spezifischen Details.
  * Alles Native wird bewusst LAZY (dynamisch) geladen und in try/catch gekapselt:
  * Fehlt der Dev-Build, das native Modul oder das gebündelte Modell, wird ein
- * `VisionUnavailableError` geworfen — der Rest der App (und die Meldung) bleibt
+ * `VisionUnavailableError` geworfen – der Rest der App (und die Meldung) bleibt
  * unberührt.
  *
  * Modelltausch: siehe `assets/vision/model.assets.ts` und

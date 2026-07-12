@@ -120,7 +120,8 @@ export default function KarteScreen() {
               {t('map.legend_done')}
             </Text>
           </View>
-          <Text style={[styles.legendSummary, { color: colors.textSecondary }]} allowFontScaling>
+          {/* See-Übersicht im „Wasser"-Teal – Locate-Akzent, kein Status. */}
+          <Text style={[styles.legendSummary, { color: colors.waterStrong }]} allowFontScaling>
             {t('map.legend_summary', { total: reports.length, closed: closedCount })}
           </Text>
         </View>
@@ -165,5 +166,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   legendText: { fontSize: 14, fontWeight: '600' },
-  legendSummary: { fontSize: 13, marginLeft: 'auto' },
+  legendSummary: { fontSize: 13, fontWeight: '600', marginLeft: 'auto' },
 });

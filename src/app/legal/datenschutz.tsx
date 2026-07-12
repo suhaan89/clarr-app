@@ -3,11 +3,11 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Card } from '@/components';
 import { Spacing, useThemeColors } from '@/constants/theme';
 
-// !!! PLATZHALTER — JURISTISCH PRUEFEN !!!
+// !!! PLATZHALTER – JURISTISCH PRUEFEN !!!
 // Dieser Text ist KEINE gueltige Datenschutzerklaerung. Vor jedem
 // oeffentlichen Release muss eine juristisch geprüfte Fassung rein
 // (Rechtsgrundlagen, Auftragsverarbeiter, Speicherfristen, Minderjaehrige).
-// Bewusst NUR auf Deutsch — Rechtstexte werden nicht maschinell uebersetzt.
+// Bewusst NUR auf Deutsch – Rechtstexte werden nicht maschinell uebersetzt.
 const SECTIONS: { title: string; body: string }[] = [
   {
     title: 'Was CLAR speichert',
@@ -26,7 +26,7 @@ const SECTIONS: { title: string; body: string }[] = [
   {
     title: 'Deine Rechte',
     body:
-      'Auskunft (Datenexport im Profil), Löschung (Konto löschen im Profil — entfernt ' +
+      'Auskunft (Datenexport im Profil), Löschung (Konto löschen im Profil – entfernt ' +
       'Profil, Meldungen, Fotos samt Kopien und Punkte), Widerruf von Einwilligungen ' +
       'jederzeit im Profil. [JURISTISCH PRÜFEN: Kontakt/Aufsichtsbehörde ergänzen]',
   },
@@ -47,7 +47,7 @@ export default function DatenschutzScreen() {
       </Text>
       <Card style={{ backgroundColor: colors.dangerSoft }}>
         <Text style={[styles.warn, { color: colors.danger }]} allowFontScaling>
-          ENTWURF — JURISTISCH PRÜFEN, vor Release ersetzen.
+          ENTWURF – JURISTISCH PRÜFEN, vor Release ersetzen.
         </Text>
       </Card>
       {SECTIONS.map((s) => (

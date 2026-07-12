@@ -3,7 +3,7 @@
  * Sprachen dürfen Lücken haben und fallen dann auf Deutsch zurück.
  *
  * Platzhalter wie {count} werden zur Laufzeit ersetzt.
- * Rechtstexte (Datenschutz/Impressum) bleiben bewusst Deutsch —
+ * Rechtstexte (Datenschutz/Impressum) bleiben bewusst Deutsch –
  * juristische Texte werden nicht maschinell übersetzt.
  */
 
@@ -31,7 +31,7 @@ export const de = {
   'home.subline': 'Zusammen halten wir die Stadt sauber.',
   'home.cta_title': 'Müll melden',
   'home.cta_sub': 'Ein Foto genügt.',
-  'home.cta_a11y': 'Müll melden — Kamera öffnen',
+  'home.cta_a11y': 'Müll melden – Kamera öffnen',
   'home.stat_open': 'offene Fälle',
   'home.stat_closed': 'aufgeräumt',
   'home.impact_a11y': 'Dein Impact: {points} Punkte, Level {level}',
@@ -59,7 +59,7 @@ export const de = {
   'login.error_signup': 'Registrierung derzeit nicht möglich. Bitte versuche es später erneut.',
   'login.signup_sent':
     'Falls die Adresse neu ist, haben wir dir eine Bestätigungs-Mail geschickt. Bitte bestätige sie und melde dich dann an.',
-  'login.hint': 'Kein Klarname nötig — du meldest Müll, keine Menschen.',
+  'login.hint': 'Kein Klarname nötig – du meldest Müll, keine Menschen.',
   'login.wait': 'Bitte warten',
   'login.language_a11y': 'Sprache ändern',
 
@@ -83,12 +83,12 @@ export const de = {
   'report.allow_camera': 'Kamera erlauben',
   'report.gallery_link': 'Oder aus der Galerie wählen (ohne Punkte)',
   'report.gallery_a11y': 'Foto aus der Galerie wählen, ohne Punkte',
-  'report.shutter_a11y': 'Foto aufnehmen — Meldungen mit der Kamera zählen für Punkte',
+  'report.shutter_a11y': 'Foto aufnehmen – Meldungen mit der Kamera zählen für Punkte',
   'report.gallery_short': 'Galerie (ohne Punkte)',
   'report.queue_badge': '{count} Meldung(en) warten auf Sync',
   'report.preview_a11y': 'Vorschau deines Fotos',
   'report.gallery_hint':
-    'Galerie-Foto: Die Meldung hilft trotzdem — Punkte gibt es nur für Fotos direkt aus der App-Kamera.',
+    'Galerie-Foto: Die Meldung hilft trotzdem – Punkte gibt es nur für Fotos direkt aus der App-Kamera.',
   'report.desc_placeholder': 'Was liegt da? (optional)',
   'report.desc_a11y': 'Beschreibung des Müllfunds, optional',
   'report.privacy_note':
@@ -101,11 +101,11 @@ export const de = {
   'report.done_camera': 'Deine Meldung ist eingegangen. Punkte gibt es nach der Prüfung.',
   'report.done_gallery': 'Deine Meldung ist eingegangen. (Galerie-Fotos geben keine Punkte.)',
   'report.done_offline':
-    'Gespeichert! Du bist offline — die Meldung wird automatisch gesendet, sobald du wieder Netz hast.',
+    'Gespeichert! Du bist offline – die Meldung wird automatisch gesendet, sobald du wieder Netz hast.',
   'report.offline_title': 'Gespeichert!',
   'report.error_title': 'Standort fehlt',
   'report.error_location':
-    'Standort nicht verfügbar. Bitte erlaube den Standortzugriff in den Einstellungen — ohne Ort können wir den Müll nicht zuordnen.',
+    'Standort nicht verfügbar. Bitte erlaube den Standortzugriff in den Einstellungen – ohne Ort können wir den Müll nicht zuordnen.',
   'report.new': 'Neue Meldung',
   'report.new_a11y': 'Weitere Meldung erfassen',
   // On-Device-Bilderkennung (Advisory, blockiert nie)
@@ -136,9 +136,9 @@ export const de = {
   'profil.points_unit': 'Impact-Punkte',
   'profil.level_default': 'Einsteiger',
   'profil.impact_a11y': 'Dein Impact: {points} Punkte, Level {level}',
-  'profil.cosmetic_note': 'Punkte zeigen deinen Beitrag — sie sind nicht einlösbar.',
+  'profil.cosmetic_note': 'Punkte zeigen deinen Beitrag – sie sind nicht einlösbar.',
   'profil.activity': 'Letzte Aktivität',
-  'profil.no_points': 'Noch keine Punkte — deine erste geprüfte Meldung ändert das.',
+  'profil.no_points': 'Noch keine Punkte – deine erste geprüfte Meldung ändert das.',
   'reason.report_verified': 'Meldung bestätigt',
   'reason.case_confirmed': 'Fall mitbestätigt',
   'reason.case_closed_after': 'Fall aufgeräumt',
@@ -151,7 +151,7 @@ export const de = {
   'profil.pseudonym_invalid_body':
     'Erlaubt sind 2–24 Zeichen: Buchstaben, Zahlen, Leerzeichen, "_", "-" und ".".',
   'profil.reset_note':
-    'Die Liste startet jeden Montag bei null — es zählt die Woche, nicht der Dauer-Grind.',
+    'Die Liste startet jeden Montag bei null – es zählt die Woche, nicht der Dauer-Grind.',
   'profil.error_title': 'Das hat nicht geklappt',
   'profil.error_body': 'Bitte versuch es erneut.',
   'profil.language': 'Sprache',
@@ -169,7 +169,7 @@ export const de = {
   'profil.delete_a11y': 'Konto endgültig löschen, Artikel 17 DSGVO',
   'profil.delete_title': 'Konto löschen?',
   'profil.delete_body':
-    'Das entfernt dein Profil, deine Meldungen, alle Fotos (auch die anonymisierten Kopien) und deine Punkte — endgültig.',
+    'Das entfernt dein Profil, deine Meldungen, alle Fotos (auch die anonymisierten Kopien) und deine Punkte – endgültig.',
   'profil.delete_cancel': 'Abbrechen',
   'profil.delete_confirm': 'Endgültig löschen',
   'profil.delete_error': 'Löschung fehlgeschlagen. Bitte später erneut versuchen.',
@@ -192,7 +192,7 @@ export const de = {
   'case.photo_a11y': 'Anonymisiertes Foto des Müllfunds',
   'case.photo_pending': 'Foto wird noch geprüft und anonymisiert.',
   'case.close': 'Ich habe aufgeräumt (Nachher-Foto)',
-  'case.close_a11y': 'Ich habe hier aufgeräumt — Fall mit Nachher-Foto abschließen',
+  'case.close_a11y': 'Ich habe hier aufgeräumt – Fall mit Nachher-Foto abschließen',
   'case.close_busy': 'Wird gesendet …',
   'case.close_ok_title': 'Stark! 💪',
   'case.close_ok_body': 'Der Fall ist als erledigt markiert. Danke fürs Aufräumen!',
@@ -245,7 +245,7 @@ const en: Catalog = {
   'home.subline': 'Together we keep the city clean.',
   'home.cta_title': 'Report litter',
   'home.cta_sub': 'One photo is enough.',
-  'home.cta_a11y': 'Report litter — open the camera',
+  'home.cta_a11y': 'Report litter – open the camera',
   'home.stat_open': 'open cases',
   'home.stat_closed': 'cleaned up',
   'home.impact_a11y': 'Your impact: {points} points, level {level}',
@@ -268,7 +268,7 @@ const en: Catalog = {
   'login.error_signup': 'Registration is currently unavailable. Please try again later.',
   'login.signup_sent':
     'If this address is new, we have sent you a confirmation email. Please confirm it, then sign in.',
-  'login.hint': 'No real name needed — you report litter, not people.',
+  'login.hint': 'No real name needed – you report litter, not people.',
   'login.wait': 'Please wait',
   'login.language_a11y': 'Change language',
 
@@ -290,12 +290,12 @@ const en: Catalog = {
   'report.allow_camera': 'Allow camera',
   'report.gallery_link': 'Or pick from the gallery (no points)',
   'report.gallery_a11y': 'Pick a photo from the gallery, without points',
-  'report.shutter_a11y': 'Take a photo — camera reports count towards points',
+  'report.shutter_a11y': 'Take a photo – camera reports count towards points',
   'report.gallery_short': 'Gallery (no points)',
   'report.queue_badge': '{count} report(s) waiting to sync',
   'report.preview_a11y': 'Preview of your photo',
   'report.gallery_hint':
-    'Gallery photo: your report still helps — points are only awarded for photos taken with the in-app camera.',
+    'Gallery photo: your report still helps – points are only awarded for photos taken with the in-app camera.',
   'report.desc_placeholder': 'What is lying there? (optional)',
   'report.desc_a11y': 'Description of the litter find, optional',
   'report.privacy_note':
@@ -308,11 +308,11 @@ const en: Catalog = {
   'report.done_camera': 'Your report has been received. Points follow after review.',
   'report.done_gallery': 'Your report has been received. (Gallery photos earn no points.)',
   'report.done_offline':
-    'Saved! You are offline — the report will be sent automatically as soon as you are back online.',
+    'Saved! You are offline – the report will be sent automatically as soon as you are back online.',
   'report.offline_title': 'Saved!',
   'report.error_title': 'Location missing',
   'report.error_location':
-    'Location unavailable. Please allow location access in settings — without it we cannot place the litter.',
+    'Location unavailable. Please allow location access in settings – without it we cannot place the litter.',
   'report.new': 'New report',
   'report.new_a11y': 'Create another report',
   'report.vision_analyzing': 'Analysing photo …',
@@ -320,7 +320,7 @@ const en: Catalog = {
   'report.vision_no_trash': 'No litter detected',
   'report.vision_uncertain': 'Not sure',
   'report.vision_confidence': '{percent}% confidence',
-  'report.vision_advisory_note': 'Just a hint — you can still report.',
+  'report.vision_advisory_note': 'Just a hint – you can still report.',
   'report.vision_unavailable': 'Automatic analysis is currently unavailable.',
 
   'events.empty_title': 'Nothing planned yet',
@@ -340,9 +340,9 @@ const en: Catalog = {
   'profil.points_unit': 'Impact points',
   'profil.level_default': 'Beginner',
   'profil.impact_a11y': 'Your impact: {points} points, level {level}',
-  'profil.cosmetic_note': 'Points show your contribution — they cannot be redeemed.',
+  'profil.cosmetic_note': 'Points show your contribution – they cannot be redeemed.',
   'profil.activity': 'Recent activity',
-  'profil.no_points': 'No points yet — your first verified report changes that.',
+  'profil.no_points': 'No points yet – your first verified report changes that.',
   'reason.report_verified': 'Report verified',
   'reason.case_confirmed': 'Case co-confirmed',
   'reason.case_closed_after': 'Case cleaned up',
@@ -355,7 +355,7 @@ const en: Catalog = {
   'profil.pseudonym_invalid_body':
     'Allowed are 2–24 characters: letters, numbers, spaces, "_", "-" and ".".',
   'profil.reset_note':
-    'The list resets every Monday — the week counts, not endless grinding.',
+    'The list resets every Monday – the week counts, not endless grinding.',
   'profil.error_title': 'That did not work',
   'profil.error_body': 'Please try again.',
   'profil.language': 'Language',
@@ -373,7 +373,7 @@ const en: Catalog = {
   'profil.delete_a11y': 'Delete account permanently, Article 17 GDPR',
   'profil.delete_title': 'Delete account?',
   'profil.delete_body':
-    'This removes your profile, your reports, all photos (including anonymised copies) and your points — permanently.',
+    'This removes your profile, your reports, all photos (including anonymised copies) and your points – permanently.',
   'profil.delete_cancel': 'Cancel',
   'profil.delete_confirm': 'Delete permanently',
   'profil.delete_error': 'Deletion failed. Please try again later.',
@@ -395,7 +395,7 @@ const en: Catalog = {
   'case.photo_a11y': 'Anonymised photo of the litter find',
   'case.photo_pending': 'Photo is still being reviewed and anonymised.',
   'case.close': 'I cleaned up (after photo)',
-  'case.close_a11y': 'I cleaned up here — close the case with an after photo',
+  'case.close_a11y': 'I cleaned up here – close the case with an after photo',
   'case.close_busy': 'Sending …',
   'case.close_ok_title': 'Amazing! 💪',
   'case.close_ok_body': 'The case is marked as done. Thanks for cleaning up!',
@@ -419,7 +419,7 @@ const en: Catalog = {
   'language.close': 'Close',
 };
 
-/** Österreichisches Deutsch — weitgehend identisch mit Standarddeutsch;
+/** Österreichisches Deutsch – weitgehend identisch mit Standarddeutsch;
  *  nur einzelne idiomatische Abweichungen. Rest fällt auf `de` zurück. */
 const deAT: Catalog = {
   'report.done_title': 'Dankschön!',
@@ -454,7 +454,7 @@ const gsw: Catalog = {
   'login.error_signup': 'Registrierig gaht grad nöd. Bitte probiers spöter nomal.',
   'login.signup_sent':
     'Falls d Adresse neu isch, hämmer dir es Bestätigungs-Mail gschickt. Bitte bestätig s und mäld di denn aa.',
-  'login.hint': 'Kei Klarname nötig — du mäldisch Abfall, kei Mensche.',
+  'login.hint': 'Kei Klarname nötig – du mäldisch Abfall, kei Mensche.',
   'login.wait': 'Bitte warte',
   'login.language_a11y': 'Sprach ändere',
 
@@ -475,7 +475,7 @@ const gsw: Catalog = {
   'report.gallery_short': 'Galerie (ohni Pünkt)',
   'report.queue_badge': '{count} Mäldig(e) warted uf Sync',
   'report.gallery_hint':
-    'Galerie-Foti: D Mäldig hilft trotzdem — Pünkt gits nur für Fotene direkt us de App-Kamera.',
+    'Galerie-Foti: D Mäldig hilft trotzdem – Pünkt gits nur für Fotene direkt us de App-Kamera.',
   'report.desc_placeholder': 'Was liit deet? (optional)',
   'report.privacy_note':
     'Standort und Ziitpunkt wärded serversiitig prüeft. Dis Foti wird vor jeder Veröffentlichung anonymisiert; s Original bliibt privat.',
@@ -486,7 +486,7 @@ const gsw: Catalog = {
   'report.done_camera': 'Dini Mäldig isch aacho. Pünkt gits nach de Prüefig.',
   'report.done_gallery': 'Dini Mäldig isch aacho. (Galerie-Fotene gäbed kei Pünkt.)',
   'report.done_offline':
-    'Gspeicheret! Du bisch offline — d Mäldig wird automatisch gschickt, sobald du wieder Netz hesch.',
+    'Gspeicheret! Du bisch offline – d Mäldig wird automatisch gschickt, sobald du wieder Netz hesch.',
   'report.offline_title': 'Gspeicheret!',
   'report.new': 'Neui Mäldig',
 
@@ -503,15 +503,15 @@ const gsw: Catalog = {
 
   'profil.points_unit': 'Impact-Pünkt',
   'profil.level_default': 'Iisteiger',
-  'profil.cosmetic_note': 'Pünkt zeiged din Biitrag — si sind nöd iilösbar.',
+  'profil.cosmetic_note': 'Pünkt zeiged din Biitrag – si sind nöd iilösbar.',
   'profil.activity': 'Letschti Aktivität',
-  'profil.no_points': 'No kei Pünkt — dini ersti prüefti Mäldig änderet das.',
+  'profil.no_points': 'No kei Pünkt – dini ersti prüefti Mäldig änderet das.',
   'reason.report_verified': 'Mäldig bestätigt',
   'reason.case_confirmed': 'Fall mitbestätigt',
   'reason.case_closed_after': 'Fall ufgrüumt',
   'profil.leaderboard': 'Wuche-Beschtelischte',
   'profil.optin': 'Mitmache (freiwillig, mit Pseudonym)',
-  'profil.reset_note': 'D Lischte startet jede Määntig bi null — d Wuche zellt, nöd de Dauergrind.',
+  'profil.reset_note': 'D Lischte startet jede Määntig bi null – d Wuche zellt, nöd de Dauergrind.',
   'profil.error_title': 'Das het nöd klappt',
   'profil.error_body': 'Bitte probiers nomal.',
   'profil.language': 'Sprach',
@@ -557,7 +557,7 @@ const fr: Catalog = {
   'login.error_signup': 'Inscription momentanément indisponible. Réessaie plus tard.',
   'login.signup_sent':
     'Si cette adresse est nouvelle, nous t’avons envoyé un e-mail de confirmation. Confirme-le, puis connecte-toi.',
-  'login.hint': 'Pas besoin de ton vrai nom — tu signales des déchets, pas des personnes.',
+  'login.hint': 'Pas besoin de ton vrai nom – tu signales des déchets, pas des personnes.',
   'login.wait': 'Patiente …',
   'login.language_a11y': 'Changer de langue',
 
@@ -579,12 +579,12 @@ const fr: Catalog = {
   'report.allow_camera': 'Autoriser la caméra',
   'report.gallery_link': 'Ou choisir dans la galerie (sans points)',
   'report.gallery_a11y': 'Choisir une photo dans la galerie, sans points',
-  'report.shutter_a11y': 'Prendre une photo — les photos caméra comptent pour les points',
+  'report.shutter_a11y': 'Prendre une photo – les photos caméra comptent pour les points',
   'report.gallery_short': 'Galerie (sans points)',
   'report.queue_badge': '{count} signalement(s) en attente de synchronisation',
   'report.preview_a11y': 'Aperçu de ta photo',
   'report.gallery_hint':
-    'Photo de la galerie : le signalement aide quand même — les points ne sont attribués qu’aux photos prises avec la caméra de l’app.',
+    'Photo de la galerie : le signalement aide quand même – les points ne sont attribués qu’aux photos prises avec la caméra de l’app.',
   'report.desc_placeholder': 'Qu’y a-t-il là ? (facultatif)',
   'report.desc_a11y': 'Description des déchets, facultatif',
   'report.privacy_note':
@@ -597,11 +597,11 @@ const fr: Catalog = {
   'report.done_camera': 'Ton signalement a bien été reçu. Les points arrivent après vérification.',
   'report.done_gallery': 'Ton signalement a bien été reçu. (Les photos de la galerie ne donnent pas de points.)',
   'report.done_offline':
-    'Enregistré ! Tu es hors ligne — le signalement sera envoyé automatiquement dès que tu retrouves du réseau.',
+    'Enregistré ! Tu es hors ligne – le signalement sera envoyé automatiquement dès que tu retrouves du réseau.',
   'report.offline_title': 'Enregistré !',
   'report.error_title': 'Position manquante',
   'report.error_location':
-    'Position indisponible. Autorise l’accès à la position dans les réglages — sans elle, impossible de situer les déchets.',
+    'Position indisponible. Autorise l’accès à la position dans les réglages – sans elle, impossible de situer les déchets.',
   'report.new': 'Nouveau signalement',
   'report.new_a11y': 'Créer un autre signalement',
 
@@ -622,9 +622,9 @@ const fr: Catalog = {
   'profil.points_unit': 'Points d’impact',
   'profil.level_default': 'Débutant·e',
   'profil.impact_a11y': 'Ton impact : {points} points, niveau {level}',
-  'profil.cosmetic_note': 'Les points montrent ta contribution — ils ne sont pas échangeables.',
+  'profil.cosmetic_note': 'Les points montrent ta contribution – ils ne sont pas échangeables.',
   'profil.activity': 'Activité récente',
-  'profil.no_points': 'Pas encore de points — ton premier signalement vérifié changera ça.',
+  'profil.no_points': 'Pas encore de points – ton premier signalement vérifié changera ça.',
   'reason.report_verified': 'Signalement vérifié',
   'reason.case_confirmed': 'Dossier co-confirmé',
   'reason.case_closed_after': 'Dossier nettoyé',
@@ -635,9 +635,9 @@ const fr: Catalog = {
   'profil.pseudonym_a11y': 'Pseudonyme pour le classement',
   'profil.pseudonym_invalid_title': 'Pseudonyme invalide',
   'profil.pseudonym_invalid_body':
-    'Autorisés : 2–24 caractères — lettres, chiffres, espaces, « _ », « - » et « . ».',
+    'Autorisés : 2–24 caractères – lettres, chiffres, espaces, « _ », « - » et « . ».',
   'profil.reset_note':
-    'Le classement repart de zéro chaque lundi — c’est la semaine qui compte, pas le grind permanent.',
+    'Le classement repart de zéro chaque lundi – c’est la semaine qui compte, pas le grind permanent.',
   'profil.error_title': 'Ça n’a pas fonctionné',
   'profil.error_body': 'Réessaie, s’il te plaît.',
   'profil.language': 'Langue',
@@ -655,7 +655,7 @@ const fr: Catalog = {
   'profil.delete_a11y': 'Supprimer définitivement le compte, article 17 RGPD',
   'profil.delete_title': 'Supprimer le compte ?',
   'profil.delete_body':
-    'Cela supprime ton profil, tes signalements, toutes les photos (y compris les copies anonymisées) et tes points — définitivement.',
+    'Cela supprime ton profil, tes signalements, toutes les photos (y compris les copies anonymisées) et tes points – définitivement.',
   'profil.delete_cancel': 'Annuler',
   'profil.delete_confirm': 'Supprimer définitivement',
   'profil.delete_error': 'Suppression échouée. Réessaie plus tard.',
@@ -676,7 +676,7 @@ const fr: Catalog = {
   'case.photo_a11y': 'Photo anonymisée des déchets',
   'case.photo_pending': 'La photo est encore en cours de vérification et d’anonymisation.',
   'case.close': 'J’ai nettoyé (photo après)',
-  'case.close_a11y': 'J’ai nettoyé ici — clore le dossier avec une photo après',
+  'case.close_a11y': 'J’ai nettoyé ici – clore le dossier avec une photo après',
   'case.close_busy': 'Envoi …',
   'case.close_ok_title': 'Génial ! 💪',
   'case.close_ok_body': 'Le dossier est marqué comme terminé. Merci d’avoir nettoyé !',
@@ -725,7 +725,7 @@ const it: Catalog = {
   'login.error_signup': 'Registrazione al momento non disponibile. Riprova più tardi.',
   'login.signup_sent':
     'Se l’indirizzo è nuovo, ti abbiamo inviato un’e-mail di conferma. Confermala e poi accedi.',
-  'login.hint': 'Nessun nome reale necessario — segnali rifiuti, non persone.',
+  'login.hint': 'Nessun nome reale necessario – segnali rifiuti, non persone.',
   'login.wait': 'Attendi …',
   'login.language_a11y': 'Cambia lingua',
 
@@ -747,12 +747,12 @@ const it: Catalog = {
   'report.allow_camera': 'Consenti fotocamera',
   'report.gallery_link': 'Oppure scegli dalla galleria (senza punti)',
   'report.gallery_a11y': 'Scegli una foto dalla galleria, senza punti',
-  'report.shutter_a11y': 'Scatta una foto — le foto dalla fotocamera valgono punti',
+  'report.shutter_a11y': 'Scatta una foto – le foto dalla fotocamera valgono punti',
   'report.gallery_short': 'Galleria (senza punti)',
   'report.queue_badge': '{count} segnalazione/i in attesa di sincronizzazione',
   'report.preview_a11y': 'Anteprima della tua foto',
   'report.gallery_hint':
-    'Foto dalla galleria: la segnalazione aiuta comunque — i punti valgono solo per foto scattate con la fotocamera dell’app.',
+    'Foto dalla galleria: la segnalazione aiuta comunque – i punti valgono solo per foto scattate con la fotocamera dell’app.',
   'report.desc_placeholder': 'Cosa c’è lì? (facoltativo)',
   'report.desc_a11y': 'Descrizione dei rifiuti, facoltativa',
   'report.privacy_note':
@@ -765,11 +765,11 @@ const it: Catalog = {
   'report.done_camera': 'La tua segnalazione è arrivata. I punti arrivano dopo la verifica.',
   'report.done_gallery': 'La tua segnalazione è arrivata. (Le foto dalla galleria non danno punti.)',
   'report.done_offline':
-    'Salvato! Sei offline — la segnalazione verrà inviata automaticamente appena torni in rete.',
+    'Salvato! Sei offline – la segnalazione verrà inviata automaticamente appena torni in rete.',
   'report.offline_title': 'Salvato!',
   'report.error_title': 'Posizione mancante',
   'report.error_location':
-    'Posizione non disponibile. Consenti l’accesso alla posizione nelle impostazioni — senza non possiamo collocare i rifiuti.',
+    'Posizione non disponibile. Consenti l’accesso alla posizione nelle impostazioni – senza non possiamo collocare i rifiuti.',
   'report.new': 'Nuova segnalazione',
   'report.new_a11y': 'Crea un’altra segnalazione',
 
@@ -790,9 +790,9 @@ const it: Catalog = {
   'profil.points_unit': 'Punti impatto',
   'profil.level_default': 'Principiante',
   'profil.impact_a11y': 'Il tuo impatto: {points} punti, livello {level}',
-  'profil.cosmetic_note': 'I punti mostrano il tuo contributo — non sono riscattabili.',
+  'profil.cosmetic_note': 'I punti mostrano il tuo contributo – non sono riscattabili.',
   'profil.activity': 'Attività recente',
-  'profil.no_points': 'Ancora nessun punto — la tua prima segnalazione verificata cambierà le cose.',
+  'profil.no_points': 'Ancora nessun punto – la tua prima segnalazione verificata cambierà le cose.',
   'reason.report_verified': 'Segnalazione verificata',
   'reason.case_confirmed': 'Caso co-confermato',
   'reason.case_closed_after': 'Caso ripulito',
@@ -805,7 +805,7 @@ const it: Catalog = {
   'profil.pseudonym_invalid_body':
     'Sono ammessi 2–24 caratteri: lettere, numeri, spazi, "_", "-" e ".".',
   'profil.reset_note':
-    'La classifica riparte da zero ogni lunedì — conta la settimana, non il grind continuo.',
+    'La classifica riparte da zero ogni lunedì – conta la settimana, non il grind continuo.',
   'profil.error_title': 'Non ha funzionato',
   'profil.error_body': 'Riprova, per favore.',
   'profil.language': 'Lingua',
@@ -823,7 +823,7 @@ const it: Catalog = {
   'profil.delete_a11y': 'Elimina definitivamente l’account, articolo 17 GDPR',
   'profil.delete_title': 'Eliminare l’account?',
   'profil.delete_body':
-    'Questo rimuove il tuo profilo, le tue segnalazioni, tutte le foto (incluse le copie anonimizzate) e i tuoi punti — definitivamente.',
+    'Questo rimuove il tuo profilo, le tue segnalazioni, tutte le foto (incluse le copie anonimizzate) e i tuoi punti – definitivamente.',
   'profil.delete_cancel': 'Annulla',
   'profil.delete_confirm': 'Elimina definitivamente',
   'profil.delete_error': 'Eliminazione non riuscita. Riprova più tardi.',
@@ -844,7 +844,7 @@ const it: Catalog = {
   'case.photo_a11y': 'Foto anonimizzata dei rifiuti',
   'case.photo_pending': 'La foto è ancora in fase di verifica e anonimizzazione.',
   'case.close': 'Ho ripulito (foto dopo)',
-  'case.close_a11y': 'Ho ripulito qui — chiudi il caso con una foto del dopo',
+  'case.close_a11y': 'Ho ripulito qui – chiudi il caso con una foto del dopo',
   'case.close_busy': 'Invio …',
   'case.close_ok_title': 'Grande! 💪',
   'case.close_ok_body': 'Il caso è segnato come risolto. Grazie per aver ripulito!',
@@ -892,7 +892,7 @@ const zh: Catalog = {
   'login.error_signin': '无法登录。请检查邮箱和密码。',
   'login.error_signup': '目前无法注册。请稍后再试。',
   'login.signup_sent': '如果该邮箱是新注册的，我们已发送确认邮件。请确认后再登录。',
-  'login.hint': '无需真实姓名——你上报的是垃圾，不是人。',
+  'login.hint': '无需真实姓名––你上报的是垃圾，不是人。',
   'login.wait': '请稍候',
   'login.language_a11y': '更改语言',
 
@@ -914,11 +914,11 @@ const zh: Catalog = {
   'report.allow_camera': '允许使用相机',
   'report.gallery_link': '或从相册选择（不计积分）',
   'report.gallery_a11y': '从相册选择照片，不计积分',
-  'report.shutter_a11y': '拍照——用相机上报可获得积分',
+  'report.shutter_a11y': '拍照––用相机上报可获得积分',
   'report.gallery_short': '相册（不计积分）',
   'report.queue_badge': '{count} 条上报等待同步',
   'report.preview_a11y': '你的照片预览',
-  'report.gallery_hint': '相册照片：上报同样有帮助——但只有用应用内相机拍摄的照片才能获得积分。',
+  'report.gallery_hint': '相册照片：上报同样有帮助––但只有用应用内相机拍摄的照片才能获得积分。',
   'report.desc_placeholder': '那里有什么？（可选）',
   'report.desc_a11y': '垃圾描述，可选',
   'report.privacy_note': '位置和时间将在服务器端核验。照片在公开前会被匿名化；原图保持私密。',
@@ -929,10 +929,10 @@ const zh: Catalog = {
   'report.done_title': '谢谢你！',
   'report.done_camera': '你的上报已收到。审核通过后即可获得积分。',
   'report.done_gallery': '你的上报已收到。（相册照片不计积分。）',
-  'report.done_offline': '已保存！你目前离线——一旦恢复网络，上报会自动发送。',
+  'report.done_offline': '已保存！你目前离线––一旦恢复网络，上报会自动发送。',
   'report.offline_title': '已保存！',
   'report.error_title': '缺少位置信息',
-  'report.error_location': '无法获取位置。请在设置中允许位置访问——没有位置我们无法定位垃圾。',
+  'report.error_location': '无法获取位置。请在设置中允许位置访问––没有位置我们无法定位垃圾。',
   'report.new': '再次上报',
   'report.new_a11y': '创建另一条上报',
 
@@ -953,9 +953,9 @@ const zh: Catalog = {
   'profil.points_unit': '影响力积分',
   'profil.level_default': '新手',
   'profil.impact_a11y': '你的影响力：{points} 积分，等级 {level}',
-  'profil.cosmetic_note': '积分展示你的贡献——不可兑换。',
+  'profil.cosmetic_note': '积分展示你的贡献––不可兑换。',
   'profil.activity': '最近动态',
-  'profil.no_points': '还没有积分——你的第一条通过审核的上报会改变这一点。',
+  'profil.no_points': '还没有积分––你的第一条通过审核的上报会改变这一点。',
   'reason.report_verified': '上报已确认',
   'reason.case_confirmed': '案例共同确认',
   'reason.case_closed_after': '案例已清理',
@@ -966,7 +966,7 @@ const zh: Catalog = {
   'profil.pseudonym_a11y': '排行榜昵称',
   'profil.pseudonym_invalid_title': '昵称无效',
   'profil.pseudonym_invalid_body': '允许 2–24 个字符：字母、数字、空格、"_"、"-" 和 "."。',
-  'profil.reset_note': '排行榜每周一清零——比的是这一周，而不是无休止的刷分。',
+  'profil.reset_note': '排行榜每周一清零––比的是这一周，而不是无休止的刷分。',
   'profil.error_title': '操作失败',
   'profil.error_body': '请重试。',
   'profil.language': '语言',
@@ -1004,7 +1004,7 @@ const zh: Catalog = {
   'case.photo_a11y': '垃圾点的匿名化照片',
   'case.photo_pending': '照片仍在审核和匿名化处理中。',
   'case.close': '我已清理（事后照片）',
-  'case.close_a11y': '我已在此清理——用事后照片关闭案例',
+  'case.close_a11y': '我已在此清理––用事后照片关闭案例',
   'case.close_busy': '发送中 …',
   'case.close_ok_title': '太棒了！💪',
   'case.close_ok_body': '案例已标记为完成。感谢你的清理！',
@@ -1053,7 +1053,7 @@ const nb: Catalog = {
   'login.error_signup': 'Registrering er ikke tilgjengelig akkurat nå. Prøv igjen senere.',
   'login.signup_sent':
     'Hvis adressen er ny, har vi sendt deg en bekreftelses-e-post. Bekreft den og logg deretter inn.',
-  'login.hint': 'Ingen fullt navn nødvendig — du rapporterer søppel, ikke mennesker.',
+  'login.hint': 'Ingen fullt navn nødvendig – du rapporterer søppel, ikke mennesker.',
   'login.wait': 'Vent litt',
   'login.language_a11y': 'Bytt språk',
 
@@ -1075,12 +1075,12 @@ const nb: Catalog = {
   'report.allow_camera': 'Tillat kamera',
   'report.gallery_link': 'Eller velg fra galleriet (uten poeng)',
   'report.gallery_a11y': 'Velg et bilde fra galleriet, uten poeng',
-  'report.shutter_a11y': 'Ta et bilde — kamerabilder teller for poeng',
+  'report.shutter_a11y': 'Ta et bilde – kamerabilder teller for poeng',
   'report.gallery_short': 'Galleri (uten poeng)',
   'report.queue_badge': '{count} rapport(er) venter på synkronisering',
   'report.preview_a11y': 'Forhåndsvisning av bildet ditt',
   'report.gallery_hint':
-    'Galleribilde: rapporten hjelper likevel — poeng gis kun for bilder tatt med kameraet i appen.',
+    'Galleribilde: rapporten hjelper likevel – poeng gis kun for bilder tatt med kameraet i appen.',
   'report.desc_placeholder': 'Hva ligger der? (valgfritt)',
   'report.desc_a11y': 'Beskrivelse av søppelfunnet, valgfritt',
   'report.privacy_note':
@@ -1093,11 +1093,11 @@ const nb: Catalog = {
   'report.done_camera': 'Rapporten din er mottatt. Poeng kommer etter kontrollen.',
   'report.done_gallery': 'Rapporten din er mottatt. (Galleribilder gir ingen poeng.)',
   'report.done_offline':
-    'Lagret! Du er frakoblet — rapporten sendes automatisk så snart du er på nett igjen.',
+    'Lagret! Du er frakoblet – rapporten sendes automatisk så snart du er på nett igjen.',
   'report.offline_title': 'Lagret!',
   'report.error_title': 'Posisjon mangler',
   'report.error_location':
-    'Posisjon utilgjengelig. Tillat posisjonstilgang i innstillingene — uten den kan vi ikke plassere søppelet.',
+    'Posisjon utilgjengelig. Tillat posisjonstilgang i innstillingene – uten den kan vi ikke plassere søppelet.',
   'report.new': 'Ny rapport',
   'report.new_a11y': 'Opprett en ny rapport',
 
@@ -1118,9 +1118,9 @@ const nb: Catalog = {
   'profil.points_unit': 'Innsatspoeng',
   'profil.level_default': 'Nybegynner',
   'profil.impact_a11y': 'Din innsats: {points} poeng, nivå {level}',
-  'profil.cosmetic_note': 'Poeng viser bidraget ditt — de kan ikke løses inn.',
+  'profil.cosmetic_note': 'Poeng viser bidraget ditt – de kan ikke løses inn.',
   'profil.activity': 'Siste aktivitet',
-  'profil.no_points': 'Ingen poeng ennå — din første verifiserte rapport endrer det.',
+  'profil.no_points': 'Ingen poeng ennå – din første verifiserte rapport endrer det.',
   'reason.report_verified': 'Rapport bekreftet',
   'reason.case_confirmed': 'Sak medbekreftet',
   'reason.case_closed_after': 'Sak ryddet',
@@ -1132,7 +1132,7 @@ const nb: Catalog = {
   'profil.pseudonym_invalid_title': 'Ugyldig kallenavn',
   'profil.pseudonym_invalid_body':
     'Tillatt er 2–24 tegn: bokstaver, tall, mellomrom, "_", "-" og ".".',
-  'profil.reset_note': 'Listen nullstilles hver mandag — uken teller, ikke evig grinding.',
+  'profil.reset_note': 'Listen nullstilles hver mandag – uken teller, ikke evig grinding.',
   'profil.error_title': 'Det fungerte ikke',
   'profil.error_body': 'Prøv igjen.',
   'profil.language': 'Språk',
@@ -1150,7 +1150,7 @@ const nb: Catalog = {
   'profil.delete_a11y': 'Slett kontoen permanent, artikkel 17 GDPR',
   'profil.delete_title': 'Slette kontoen?',
   'profil.delete_body':
-    'Dette fjerner profilen din, rapportene dine, alle bilder (inkludert anonymiserte kopier) og poengene dine — permanent.',
+    'Dette fjerner profilen din, rapportene dine, alle bilder (inkludert anonymiserte kopier) og poengene dine – permanent.',
   'profil.delete_cancel': 'Avbryt',
   'profil.delete_confirm': 'Slett permanent',
   'profil.delete_error': 'Sletting mislyktes. Prøv igjen senere.',
@@ -1171,7 +1171,7 @@ const nb: Catalog = {
   'case.photo_a11y': 'Anonymisert bilde av søppelfunnet',
   'case.photo_pending': 'Bildet er fortsatt under kontroll og anonymisering.',
   'case.close': 'Jeg har ryddet (etter-bilde)',
-  'case.close_a11y': 'Jeg har ryddet her — lukk saken med et etter-bilde',
+  'case.close_a11y': 'Jeg har ryddet her – lukk saken med et etter-bilde',
   'case.close_busy': 'Sender …',
   'case.close_ok_title': 'Sterkt! 💪',
   'case.close_ok_body': 'Saken er merket som ferdig. Takk for at du ryddet!',
@@ -1220,7 +1220,7 @@ const cs: Catalog = {
   'login.error_signup': 'Registrace momentálně není možná. Zkus to prosím později.',
   'login.signup_sent':
     'Pokud je adresa nová, poslali jsme ti potvrzovací e-mail. Potvrď ho a pak se přihlas.',
-  'login.hint': 'Není potřeba skutečné jméno — hlásíš odpadky, ne lidi.',
+  'login.hint': 'Není potřeba skutečné jméno – hlásíš odpadky, ne lidi.',
   'login.wait': 'Čekej prosím',
   'login.language_a11y': 'Změnit jazyk',
 
@@ -1242,12 +1242,12 @@ const cs: Catalog = {
   'report.allow_camera': 'Povolit fotoaparát',
   'report.gallery_link': 'Nebo vybrat z galerie (bez bodů)',
   'report.gallery_a11y': 'Vybrat fotku z galerie, bez bodů',
-  'report.shutter_a11y': 'Vyfotit — fotky z fotoaparátu se počítají do bodů',
+  'report.shutter_a11y': 'Vyfotit – fotky z fotoaparátu se počítají do bodů',
   'report.gallery_short': 'Galerie (bez bodů)',
   'report.queue_badge': '{count} hlášení čeká na synchronizaci',
   'report.preview_a11y': 'Náhled tvé fotky',
   'report.gallery_hint':
-    'Fotka z galerie: hlášení i tak pomůže — body jsou jen za fotky pořízené fotoaparátem v aplikaci.',
+    'Fotka z galerie: hlášení i tak pomůže – body jsou jen za fotky pořízené fotoaparátem v aplikaci.',
   'report.desc_placeholder': 'Co tam leží? (volitelné)',
   'report.desc_a11y': 'Popis nálezu odpadků, volitelný',
   'report.privacy_note':
@@ -1260,11 +1260,11 @@ const cs: Catalog = {
   'report.done_camera': 'Tvoje hlášení dorazilo. Body přijdou po kontrole.',
   'report.done_gallery': 'Tvoje hlášení dorazilo. (Fotky z galerie body nedávají.)',
   'report.done_offline':
-    'Uloženo! Jsi offline — hlášení se odešle automaticky, jakmile budeš zase online.',
+    'Uloženo! Jsi offline – hlášení se odešle automaticky, jakmile budeš zase online.',
   'report.offline_title': 'Uloženo!',
   'report.error_title': 'Chybí poloha',
   'report.error_location':
-    'Poloha není dostupná. Povol prosím přístup k poloze v nastavení — bez ní nemůžeme odpadky umístit.',
+    'Poloha není dostupná. Povol prosím přístup k poloze v nastavení – bez ní nemůžeme odpadky umístit.',
   'report.new': 'Nové hlášení',
   'report.new_a11y': 'Vytvořit další hlášení',
 
@@ -1285,9 +1285,9 @@ const cs: Catalog = {
   'profil.points_unit': 'Body dopadu',
   'profil.level_default': 'Začátečník',
   'profil.impact_a11y': 'Tvůj dopad: {points} bodů, úroveň {level}',
-  'profil.cosmetic_note': 'Body ukazují tvůj přínos — nelze je směnit.',
+  'profil.cosmetic_note': 'Body ukazují tvůj přínos – nelze je směnit.',
   'profil.activity': 'Poslední aktivita',
-  'profil.no_points': 'Zatím žádné body — tvoje první ověřené hlášení to změní.',
+  'profil.no_points': 'Zatím žádné body – tvoje první ověřené hlášení to změní.',
   'reason.report_verified': 'Hlášení potvrzeno',
   'reason.case_confirmed': 'Případ spolupotvrzen',
   'reason.case_closed_after': 'Případ uklizen',
@@ -1299,7 +1299,7 @@ const cs: Catalog = {
   'profil.pseudonym_invalid_title': 'Neplatná přezdívka',
   'profil.pseudonym_invalid_body':
     'Povoleno je 2–24 znaků: písmena, číslice, mezery, "_", "-" a ".".',
-  'profil.reset_note': 'Žebříček začíná každé pondělí od nuly — počítá se týden, ne věčné grindování.',
+  'profil.reset_note': 'Žebříček začíná každé pondělí od nuly – počítá se týden, ne věčné grindování.',
   'profil.error_title': 'To se nepovedlo',
   'profil.error_body': 'Zkus to prosím znovu.',
   'profil.language': 'Jazyk',
@@ -1317,7 +1317,7 @@ const cs: Catalog = {
   'profil.delete_a11y': 'Trvale smazat účet, článek 17 GDPR',
   'profil.delete_title': 'Smazat účet?',
   'profil.delete_body':
-    'Tím se odstraní tvůj profil, hlášení, všechny fotky (včetně anonymizovaných kopií) a body — natrvalo.',
+    'Tím se odstraní tvůj profil, hlášení, všechny fotky (včetně anonymizovaných kopií) a body – natrvalo.',
   'profil.delete_cancel': 'Zrušit',
   'profil.delete_confirm': 'Trvale smazat',
   'profil.delete_error': 'Smazání se nezdařilo. Zkus to prosím později.',
@@ -1338,7 +1338,7 @@ const cs: Catalog = {
   'case.photo_a11y': 'Anonymizovaná fotka nálezu odpadků',
   'case.photo_pending': 'Fotka se ještě kontroluje a anonymizuje.',
   'case.close': 'Uklidil/a jsem (fotka poté)',
-  'case.close_a11y': 'Uklidil/a jsem tady — uzavřít případ fotkou poté',
+  'case.close_a11y': 'Uklidil/a jsem tady – uzavřít případ fotkou poté',
   'case.close_busy': 'Odesílání …',
   'case.close_ok_title': 'Paráda! 💪',
   'case.close_ok_body': 'Případ je označen jako hotový. Díky za úklid!',
@@ -1362,7 +1362,7 @@ const cs: Catalog = {
   'language.close': 'Zavřít',
 };
 
-// `beta`: Sprache ist waehlbar, aber noch nicht redaktionell geprueft —
+// `beta`: Sprache ist waehlbar, aber noch nicht redaktionell geprueft –
 // wird in der Sprachwahl mit einem Beta-Badge angezeigt. Vollstaendig
 // gepflegt sind Deutsch, English und Schwiizerdütsch.
 export const LANGUAGES = [

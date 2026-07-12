@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
 
 type Props = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -47,6 +47,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.one,
   },
-  title: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  title: { fontFamily: DisplayFont.regular, fontSize: 18, fontWeight: '700', textAlign: 'center' },
   body: { fontSize: 15, lineHeight: 22, textAlign: 'center' },
 });

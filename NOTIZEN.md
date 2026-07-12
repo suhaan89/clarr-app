@@ -234,3 +234,72 @@ unverändert; die wichtigsten sind unten je Paket wiederholt.
    (Function-Response klein halten); Hinweis steht in der Antwort.
 5. Legal-Screens sind sichtbar als ENTWURF markiert (rote Warnzeile) —
    bewusst, damit niemand sie versehentlich für final hält.
+
+## Paket 12 — Tests & Umgebungen
+
+1. Jest mit `jest-expo@54` (SDK-passend; jest-expo@57 kollidiert mit
+   react 19.1). Reward-/Auth-KERNlogik lebt in SQL → dort getestet
+   (pgTAP: rewards.test.sql aus Paket 6 + neu auth.test.sql); Jest testet
+   die Client-Logik (Offline-Queue „kein Doppel-Sync", Validierung).
+2. `npm test` = Jest (lauffähig ohne Docker); `supabase test db` braucht
+   die lokale Supabase (Docker) und ist in docs/ops.md dokumentiert —
+   bewusst nicht in npm test gekettet, damit CI/Rechner ohne Docker nicht
+   rot werden.
+3. Login-Validierung nach `src/lib/validation.ts` ausgelagert (testbar);
+   Pseudonym-Regex clientseitig gespiegelt (Server bleibt maßgeblich).
+4. `supabase/seed.sql` legt synthetische auth.users OHNE Passwort an
+   (kein Login möglich — reicht für RLS-/Karten-/Profil-Tests, keine
+   Fake-Logins in dev). Statuswechsel im Seed folgen der Statusmaschine.
+5. pgTAP-Tests wurden nicht gegen eine laufende DB ausgeführt (kein
+   Docker in diesem Lauf; Vorgabe kein Live-DB-Zugriff) — Ausführung ist
+   der dokumentierte `supabase test db`-Schritt.
+
+## Paket 13 — Security-Härtung
+
+1. Audit-Ergebnis: alle 16 Tabellen mit RLS; `reports`-Schreib-Grants
+   waren seit 004 revoked (die 001-Policies waren inert, nicht offen).
+   Vollständige Tabelle in docs/security-review.md.
+2. Migration 014 behebt drei echte Befunde:
+   - Flag-Tageslimit 10 (Fail-safe-Flagging war unbegrenzt → ein Konto
+     hätte die Karte leeren können);
+   - `signups_select_all` ersetzt durch „nur eigene" + Zähler-View
+     (Teilnehmer-user_ids waren für alle Angemeldeten lesbar —
+     Datenschutz, Zielgruppe teils minderjährig) → Policy-Ausnahme Nr. 3,
+     Events-Screen angepasst;
+   - Legacy-Bucket `report-photos`: Schreibweg geschlossen (Ausnahme
+     Nr. 4); Alt-Objekte muss der Betreiber sichten (nicht anonymisiert!).
+   Zusätzlich defense-in-depth: Pfad-Besitz-Trigger auf report_photos,
+   inerte Altlast-Policies entfernt (Ausnahme Nr. 5, ohne Wirkungsänderung).
+3. Bewusst NICHT gemacht: pHash-Duplikatabgleich automatisieren (größerer
+   Umbau, als offener Punkt dokumentiert).
+
+## Bugfix-Lauf 2026-07-11
+
+1. `useFocusEffect(load)` in events.tsx übergab eine async Funktion direkt
+   (TS-Fehler, `tsc` war nicht sauber) — auf
+   `useFocusEffect(useCallback(() => { load(); }, [load]))` umgestellt.
+2. `authority-digest`: Fälle, bei denen der Confirm-Token-Insert fehlschlug,
+   wurden trotzdem auf `weitergeleitet` gesetzt (weil `caseIds` aus der
+   ungefilterten `cases`-Liste gebaut wurde, nicht aus den tatsächlich
+   versendeten Items) — Fall war danach verwaist (kein Token, kein
+   Rücklauf-Link, taucht in keinem Digest mehr auf). Jetzt wird nur noch
+   weitergeleitet, wofür auch wirklich ein Token existiert.
+3. `max_participants` bei Events war nur clientseitig geprüft (Button
+   deaktiviert) — direkter Insert oder ein Race um den letzten Platz konnte
+   überbuchen. Migration 015: Trigger sperrt die Event-Zeile (`FOR UPDATE`)
+   und zählt Anmeldungen serverseitig gegen; events.tsx zeigt jetzt einen
+   Alert statt den Fehler stillschweigend zu verschlucken.
+4. Pseudonym-Validierung: Client (`\p{L}`, Unicode) und Server
+   (`set_leaderboard_prefs`, `[[:alnum:]]`) konnten je nach DB-Locale
+   auseinanderlaufen, UND `saveLeaderboardPrefs` prüfte den RPC-Fehler gar
+   nicht — ein abgelehntes Pseudonym setzte den Switch optimistisch auf
+   „an" und fiel erst beim nächsten `load()` stillschweigend zurück, ohne
+   Erklärung. Migration 016 erweitert die Server-Zeichenklasse explizit um
+   Latin-1-Supplement/Latin-Extended-A (deckt deutsche/europäische Namen
+   ab, ohne sich auf locale-abhängige `[[:alnum:]]`-Klassifizierung zu
+   verlassen); profil.tsx validiert jetzt vorab und zeigt bei einem
+   RPC-Fehler einen Alert, macht den optimistischen State-Update rückgängig.
+5. `npx expo lint` hatte noch keine Konfiguration (`eslint`/
+   `eslint-config-expo` fehlten als devDependencies) — nachinstalliert,
+   Lauf zeigt jetzt nur 2 stilistische Warnungen (kein echter Bug) im
+   AsyncStorage-Jest-Mock.

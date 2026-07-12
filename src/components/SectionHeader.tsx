@@ -1,6 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 
-import { Spacing, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Spacing, useThemeColors } from '@/constants/theme';
 
 /** Abschnittsüberschrift mit einheitlichem Abstand nach oben. */
 export function SectionHeader({ title }: { title: string }) {
@@ -14,6 +14,7 @@ export function SectionHeader({ title }: { title: string }) {
 
 const styles = StyleSheet.create({
   heading: {
+    fontFamily: DisplayFont.regular,
     fontSize: 17,
     fontWeight: '700',
     marginTop: Spacing.four,

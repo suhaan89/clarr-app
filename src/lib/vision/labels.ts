@@ -8,7 +8,7 @@
  * enthalten (z. B. „pop bottle, soda bottle").
  *
  * Diese Datei ist REIN (keine nativen Imports) und vollständig testbar. Sie
- * arbeitet auf Label-Strings — egal, aus welchem Modell sie stammen. Bei einem
+ * arbeitet auf Label-Strings – egal, aus welchem Modell sie stammen. Bei einem
  * müll-spezifischen Modell (siehe docs/vision-ondevice.md) kann diese Heuristik
  * entfallen oder durch die dortigen Klassennamen ersetzt werden.
  */
@@ -54,7 +54,7 @@ export const TRASH_LABEL_KEYWORDS: readonly string[] = [
  * aber KEIN Müll sind (Fehlalarm vermeiden). Wird zuerst geprüft.
  */
 const NON_TRASH_LABELS: readonly string[] = [
-  'hot pot', // enthält „pot", aber kein Müll-Keyword — Beispiel für künftige Fälle
+  'hot pot', // enthält „pot", aber kein Müll-Keyword – Beispiel für künftige Fälle
 ] as const;
 
 /** Normalisiert ein Label für den Vergleich. */

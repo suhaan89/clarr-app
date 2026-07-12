@@ -20,7 +20,7 @@ import { useI18n } from '@/lib/i18n';
  * Hochwertiger Marken-Splash beim Kaltstart: Logo-Kachel steigt sanft auf,
  * ein weicher Ring pulsiert dahinter, Wortmarke + kurzer Ladetext. Nach ~1,9 s
  * blendet er aus und ruft `onFinish`. Rein dekorativ, keine Logik, kein Warten
- * auf Netzwerk — der erste Eindruck soll ruhig und wertig sein.
+ * auf Netzwerk – der erste Eindruck soll ruhig und wertig sein.
  */
 export function BrandSplash({ onFinish }: { onFinish: () => void }) {
   const scheme = useColorScheme();

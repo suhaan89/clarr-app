@@ -8,7 +8,7 @@ type Tone = 'success' | 'danger' | 'warning' | 'neutral';
 type Props = {
   label: string;
   tone?: Tone;
-  /** Aussagekräftiges Icon vor dem Label — bevorzugt für Status (nicht nur Farbe). */
+  /** Aussagekräftiges Icon vor dem Label – bevorzugt für Status (nicht nur Farbe). */
   icon?: keyof typeof Ionicons.glyphMap;
   /** Kleiner Farbpunkt vor dem Label (Alternative zum Icon). */
   dot?: boolean;

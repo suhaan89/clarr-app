@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const expiresAt = new Date(Date.now() + ttlDays * 24 * 3600 * 1000).toISOString();
   const items: string[] = [];
+  const sentCaseIds: string[] = [];
 
   for (const c of cases) {
     // Ein geblurrtes, freigegebenes Foto des Falls (falls vorhanden).
@@ -86,6 +87,7 @@ Deno.serve(async (req) => {
       expires_at: expiresAt,
     });
     if (tokenError) continue; // Fall bleibt 'geprueft' und kommt naechste Woche wieder
+    sentCaseIds.push(c.id);
 
     const mapUrl = `https://www.openstreetmap.org/?mlat=${c.location_lat}&mlon=${c.location_lng}#map=18/${c.location_lat}/${c.location_lng}`;
     const photoUrl = photo?.blurred_path
@@ -128,7 +130,7 @@ Deno.serve(async (req) => {
     // Fehlerdetails NICHT loggen (koennten Empfaenger/Headers enthalten).
   }
 
-  const caseIds = cases.map((c) => c.id);
+  const caseIds = sentCaseIds;
   await admin.from("authority_digests").insert({ recipient, case_ids: caseIds, delivery });
 
   // Erst nach erfolgreichem Versand/Protokoll: geprueft -> weitergeleitet.

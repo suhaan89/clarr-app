@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Input, LanguagePicker } from '@/components';
-import { Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -43,7 +43,7 @@ export default function LoginScreen() {
     });
     setBusy(false);
     if (error) {
-      // Neutral — kein Unterschied "Konto existiert nicht" vs. "Passwort
+      // Neutral – kein Unterschied "Konto existiert nicht" vs. "Passwort
       // falsch" (Anti-Enumeration).
       setMessage({ text: t('login.error_signin'), kind: 'error' });
     }
@@ -58,11 +58,11 @@ export default function LoginScreen() {
       setMessage({ text: t('login.error_signup'), kind: 'error' });
       return;
     }
-    // Immer dieselbe Meldung — auch wenn die Adresse schon registriert ist
+    // Immer dieselbe Meldung – auch wenn die Adresse schon registriert ist
     // (Anti-Enumeration). Supabase sendet dann keine zweite Mail.
     setMessage({ text: t('login.signup_sent'), kind: 'info' });
     // TODO (JURISTISCH PRUEFEN): Alters-/Einwilligungsabfrage vor der
-    // Registrierung — Zielgruppe teils minderjaehrig. Bis zur Klaerung
+    // Registrierung – Zielgruppe teils minderjaehrig. Bis zur Klaerung
     // keine Geburtsdatum-Abfrage (Datenminimierung).
   }
 
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.one,
   },
-  title: { fontSize: 40, fontWeight: '800', letterSpacing: 2, textAlign: 'center' },
+  title: { fontFamily: DisplayFont.bold, fontSize: 40, fontWeight: '800', letterSpacing: 2, textAlign: 'center' },
   subtitle: { fontSize: 16, textAlign: 'center' },
   form: { gap: Spacing.three },
   message: { fontSize: 15, lineHeight: 21 },
