@@ -254,3 +254,24 @@ Warnungen in `offline-queue.test.ts`, nicht dieser Runde) · `npm test` ✅
 26/26 Tests grün. Neue pgTAP-Dateien (`security_hardening_2`,
 `gps_precision`, `rls_attacker`) konnten mangels Docker nicht ausgeführt
 werden — Nachholen in Paket I.40 vermerkt.
+
+## Paket C — Rechtliches (nur technische Vorbereitung) ✅
+
+16. **Alters-/Einwilligungsabfrage**: `login.tsx` hat jetzt vor der
+    Registrierung eine Pflicht-Selbstauskunft „Ich bin 16 Jahre oder
+    älter" (Switch, Signup-Button bleibt deaktiviert ohne Bestätigung);
+    wird per `record_consent('altersbestaetigung', true)` nachweisbar im
+    `consents`-Journal gespeichert (Migration `021_age_consent.sql`,
+    additiver consent_key, gleiche append-only-Mechanik wie die
+    bestehenden Consents). `docs/auth.md` aktualisiert. **Weiterhin
+    JURISTISCH PRUEFEN**: die 16-Jahre-Grenze ist eine Annahme, keine
+    geprüfte Rechtsauskunft; es gibt bewusst keine serverseitige Sperre
+    bei Selbstauskunft „unter 16" (nur ein Hinweistext) — das technische
+    Erfassen war der Auftrag, nicht die rechtliche Ausgestaltung.
+17. **Rechtstexte-Platzhalter**: `datenschutz.tsx`/`impressum.tsx`
+    geprüft — beide zeigen bereits einen sichtbaren „ENTWURF – JURISTISCH
+    PRÜFEN"-Banner plus `[JURISTISCH PRÜFEN]`-Marker in den Texten selbst.
+    Nichts geändert (kein Rechtstext erfunden/ausformuliert), nur
+    verifiziert, dass der Status korrekt sichtbar bleibt.
+
+`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.

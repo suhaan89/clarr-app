@@ -47,10 +47,17 @@ Clientseitig zeigt der LoginScreen bei der Registrierung immer dieselbe
 neutrale Erfolgsmeldung („falls noch kein Konto besteht …") — auch wenn die
 Adresse schon registriert ist. Es gibt keine „bereits registriert"-Meldung.
 
-## Alters-/Einwilligungslogik — offen
+## Alters-/Einwilligungslogik (Runde 6, Paket C.16)
 
-Bewusst nur Platzhalter (`TODO JURISTISCH PRUEFEN` in `LoginScreen.js` und
-Migration 003): Zielgruppe teils minderjaehrig, DSGVO Art. 8 (in DE 16 Jahre
-fuer eigenstaendige Einwilligung). Bis zur juristischen Klaerung wird KEIN
-Geburtsdatum erhoben (Datenminimierung); gespeichert wird nur
-`rules_accepted_at` (Zeitpunkt der Regel-Bestaetigung).
+Technisch umgesetzt: `login.tsx` zeigt bei der Registrierung eine
+Selbstauskunft „Ich bin 16 Jahre oder älter" (Switch, Pflicht vor
+`signUp`); die Bestätigung wird ueber `record_consent('altersbestaetigung',
+true)` nachweisbar im `consents`-Journal gespeichert (Migration 021, gleiche
+append-only-Mechanik wie die uebrigen Consents). Bewusst KEIN Geburtsdatum
+(Datenminimierung); nur der Bestaetigungs-Zeitpunkt wird erfasst.
+
+**Weiterhin `TODO JURISTISCH PRUEFEN`**: die Altersgrenze (16 nach DSGVO
+Art. 8 fuer DE als Annahme, nicht rechtlich verifiziert), der exakte
+Wortlaut, und was bei einer Selbstauskunft unter 16 tatsaechlich passieren
+soll (aktuell: nur ein Hinweistext, keine serverseitige Sperre — das ist
+bewusst offen gelassen, bis die rechtliche Ausgestaltung klar ist).

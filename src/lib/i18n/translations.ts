@@ -75,6 +75,10 @@ export const de = {
   'login.signup_sent':
     'Falls die Adresse neu ist, haben wir dir eine Bestätigungs-Mail geschickt. Bitte bestätige sie und melde dich dann an.',
   'login.hint': 'Kein Klarname nötig – du meldest Müll, keine Menschen.',
+  'login.age_confirm': 'Ich bin 16 Jahre oder älter.',
+  'login.age_confirm_a11y': 'Bestätigen: Ich bin 16 Jahre oder älter',
+  'login.age_confirm_hint':
+    'Bist du jünger als 16? Dann brauchst du vorab die Einwilligung eines Erziehungsberechtigten.',
   'login.wait': 'Bitte warten',
   'login.language_a11y': 'Sprache ändern',
 

@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from 'react-native';
@@ -27,12 +28,16 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; kind: 'error' | 'info' } | null>(null);
+  // Art. 8 DSGVO: Selbstauskunft statt Geburtsdatum (Datenminimierung) —
+  // konkrete Altersgrenze/Text bleiben JURISTISCH PRUEFEN (docs/auth.md).
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   if (session) return <Redirect href="/" />;
 
   const validEmail = isValidEmail(email);
   const validPassword = isValidPassword(password);
   const canSubmit = validEmail && validPassword;
+  const canSignUp = canSubmit && ageConfirmed;
 
   async function signIn() {
     setBusy(true);
@@ -50,9 +55,10 @@ export default function LoginScreen() {
   }
 
   async function signUp() {
+    if (!ageConfirmed) return;
     setBusy(true);
     setMessage(null);
-    const { error } = await supabase.auth.signUp({ email: email.trim(), password });
+    const { error, data } = await supabase.auth.signUp({ email: email.trim(), password });
     setBusy(false);
     if (error && error.status !== 422) {
       setMessage({ text: t('login.error_signup'), kind: 'error' });
@@ -61,9 +67,17 @@ export default function LoginScreen() {
     // Immer dieselbe Meldung – auch wenn die Adresse schon registriert ist
     // (Anti-Enumeration). Supabase sendet dann keine zweite Mail.
     setMessage({ text: t('login.signup_sent'), kind: 'info' });
-    // TODO (JURISTISCH PRUEFEN): Alters-/Einwilligungsabfrage vor der
-    // Registrierung – Zielgruppe teils minderjaehrig. Bis zur Klaerung
-    // keine Geburtsdatum-Abfrage (Datenminimierung).
+
+    // Altersbestaetigung nachweisbar speichern (Migration 021). Best effort:
+    // signUp() liefert bei neuer Adresse sofort eine Session (auth.uid()
+    // ist dann gesetzt); bei bereits registrierter Adresse (Anti-Enumeration-
+    // Zweig) gibt es keine neue Session – dann gibt es nichts zu speichern.
+    if (data?.session) {
+      await supabase.rpc('record_consent', {
+        p_consent_key: 'altersbestaetigung',
+        p_granted: true,
+      });
+    }
   }
 
   return (
@@ -129,6 +143,21 @@ export default function LoginScreen() {
               </Card>
             )}
 
+            <View style={styles.ageRow}>
+              <Switch
+                accessibilityLabel={t('login.age_confirm_a11y')}
+                value={ageConfirmed}
+                onValueChange={setAgeConfirmed}
+                trackColor={{ true: colors.primary }}
+              />
+              <Text style={[styles.ageLabel, { color: colors.text }]} allowFontScaling>
+                {t('login.age_confirm')}
+              </Text>
+            </View>
+            <Text style={[styles.ageHint, { color: colors.textSecondary }]} allowFontScaling>
+              {t('login.age_confirm_hint')}
+            </Text>
+
             {busy ? (
               <ActivityIndicator color={colors.primary} accessibilityLabel={t('login.wait')} />
             ) : (
@@ -138,7 +167,7 @@ export default function LoginScreen() {
                   label={t('login.signup')}
                   onPress={signUp}
                   variant="ghost"
-                  disabled={!canSubmit}
+                  disabled={!canSignUp}
                 />
               </View>
             )}
@@ -187,6 +216,9 @@ const styles = StyleSheet.create({
   title: { fontFamily: DisplayFont.bold, fontSize: 40, fontWeight: '800', letterSpacing: 2, textAlign: 'center' },
   subtitle: { fontSize: 16, textAlign: 'center' },
   form: { gap: Spacing.three },
+  ageRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, minHeight: 44 },
+  ageLabel: { fontSize: 14, flexShrink: 1 },
+  ageHint: { fontSize: 12, lineHeight: 16, marginTop: -Spacing.two },
   message: { fontSize: 15, lineHeight: 21 },
   buttons: { gap: Spacing.two },
   hintRow: {
