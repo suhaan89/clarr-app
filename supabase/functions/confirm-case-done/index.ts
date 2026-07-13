@@ -11,11 +11,7 @@
 //     welche Tokens existieren).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+import { sha256Hex, ipHashFromRequest, checkRateLimit } from "../_shared/security.ts";
 
 function page(status: number, title: string, text: string): Response {
   return new Response(
@@ -40,6 +36,22 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // Oeffentlicher, unauthentifizierter Endpunkt (Klick aus der Behoerden-Mail)
+  // — bisher ohne jedes Limit. IP-Hash-basiert begrenzen, damit ein
+  // Token-Brute-Force nicht beliebig oft probieren kann.
+  const ipHash = await ipHashFromRequest(req);
+  const rlOk = await checkRateLimit(admin, {
+    userId: null,
+    deviceHash: null,
+    ipHash,
+    action: "confirm_case_done",
+    max: 20,
+    windowSecs: 600,
+  });
+  if (!rlOk) {
+    return page(429, "Zu viele Versuche", "Bitte in ein paar Minuten erneut versuchen.");
+  }
 
   const { data: caseId, error } = await admin.rpc("use_case_confirm_token", {
     p_token_hash: await sha256Hex(token),

@@ -12,20 +12,17 @@
 //   3. audit_log-Eintrag OHNE personenbezogene Inhalte.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+import { corsHeadersFor, ipHashFromRequest, checkRateLimit } from "../_shared/security.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
+  function json(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
@@ -51,6 +48,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
     const uid = user.id;
+
+    // Leichtes, defensives Limit — die Aktion ist unumkehrbar, aber ein
+    // Limit verhindert versehentliche/automatisierte Wiederholversuche.
+    const rlOk = await checkRateLimit(admin, {
+      userId: uid,
+      deviceHash: null,
+      ipHash: await ipHashFromRequest(req),
+      action: "delete_account",
+      max: 3,
+      windowSecs: 3600,
+    });
+    if (!rlOk) return json(429, { error: "rate_limited" });
 
     // 1a. Geblurrte Derivate (Pfade stehen in report_photos.blurred_path).
     const { data: photos } = await admin

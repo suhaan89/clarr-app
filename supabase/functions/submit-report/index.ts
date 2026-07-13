@@ -17,30 +17,12 @@
 // (voller Kill-Switch in Paket 4 / analyze-photo).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeadersFor, sha256Hex } from "../_shared/security.ts";
 
 const RATE_LIMIT_MAX = 5; // Einreichungen ...
 const RATE_LIMIT_WINDOW_SECS = 600; // ... pro 10 Minuten (Konto ODER Geraet ODER IP)
 const MAX_PLAUSIBLE_SPEED_KMH = 200;
 const MAX_PHOTOS = 5;
-
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const rad = (d: number) => (d * Math.PI) / 180;
@@ -68,6 +50,14 @@ function isOwnStoragePath(path: unknown, uid: string): path is string {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
+  function json(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

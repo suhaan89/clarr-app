@@ -15,6 +15,7 @@
 // nur protokolliert (delivery='logged'), damit DEV ohne Mail-Provider laeuft.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sha256Hex, timingSafeEqual } from "../_shared/security.ts";
 
 const TOKEN_BYTES = 32;
 
@@ -23,16 +24,13 @@ function b64url(bytes: Uint8Array): string {
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 Deno.serve(async (req) => {
   // Nur Scheduler/Betreiber: Bearer muss der Service-Role-Key sein.
+  // Konstante-Zeit-Vergleich statt `!==`, damit ein Angreifer nicht ueber
+  // die Antwortzeit byteweise auf den Key schliessen kann.
   const auth = req.headers.get("Authorization") ?? "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  if (auth !== `Bearer ${serviceKey}`) {
+  if (!(await timingSafeEqual(auth, `Bearer ${serviceKey}`))) {
     return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
   }
 

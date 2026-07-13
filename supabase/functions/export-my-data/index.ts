@@ -6,13 +6,10 @@
 // Original-Fotos werden als kurzlebige Signed URLs beigelegt.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeadersFor, ipHashFromRequest, checkRateLimit } from "../_shared/security.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
@@ -35,7 +32,22 @@ Deno.serve(async (req) => {
     );
     const uid = user.id;
 
-    const [profile, reports, photos, ledger, consents, flags, signups] = await Promise.all([
+    // Leichtes, defensives Limit — verhindert, dass ein kompromittiertes
+    // Token den Export-Endpunkt (7 Tabellen + Signed-URL-Generierung je
+    // Foto) im Sekundentakt ausloest.
+    const rlOk = await checkRateLimit(admin, {
+      userId: uid,
+      deviceHash: null,
+      ipHash: await ipHashFromRequest(req),
+      action: "export_my_data",
+      max: 5,
+      windowSecs: 3600,
+    });
+    if (!rlOk) {
+      return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: corsHeaders });
+    }
+
+    const [profile, reports, photos, ledger, consents, flags, signups, auditLog, visionUsage] = await Promise.all([
       admin.from("user_profiles").select("*").eq("id", uid).maybeSingle(),
       admin.from("reports").select("*").eq("user_id", uid),
       admin.from("report_photos").select("*").eq("user_id", uid),
@@ -43,6 +55,14 @@ Deno.serve(async (req) => {
       admin.from("consents").select("*").eq("user_id", uid),
       admin.from("moderation_flags").select("*").eq("user_id", uid),
       admin.from("cleanup_signups").select("*").eq("user_id", uid),
+      // Art. 15 DSGVO: auch Eintraege, in denen der User selbst der Akteur
+      // war (z. B. eigene Meldungen/Loeschungen) — KEINE Eintraege, in denen
+      // er nur als Ziel/entity_id vorkommt (dort steht i. d. R. keine
+      // personenbezogene ID, sondern eine report_id/case_id o. ae.).
+      admin.from("audit_log").select("*").eq("actor_user_id", uid),
+      // KI-Kostenerfassung (Paket 4) — enthaelt keine Bildinhalte, nur
+      // Modell/Kosten/Zeitpunkt je eigenem Report.
+      admin.from("vision_usage").select("*").eq("user_id", uid),
     ]);
 
     // Original-Fotos: kurzlebige Signed URLs (1 h) auf den privaten Bucket.
@@ -61,7 +81,7 @@ Deno.serve(async (req) => {
       action: "data_export",
       entity_type: "user",
       // Keine Inhalte im Audit — nur DASS exportiert wurde.
-      details: { tables: 7 },
+      details: { tables: 9 },
     });
 
     return new Response(
@@ -76,8 +96,12 @@ Deno.serve(async (req) => {
         consents: consents.data,
         moderation_flags: flags.data,
         event_signups: signups.data,
+        audit_log: auditLog.data,
+        vision_usage: visionUsage.data,
         hinweis:
-          "Signed URLs sind 1 Stunde gueltig. Veroeffentlichte Fotos existieren zusaetzlich anonymisiert (geblurrt).",
+          "Signed URLs sind 1 Stunde gueltig. Veroeffentlichte Fotos existieren zusaetzlich anonymisiert (geblurrt). " +
+          "audit_log enthaelt nur Eintraege, in denen dieses Konto selbst gehandelt hat (actor_user_id) — " +
+          "nicht jede Zeile, in der die Konto-ID irgendwo als Referenz (z. B. entity_id) vorkommt.",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

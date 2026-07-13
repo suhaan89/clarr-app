@@ -5,7 +5,7 @@
 // Wochen-Reset.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Link, useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   Alert,
@@ -46,6 +46,7 @@ export default function ProfilScreen() {
   const colors = useThemeColors();
   const { t } = useI18n();
   const { session } = useSession();
+  const router = useRouter();
   const [level, setLevel] = useState<LevelRow>(null);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [optIn, setOptIn] = useState(false);
@@ -53,6 +54,7 @@ export default function ProfilScreen() {
   const [board, setBoard] = useState<BoardRow[]>([]);
   const [consents, setConsents] = useState<Record<string, boolean>>({});
   const [counts, setCounts] = useState({ reports: 0, confirms: 0, closes: 0, events: 0 });
+  const [isModerator, setIsModerator] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   // Zuletzt gesehene Stufe; erst ein ECHTER Anstieg (nicht der erste Ladevorgang)
   // löst die Feier aus. Keine künstlichen Trigger.
@@ -82,13 +84,14 @@ export default function ProfilScreen() {
       .then(({ data }) => setLedger((data as LedgerRow[]) ?? []));
     supabase
       .from('user_profiles')
-      .select('leaderboard_opt_in, display_name')
+      .select('leaderboard_opt_in, display_name, role')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setOptIn(Boolean(data.leaderboard_opt_in));
           setDisplayName(data.display_name ?? '');
+          setIsModerator(data.role === 'moderator');
         }
       });
     supabase
@@ -364,6 +367,19 @@ export default function ProfilScreen() {
           </Text>
         </Pressable>
       </Card>
+
+      {isModerator && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('moderation.title')}
+          onPress={() => router.push('/moderation')}
+          style={({ pressed }) => [styles.rightsButton, pressed && styles.pressed]}>
+          <Ionicons name="shield-checkmark-outline" size={18} color={colors.text} />
+          <Text style={[styles.rightsLabel, { color: colors.text }]} allowFontScaling>
+            {t('moderation.title')}
+          </Text>
+        </Pressable>
+      )}
 
       <View style={styles.legalLinks}>
         <Link href="/legal/datenschutz" accessibilityLabel={t('profil.datenschutz_a11y')}>

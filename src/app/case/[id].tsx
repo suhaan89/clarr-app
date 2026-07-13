@@ -35,7 +35,14 @@ export default function CaseDetailScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    const { data: c } = await supabase.from('cases').select('*').eq('id', id).maybeSingle();
+    // Nur die Spalten, die der Screen tatsaechlich anzeigt — kein select('*'),
+    // das auch die exakten location_lat/location_lng an den Client schicken
+    // wuerde (Fall-Detail zeigt keine Karte, braucht sie nicht).
+    const { data: c } = await supabase
+      .from('cases')
+      .select('id, title, status, created_at')
+      .eq('id', id)
+      .maybeSingle();
     setCaseRow(c as CaseRow | null);
     const { data: reports } = await supabase.from('reports').select('id').eq('case_id', id);
     const ids = (reports ?? []).map((r) => r.id);

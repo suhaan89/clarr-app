@@ -24,10 +24,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeadersFor } from "../_shared/security.ts";
 
 const MODEL = "claude-sonnet-4-6";
 const USD_PER_INPUT_TOKEN = 3 / 1_000_000;
@@ -37,6 +34,8 @@ const MAX_PUBLIC_DIMENSION = 1600;
 const MAX_DETECT_DIMENSION = 1024;
 const PIXELATE_BLOCK = 24;
 const REGION_PADDING = 0.15; // 15 % Polster um jede erkannte Region
+const DUPLICATE_HAMMING_THRESHOLD = 5; // von 64 Bit — dHash-Faustregel fuer Nah-Duplikate
+const DUPLICATE_LOOKBACK_DAYS = 30;
 
 const DETECT_PROMPT = `Du hilfst einer Umwelt-App, Fotos vor der Veroeffentlichung zu anonymisieren.
 Finde ALLE menschlichen Gesichter und ALLE Kfz-Kennzeichen im Bild.
@@ -45,13 +44,6 @@ Antworte NUR mit gueltigem JSON:
 Koordinaten normalisiert auf 0-1000 (x,y = linke obere Ecke der Region, bezogen auf das Gesamtbild).
 Sei grosszuegig: lieber eine Region zu viel oder zu gross als eine uebersehen.
 "peopleVisible": true, wenn Personen erkennbar sind (auch ohne klares Gesicht).`;
-
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 function toBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -76,6 +68,21 @@ function dHash(img: Image): string {
     }
   }
   return BigInt("0b" + bits).toString(16).padStart(16, "0");
+}
+
+// Hamming-Distanz zweier 64-bit dHash-Hex-Strings (Anzahl abweichender Bits).
+// <= DUPLICATE_HAMMING_THRESHOLD gilt als Nah-Duplikat (uebliche Faustregel
+// fuer dHash: 0 = identisch, <=5 = sehr aehnlich/gleiches Motiv erneut fotografiert).
+function hammingDistanceHex(a: string, b: string): number {
+  const bitsA = BigInt("0x" + a);
+  const bitsB = BigInt("0x" + b);
+  let xor = bitsA ^ bitsB;
+  let count = 0;
+  while (xor > 0n) {
+    count += Number(xor & 1n);
+    xor >>= 1n;
+  }
+  return count;
 }
 
 // Mosaik-Pixelierung einer Region (unumkehrbar bei grossen Bloecken).
@@ -112,6 +119,14 @@ function pixelateRegion(img: Image, rx: number, ry: number, rw: number, rh: numb
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
+  function json(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -213,6 +228,29 @@ Deno.serve(async (req) => {
         // 2. pHash auf dem bereinigten Bild
         const phash = dHash(img);
 
+        // 2b. Duplikat-Abgleich: Hamming-Distanz gegen kuerzlich eingereichte
+        // Fotos DESSELBEN Users (z. B. dasselbe Motiv erneut fotografiert, um
+        // mehrfach Punkte zu sammeln). Ein Treffer veroeffentlicht das Foto
+        // NICHT automatisch, sondern markiert es zur Review — es wird nie
+        // stillschweigend geloescht/abgelehnt, ein Mensch entscheidet.
+        let duplicateSuspect = false;
+        let duplicateOfId: string | null = null;
+        const { data: recentPhotos } = await admin
+          .from("report_photos")
+          .select("id, phash")
+          .eq("user_id", user.id)
+          .neq("id", photo.id)
+          .not("phash", "is", null)
+          .gte("created_at", new Date(Date.now() - DUPLICATE_LOOKBACK_DAYS * 86_400_000).toISOString())
+          .limit(200);
+        for (const candidate of recentPhotos ?? []) {
+          if (candidate.phash && hammingDistanceHex(phash, candidate.phash) <= DUPLICATE_HAMMING_THRESHOLD) {
+            duplicateSuspect = true;
+            duplicateOfId = candidate.id;
+            break;
+          }
+        }
+
         // 3. Gesichter/Kennzeichen erkennen (budgetiert, race-sicher)
         const { data: reservation } = await admin.rpc("reserve_vision_budget", {
           p_user_id: user.id,
@@ -227,6 +265,8 @@ Deno.serve(async (req) => {
           await admin.from("report_photos").update({
             phash,
             exif_stripped: true,
+            duplicate_suspect: duplicateSuspect,
+            duplicate_of: duplicateOfId,
             processed_at: new Date().toISOString(),
           }).eq("id", photo.id);
           results.push({ photo_id: photo.id, published: false, reason: reservation?.reason ?? "budget" });
@@ -299,6 +339,8 @@ Deno.serve(async (req) => {
           await admin.from("report_photos").update({
             phash,
             exif_stripped: true,
+            duplicate_suspect: duplicateSuspect,
+            duplicate_of: duplicateOfId,
             processed_at: new Date().toISOString(),
           }).eq("id", photo.id);
           results.push({ photo_id: photo.id, published: false, reason: "detection_failed" });
@@ -330,19 +372,31 @@ Deno.serve(async (req) => {
         if (upError) throw upError;
 
         // PRUEFSCHRITT VOR VEROEFFENTLICHUNG (Blurring ist fehlbar):
-        // Personen/Kennzeichen im Bild -> approved bleibt FALSE, ein Mensch
-        // prueft in der Review (Paket 8). Nur Bilder ohne erkannte Personen/
-        // Kennzeichen werden automatisch freigegeben.
-        const autoApprove = regions.length === 0 && !peopleVisible;
+        // Personen/Kennzeichen im Bild ODER Duplikat-Verdacht -> approved
+        // bleibt FALSE, ein Mensch prueft in der Review (Paket 8). Nur Bilder
+        // ohne erkannte Personen/Kennzeichen UND ohne Duplikat-Verdacht
+        // werden automatisch freigegeben.
+        const autoApprove = regions.length === 0 && !peopleVisible && !duplicateSuspect;
 
-        if (!autoApprove) {
+        if (regions.length > 0 || peopleVisible) {
           // Pruefschritt (Paket 8): Mensch sichtet das gepixelte Foto,
-          // bevor es oeffentlich wird. Ein Duplikat-Fehler (offener
-          // Eintrag existiert schon) wird bewusst ignoriert.
-          await admin.from("review_queue").insert({
-            report_id: reportId,
-            reason: "personen_im_bild",
-          });
+          // bevor es oeffentlich wird.
+          await admin.from("review_queue")
+            .insert({ report_id: reportId, reason: "personen_im_bild" })
+            .select()
+            .then(({ error }) => {
+              // Offener Eintrag mit gleichem Grund existiert schon (partial
+              // unique index) -> kein Fehler, einfach ignorieren.
+              if (error && error.code !== "23505") throw error;
+            });
+        }
+        if (duplicateSuspect) {
+          await admin.from("review_queue")
+            .insert({ report_id: reportId, reason: "duplikat_verdacht" })
+            .select()
+            .then(({ error }) => {
+              if (error && error.code !== "23505") throw error;
+            });
         }
 
         await admin.from("report_photos").update({
@@ -351,6 +405,8 @@ Deno.serve(async (req) => {
           exif_stripped: true,
           faces_blurred: faces > 0,
           plates_blurred: plates > 0,
+          duplicate_suspect: duplicateSuspect,
+          duplicate_of: duplicateOfId,
           approved: autoApprove,
           processed_at: new Date().toISOString(),
         }).eq("id", photo.id);
@@ -360,6 +416,7 @@ Deno.serve(async (req) => {
           published: autoApprove,
           needs_review: !autoApprove,
           regions_pixelated: regions.length,
+          duplicate_suspect: duplicateSuspect,
         });
       } catch (photoError) {
         console.error(

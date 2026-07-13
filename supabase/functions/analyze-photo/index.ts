@@ -23,10 +23,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeadersFor } from "../_shared/security.ts";
 
 const MODEL = "claude-sonnet-4-6";
 // Sonnet-Preise: $3 / 1M Input-Tokens, $15 / 1M Output-Tokens
@@ -74,13 +71,6 @@ Antworte NUR mit gueltigem JSON:
 wasteType aus: "Hausmuell", "Sperrgut", "Bauschutt", "Gefaehrlicher Abfall", "Verpackungsmuell", "Elektroschrott", "Organischer Abfall", "Sonstiger Muell" (oder null).
 "reason" auf Deutsch, 1-2 Saetze.`;
 
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 // Serverseitig verkleinern: senkt Kosten und entfernt nebenbei Metadaten
 // aus dem an die API gesendeten Bild.
 async function downscaleImage(bytes: Uint8Array): Promise<Uint8Array> {
@@ -105,6 +95,14 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
+  function json(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

@@ -270,6 +270,34 @@ export const de = {
   // Sprachwahl
   'language.title': 'Sprache wählen',
   'language.close': 'Schließen',
+
+  // Moderation (nur für Moderator:innen)
+  'moderation.title': 'Moderation',
+  'moderation.loading': 'Warteschlange wird geladen',
+  'moderation.empty_title': 'Alles erledigt',
+  'moderation.empty_body': 'Die Review-Warteschlange ist gerade leer.',
+  'moderation.access_denied_title': 'Kein Zugriff',
+  'moderation.access_denied_body': 'Dieser Bereich ist nur für das Moderationsteam.',
+  'moderation.error_generic': 'Das hat leider nicht geklappt. Bitte versuche es erneut.',
+  'moderation.reason.geflaggt': 'Gemeldet',
+  'moderation.reason.confidence': 'KI unsicher',
+  'moderation.reason.stichprobe': 'Stichprobe',
+  'moderation.reason.privatgrund': 'Privatgrund-Verdacht',
+  'moderation.reason.unklassifiziert': 'Nicht klassifiziert',
+  'moderation.reason.personen_im_bild': 'Personen im Bild',
+  'moderation.reason.standort_suspekt': 'Standort verdächtig',
+  'moderation.reason.duplikat_verdacht': 'Duplikat-Verdacht',
+  'moderation.report_a11y': 'Meldung {id}',
+  'moderation.no_photos': 'Keine Fotos vorhanden.',
+  'moderation.photo_pending': 'Foto wird noch verarbeitet.',
+  'moderation.photo_approved': 'Freigegeben',
+  'moderation.photo_pending_review': 'Nicht freigegeben',
+  'moderation.approve_photo': 'Foto freigeben',
+  'moderation.reject_photo': 'Foto ablehnen',
+  'moderation.approve_report': 'Meldung freigeben',
+  'moderation.reject_report': 'Meldung ablehnen',
+  'moderation.privat_report': 'Als privat einstufen',
+  'moderation.privat_hint': 'Meldung ist gültig, bleibt aber dauerhaft nicht öffentlich (z. B. Privatgrund).',
 } as const;
 
 export type TranslationKey = keyof typeof de;
@@ -1471,11 +1499,13 @@ const cs: Catalog = {
 
 // `beta`: Sprache ist waehlbar, aber noch nicht redaktionell geprueft –
 // wird in der Sprachwahl mit einem Beta-Badge angezeigt. Vollstaendig
-// gepflegt sind Deutsch, English und Schwiizerdütsch.
+// gepflegt sind nur Deutsch und English (227/227 Schluessel); gsw deckt
+// aktuell nur ~85/227 ab und fiele ohne Beta-Flag still auf Deutsch
+// zurueck (Runde 6, Paket H.33).
 export const LANGUAGES = [
   { code: 'de', label: 'Deutsch', dateLocale: 'de-DE', beta: false },
   { code: 'en', label: 'English', dateLocale: 'en-GB', beta: false },
-  { code: 'gsw', label: 'Schwiizerdütsch', dateLocale: 'de-CH', beta: false },
+  { code: 'gsw', label: 'Schwiizerdütsch', dateLocale: 'de-CH', beta: true },
   { code: 'de-AT', label: 'Österreichisches Deutsch', dateLocale: 'de-AT', beta: true },
   { code: 'fr', label: 'Français', dateLocale: 'fr-FR', beta: true },
   { code: 'it', label: 'Italiano', dateLocale: 'it-IT', beta: true },

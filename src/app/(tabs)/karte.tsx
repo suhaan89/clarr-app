@@ -16,7 +16,7 @@ type MapReport = {
   status: string;
   waste_type: string | null;
   case_id: string | null;
-  cases: { status: string } | null;
+  case_status: string | null;
 };
 
 // Startausschnitt: Deutschland-Mitte; die Karte springt auf echte Marker.
@@ -49,9 +49,12 @@ export default function KarteScreen() {
     useCallback(() => {
       // RLS liefert nur veroeffentlichte/eigene Meldungen (Paket 8);
       // Fotos kommen ausschliesslich geblurrt aus public-blurred.
+      // `reports_map` liefert Koordinaten gerundet auf den Geohash8-
+      // Zentroid statt exakter Lat/Lng (Migration 018) — schuetzt den
+      // genauen Meldeort auf der oeffentlichen Karte.
       supabase
-        .from('reports')
-        .select('id, latitude, longitude, status, waste_type, case_id, cases(status)')
+        .from('reports_map')
+        .select('id, latitude, longitude, status, waste_type, case_id, case_status')
         .in('status', ['veroeffentlicht', 'erledigt'])
         .limit(500)
         .then(({ data }) => {
@@ -67,7 +70,7 @@ export default function KarteScreen() {
   }, [reports]);
 
   const closedCount = reports.filter(
-    (r) => r.cases?.status === 'erledigt' || r.cases?.status === 'geschlossen'
+    (r) => r.case_status === 'erledigt' || r.case_status === 'geschlossen'
   ).length;
 
   return (
@@ -77,7 +80,7 @@ export default function KarteScreen() {
         initialRegion={INITIAL_REGION}
         accessibilityLabel={t('map.a11y')}>
         {reports.map((r) => {
-          const closed = r.cases?.status === 'erledigt' || r.cases?.status === 'geschlossen';
+          const closed = r.case_status === 'erledigt' || r.case_status === 'geschlossen';
           return (
             <Marker
               key={r.id}

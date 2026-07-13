@@ -125,16 +125,132 @@ Details und Annahmen in `NOTIZEN.md`.
   statt verschluckt (Migration 016), `npm run lint` lauffähig gemacht
   (eslint-Setup fehlte). Details: NOTIZEN.md „Bugfix-Lauf 2026-07-11".
 
-## Offen ⏳
+## Offen ⏳ (Stand vor Runde 6 — siehe unten für aktuellen Stand)
 
 - **Juristisch**: Datenschutz/Impressum-Texte, Alters-/Einwilligungslogik
   (Art. 8), Consent-Gating des Behörden-Digests, AVV Supabase/Anthropic
   (alles als JURISTISCH PRUEFEN markiert).
 - **Betreiber-Aktionen**: Auth-Dashboard-Checkliste (docs/auth.md) im
   DEV-Projekt setzen; Digest-Scheduling (wöchentlich) einrichten;
-  `RESEND_API_KEY`/Behörden-Adresse konfigurieren; Legacy-Bucket
-  `report-photos` sichten (Alt-Fotos nicht anonymisiert!); Migrationen
+  `RESEND_API_KEY`/Behörden-Adresse konfigurieren; Migrationen
   008–016 + Functions gegen DEV ausrollen (docs/ops.md).
-- **Technisch (spätere Pakete)**: pHash-Duplikatabgleich automatisieren,
-  Storage-Aufräum-Job für verwaiste Objekte, Moderations-Frontend,
-  Push-Token-UI (expo-notifications), pgTAP-Lauf via Docker/CI.
+- **Technisch**: Push-Token-UI (expo-notifications), pgTAP-Lauf via Docker/CI.
+
+---
+
+# Runde 6 (Pakete A–B, docs/verbesserungs-prompt.md) — Stand 2026-07-14
+
+Auftrag: langer, eigenständiger Lauf über Verifikation → Sicherheit →
+Recht (nur technisch) → Funktionen/Politur → Robustheit/i18n/Tests.
+Reihenfolge eingehalten. Nach jedem Paket `npm run lint`/`npx tsc --noEmit`/
+`npm test` grün gehalten (siehe unten).
+
+## Paket A — Verifikation ⏳ teilweise
+
+1. **Nicht verifizierbar in dieser Session**: kein Docker (also kein
+   `supabase start`/`supabase test db`), kein `SUPABASE_ACCESS_TOKEN`, kein
+   DB-Passwort für das gehostete Projekt
+   (`https://uzbjknhmpbxtgvlclpqe.supabase.co`, aus `.env`). Ob Migration
+   `017_security_hardening_2.sql` (Revoke `increment_user_credits`/
+   `check_and_increment_daily_reports`) wirklich auf dem gehosteten
+   Dev-Projekt angewendet wurde, bleibt **offener Operator-Punkt**.
+   **Aktion für den Betreiber**: `npx supabase login` (oder
+   `SUPABASE_ACCESS_TOKEN` setzen), dann
+   `npx supabase link --project-ref uzbjknhmpbxtgvlclpqe && npx supabase db push`
+   bzw. `npx supabase migration list --linked` zum Abgleich.
+2. **Ebenfalls nicht verifizierbar**: die Supabase-Dashboard-Checkliste aus
+   `docs/auth.md` (Rate Limits `sign_in_sign_ups`/`email_sent`, „Prevent
+   email enumeration"). `supabase/config.toml` gilt nur lokal — das
+   gehostete Projekt braucht die Werte manuell im Dashboard
+   (Authentication → Rate Limits / Advanced). **Offener Operator-Punkt.**
+3. **Erledigt** ✅: `supabase/tests/security_hardening_2.test.sql` (neu) —
+   pgTAP-Regressionstest, der dauerhaft sicherstellt, dass
+   `increment_user_credits`/`check_and_increment_daily_reports`/alle
+   Trigger-Funktionen NICHT von `anon`/`authenticated`/`PUBLIC` ausführbar
+   sind, plus `search_path`-Haertung. Ungetestet gegen echte DB (kein
+   Docker) — Ausführung nachholen, siehe Paket I.40.
+
+## Paket B — Sicherheitshärtung ✅ (bis auf Betreiber-Ausführung)
+
+4. **Legacy-Bucket `report-photos`**: `scripts/cleanup-legacy-bucket.mjs`
+   (neu) — listet den Bucket, meldet noch referenzierende Alt-Reports zur
+   Transparenz und löscht (nur mit `--delete`, Default Trockenlauf).
+   Begründung fürs Löschen statt Nachbearbeiten: Schreibweg seit
+   Migration 014 tot, Alt-Reports haben ihre KI-Prüfung längst
+   durchlaufen, kein Code liest mehr daraus — unanonymisiert öffentlich
+   liegen lassen wiegt schwerer als die Referenzen zu erhalten. **Noch
+   nicht ausgeführt** (kein Service-Role-Zugriff in dieser Session) —
+   Betreiber-Aktion.
+5. **Moderations-Frontend**: neuer Screen `src/app/moderation.tsx`
+   (Stack-Route, kein Tab-Eintrag), nur erreichbar über einen Link im
+   Profil-Screen bei `role = 'moderator'`; nutzt bestehende RPCs
+   `moderate_report`/`approve_photo`. Migration `020_moderation_frontend.sql`
+   ergänzt eine fehlende RLS-Lücke: Moderatoren konnten `report_photos`
+   fremder, nicht freigegebener Fotos bisher gar nicht lesen (nur
+   `review_queue`/`moderation_flags` hatten in Migration 010 eine
+   Moderator-Policy bekommen, `report_photos` wurde übersehen).
+6. **Rate-Limiting**: `confirm-case-done` (IP-Hash, 20/10min),
+   `export-my-data` (5/h/User) und `delete-account` (3/h/User) nutzen jetzt
+   `check_and_log_rate_limit` über den neuen gemeinsamen Helfer
+   `supabase/functions/_shared/security.ts`.
+7. **GPS-Präzision**: Migration `018_gps_precision.sql` — `geohash_decode_
+   centroid`/`round_to_geohash8` (nutzt das bestehende `geohash_encode` aus
+   Migration 004) + View `public.reports_map` (security_invoker, rundet auf
+   Geohash8-Zentroid). `karte.tsx` liest jetzt `reports_map` statt der
+   Rohtabelle; `case/[id].tsx` selektiert nur noch die tatsächlich
+   angezeigten Spalten (kein `select('*')` mehr, das exakte
+   `location_lat/lng` unnötig zum Client geschickt hätte).
+   `supabase/tests/gps_precision.test.sql` (neu, ungetestet mangels Docker).
+8. **`app.json`**: `ios.infoPlist` (Kamera/Fotos/Standort, deutsch,
+   konkret) + `android.permissions` (Kamera, Standort) ergänzt — vorher
+   komplett leer.
+9. **Auth-Session → SecureStore**: `src/lib/supabase.ts` nutzt jetzt den
+   offiziellen Supabase-Adapter-Pattern (`expo-secure-store` +
+   `expo-crypto` + `aes-js`): Session bleibt AES-256-verschlüsselt in
+   AsyncStorage, nur der kleine Schlüssel liegt im Keychain/Keystore (löst
+   SecureStores 2048-Byte-Limit-Problem, das früher „Massen-Logout-Risiko"
+   hieß). **Rollback**: Adapter in `supabase.ts` zurück auf reines
+   `AsyncStorage` tauschen. **Migrationsfolge**: bestehende
+   AsyncStorage-Sessions von vor diesem Update lassen sich nicht mehr
+   entschlüsseln (kein Schlüssel im Keychain vorhanden) → betroffene
+   Nutzer:innen müssen sich EINMALIG neu anmelden. **Nicht auf echtem
+   Gerät/Simulator getestet** (keine Geräte-/Simulator-Umgebung in dieser
+   Session verfügbar) — das war explizit gefordert, bevor als „fertig"
+   gilt. **Vor dem Rollout: manuell auf Gerät/Simulator verifizieren.**
+10. **CORS**: neues `supabase/functions/_shared/security.ts` mit
+    `corsHeadersFor(req)` — Origin-Allowlist statt `"*"`, konfigurierbar
+    über das Function-Secret `ALLOWED_ORIGINS` (kommagetrennt), Default nur
+    lokale Expo-Web-Dev-Server. Betrifft die 7 Functions, die vorher
+    `"*"` hatten (`submit-report`, `close-case`, `close-event-cases`,
+    `delete-account`, `export-my-data`, `analyze-photo`, `process-photo`).
+    Mobile-App-Aufrufe sind von CORS ohnehin nicht betroffen (kein
+    Origin-Header) — die Einschränkung wirkt nur auf potenzielle
+    Web-Aufrufe.
+11. **Konstante-Zeit-Vergleich**: `authority-digest/index.ts` vergleicht
+    den Service-Token jetzt über `timingSafeEqual` (SHA-256-Hash beider
+    Seiten + konstante XOR-Schleife) statt `!==`.
+12. **pHash-Duplikaterkennung**: `process-photo/index.ts` vergleicht den
+    dHash jetzt per Hamming-Distanz (Schwelle 5/64 Bit) gegen die Fotos
+    desselben Users der letzten 30 Tage. Treffer → `approved` bleibt
+    `FALSE`, `review_queue`-Eintrag `duplikat_verdacht` (neuer, additiver
+    Grund, Migration `019_duplicate_detection.sql`), nie automatische
+    Ablehnung/Löschung — ein Mensch entscheidet.
+13. **`export-my-data`**: ergänzt um `audit_log` (nur `actor_user_id =
+    eigene ID`) und `vision_usage` der eigenen Reports — vorher fehlten
+    beide trotz Art.-15-Anspruch.
+14. **RLS-Angreifer-Tests**: `supabase/tests/rls_attacker.test.sql` (neu)
+    — echte Cross-User-Zugriffsversuche per `SET ROLE authenticated` +
+    `set_config('request.jwt.claims', ...)`, inkl. Test für den
+    `handle_flag_inserted`-Fail-Safe-Trigger. Ungetestet mangels Docker.
+15. **npm audit**: 18 moderate Advisories, alle transitiv über
+    `@expo/*`-Build-Tooling (`postcss` XSS, `uuid` Bounds-Check über
+    `xcode`) — keine Laufzeit-Abhängigkeit der App selbst, kein Fix ohne
+    Expo-SDK-Upgrade verfügbar. **Review-Termin: nächstes Expo-SDK-Upgrade.**
+
+## Verifikation nach Paket A+B
+
+`npx tsc --noEmit` ✅ sauber · `npm run lint` ✅ 0 Fehler (2 Vorbestand-
+Warnungen in `offline-queue.test.ts`, nicht dieser Runde) · `npm test` ✅
+26/26 Tests grün. Neue pgTAP-Dateien (`security_hardening_2`,
+`gps_precision`, `rls_attacker`) konnten mangels Docker nicht ausgeführt
+werden — Nachholen in Paket I.40 vermerkt.

@@ -48,6 +48,7 @@ function AppStack() {
         <Stack.Screen name="case/[id]" options={{ title: t('stack.case') }} />
         <Stack.Screen name="legal/datenschutz" options={{ title: t('stack.datenschutz') }} />
         <Stack.Screen name="legal/impressum" options={{ title: t('stack.impressum') }} />
+        <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
       </Stack>
       {showSplash && <BrandSplash onFinish={() => setShowSplash(false)} />}
     </ThemeProvider>

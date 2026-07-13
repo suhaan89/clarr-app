@@ -14,20 +14,9 @@
 // werden anschliessend via process-photo anonymisiert.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeadersFor } from "../_shared/security.ts";
 
 const MAX_PHOTOS = 3;
-
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 // Nachher-Foto-Pfade muessen unter dem eigenen User-Prefix liegen
 // (originals/<uid>/...) — verhindert SSRF/Cross-Tenant-Verweise.
@@ -44,6 +33,14 @@ function isOwnStoragePath(path: unknown, uid: string): path is string {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
+  function json(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
