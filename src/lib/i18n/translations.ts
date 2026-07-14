@@ -94,6 +94,9 @@ export const de = {
   'map.legend_done': 'erledigt',
   'map.legend_summary': '{total} Meldungen · {closed} erledigt',
   'map.summary_a11y': '{total} Meldungen auf der Karte, davon {closed} erledigt',
+  'map.refresh_a11y': 'Karte aktualisieren',
+  'map.error_title': 'Karte konnte nicht geladen werden',
+  'map.error_body': 'Bitte prüfe deine Verbindung und versuche es erneut.',
 
   // Melden
   'report.permission_title': 'Kamera freigeben',
@@ -302,6 +305,37 @@ export const de = {
   'moderation.reject_report': 'Meldung ablehnen',
   'moderation.privat_report': 'Als privat einstufen',
   'moderation.privat_hint': 'Meldung ist gültig, bleibt aber dauerhaft nicht öffentlich (z. B. Privatgrund).',
+
+  // Hilfe-Chat (Clari, regelbasiert)
+  'chat.open_a11y': 'Hilfe von Clari öffnen',
+  'chat.title': 'Frag Clari',
+  'chat.intro': 'Hallo! Wobei kann ich helfen?',
+  'chat.close_a11y': 'Hilfe schließen',
+  'chat.back': 'Zurück zu den Fragen',
+  'chat.back_a11y': 'Zurück zur Fragenübersicht',
+  'chat.q.report': 'Wie melde ich etwas?',
+  'chat.a.report':
+    'Tipp im Tab „Melden" auf die Kamera und mach ein Foto direkt in der App – ' +
+    'nur Fotos aus der Kamera zählen für Punkte. Standort wird automatisch erfasst. ' +
+    'Danach kurz beschreiben, fertig. Deine Meldung geht zuerst durch eine automatische ' +
+    'Prüfung und wird dann sichtbar.',
+  'chat.q.photos': 'Was passiert mit meinen Fotos?',
+  'chat.a.photos':
+    'Deine Originalfotos bleiben privat. Bevor ein Foto öffentlich sichtbar wird, ' +
+    'entfernen wir automatisch Metadaten (z. B. GPS aus der Bilddatei) und pixeln ' +
+    'Gesichter sowie Kennzeichen. Nur die anonymisierte Version wird veröffentlicht – ' +
+    'und auch das erst nach einer Prüfung.',
+  'chat.q.points': 'Wie funktionieren Punkte und Level?',
+  'chat.a.points':
+    'Du bekommst Punkte für geprüfte Meldungen, Bestätigungen und aufgeräumte Fälle. ' +
+    'Mehr Punkte am selben Ort bringen weniger (kein Grinding), es gibt einen ' +
+    'Tagesdeckel und keine Zufallsbelohnungen. Punkte sind rein kosmetisch – dein ' +
+    'Level zeigt euren echten Impact, keinen Geldwert.',
+  'chat.q.privacy': 'Wo finde ich den Datenschutz?',
+  'chat.a.privacy':
+    'Alle Infos zu deinen Daten stehen in der Datenschutzerklärung – erreichbar über ' +
+    'dein Profil. Dort kannst du auch deine Daten exportieren oder dein Konto löschen.',
+  'chat.privacy_link': 'Datenschutz öffnen',
 } as const;
 
 export type TranslationKey = keyof typeof de;

@@ -5,11 +5,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { BrandSplash } from '@/components';
+import { BrandSplash, HelpChat } from '@/components';
 import { Colors } from '@/constants/theme';
 import { I18nProvider, useI18n } from '@/lib/i18n';
 import { startAutoSync } from '@/lib/offline-queue';
-import { SessionProvider } from '@/lib/session';
+import { SessionProvider, useSession } from '@/lib/session';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +17,7 @@ function AppStack() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const { t } = useI18n();
+  const { session } = useSession();
   // Marken-Splash nur beim Kaltstart; blendet sich selbst aus.
   const [showSplash, setShowSplash] = useState(true);
 
@@ -50,6 +51,7 @@ function AppStack() {
         <Stack.Screen name="legal/impressum" options={{ title: t('stack.impressum') }} />
         <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
       </Stack>
+      {session && !showSplash && <HelpChat />}
       {showSplash && <BrandSplash onFinish={() => setShowSplash(false)} />}
     </ThemeProvider>
   );

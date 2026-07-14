@@ -10,6 +10,7 @@ import { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   Share,
   StyleSheet,
@@ -18,7 +19,18 @@ import {
   View,
 } from 'react-native';
 
-import { Badge, Badges, Card, Celebration, Input, LanguagePicker, LevelProgress, SectionHeader } from '@/components';
+import {
+  Badge,
+  Badges,
+  Card,
+  Celebration,
+  Input,
+  LanguagePicker,
+  LevelProgress,
+  SectionHeader,
+  Skeleton,
+  SkeletonLine,
+} from '@/components';
 import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { computeAchievements, earnedCount } from '@/lib/achievements';
 import { callFunction } from '@/lib/api';
@@ -55,17 +67,23 @@ export default function ProfilScreen() {
   const [consents, setConsents] = useState<Record<string, boolean>>({});
   const [counts, setCounts] = useState({ reports: 0, confirms: 0, closes: 0, events: 0 });
   const [isModerator, setIsModerator] = useState(false);
+  // Bis der erste Ladevorgang durch ist: Skeleton statt kurzem "0 Punkte"-Blitzer.
+  const [loaded, setLoaded] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   // Zuletzt gesehene Stufe; erst ein ECHTER Anstieg (nicht der erste Ladevorgang)
   // löst die Feier aus. Keine künstlichen Trigger.
   const lastLevel = useRef<number | null>(null);
 
-  const load = useCallback(() => {
+  // Async + Promise.all, damit RefreshControl weiss, wann der Refresh fertig ist
+  // (statt der vorherigen Fire-and-forget-.then()-Ketten ohne Rueckgabewert).
+  const load = useCallback(async () => {
     if (!session) return;
-    supabase
+    const uid = session.user.id;
+
+    const levelP = supabase
       .from('points_level')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', uid)
       .maybeSingle()
       .then(({ data }) => {
         const row = data as LevelRow;
@@ -75,17 +93,18 @@ export default function ProfilScreen() {
           if (lastLevel.current != null && lvl > lastLevel.current) setLevelUp(lvl);
           lastLevel.current = lvl;
         }
+        setLoaded(true);
       });
-    supabase
+    const ledgerP = supabase
       .from('points_ledger')
       .select('id, delta, reason, created_at')
       .order('created_at', { ascending: false })
       .limit(20)
       .then(({ data }) => setLedger((data as LedgerRow[]) ?? []));
-    supabase
+    const profileP = supabase
       .from('user_profiles')
       .select('leaderboard_opt_in, display_name, role')
-      .eq('id', session.user.id)
+      .eq('id', uid)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
@@ -94,11 +113,11 @@ export default function ProfilScreen() {
           setIsModerator(data.role === 'moderator');
         }
       });
-    supabase
+    const boardP = supabase
       .from('leaderboard_week')
       .select('*')
       .then(({ data }) => setBoard((data as BoardRow[]) ?? []));
-    supabase
+    const consentsP = supabase
       .from('current_consents')
       .select('consent_key, granted')
       .then(({ data }) => {
@@ -108,8 +127,7 @@ export default function ProfilScreen() {
       });
     // Zaehlwerte fuer die Abzeichen (nur eigene Zeilen via RLS). Reine
     // Anzeige, keine Reward-Buchung.
-    const uid = session.user.id;
-    Promise.all([
+    const countsP = Promise.all([
       supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'report_verified'),
       supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'case_confirmed'),
       supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'case_closed_after'),
@@ -122,9 +140,22 @@ export default function ProfilScreen() {
         events: ev.count ?? 0,
       });
     });
+
+    await Promise.all([levelP, ledgerP, profileP, boardP, consentsP, countsP]);
   }, [session]);
 
-  useFocusEffect(load);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const [refreshing, setRefreshing] = useState(false);
+  async function onRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   async function saveLeaderboardPrefs(nextOptIn: boolean) {
     const trimmedName = displayName.trim();
@@ -158,34 +189,45 @@ export default function ProfilScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={styles.content}>
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }>
       {/* Impact-Held: der eigene Beitrag zuerst, ruhig und stolz. */}
-      <Card
-        tone="soft"
-        style={styles.impactCard}
-        accessibilityRole="summary"
-        accessibilityLabel={t('profil.impact_a11y', {
-          points: level?.balance ?? 0,
-          level: levelName,
-        })}>
-        <View style={[styles.impactIcon, { backgroundColor: colors.primary }]}>
-          <Ionicons name="leaf" size={22} color={colors.onPrimary} />
-        </View>
-        <Text style={[styles.points, { color: colors.primaryStrong }]} allowFontScaling>
-          {level?.balance ?? 0}
-        </Text>
-        <Text style={[styles.pointsLabel, { color: colors.text }]} allowFontScaling>
-          {t('profil.points_unit')}
-        </Text>
-        <Badge label={levelName} tone="success" />
-        <Text style={[styles.cosmeticNote, { color: colors.textSecondary }]} allowFontScaling>
-          {t('profil.cosmetic_note')}
-        </Text>
-      </Card>
+      {!loaded ? (
+        <Card tone="soft" style={styles.impactCard}>
+          <Skeleton width={44} height={44} radius={999} />
+          <Skeleton width={100} height={48} style={{ marginTop: Spacing.two }} />
+          <Skeleton width={80} height={16} />
+        </Card>
+      ) : (
+        <Card
+          tone="soft"
+          style={styles.impactCard}
+          accessibilityRole="summary"
+          accessibilityLabel={t('profil.impact_a11y', {
+            points: level?.balance ?? 0,
+            level: levelName,
+          })}>
+          <View style={[styles.impactIcon, { backgroundColor: colors.primary }]}>
+            <Ionicons name="leaf" size={22} color={colors.onPrimary} />
+          </View>
+          <Text style={[styles.points, { color: colors.primaryStrong }]} allowFontScaling>
+            {level?.balance ?? 0}
+          </Text>
+          <Text style={[styles.pointsLabel, { color: colors.text }]} allowFontScaling>
+            {t('profil.points_unit')}
+          </Text>
+          <Badge label={levelName} tone="success" />
+          <Text style={[styles.cosmeticNote, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.cosmetic_note')}
+          </Text>
+        </Card>
+      )}
 
       {/* Fortschritt zur naechsten Stufe – klarer naechster Schritt, aus dem
           Saldo abgeleitet (keine Reward-Logik im Client). */}
-      <LevelProgress balance={level?.balance ?? 0} levelName={levelName} />
+      {loaded && <LevelProgress balance={level?.balance ?? 0} levelName={levelName} />}
 
       {/* Sammelbare Abzeichen fuer echte Meilensteine (kein Geldwert). */}
       <View style={styles.badgesHead}>
@@ -200,7 +242,12 @@ export default function ProfilScreen() {
 
       <SectionHeader title={t('profil.activity')} />
       <Card style={styles.sectionCard}>
-        {ledger.length === 0 ? (
+        {!loaded ? (
+          <>
+            <SkeletonLine />
+            <SkeletonLine />
+          </>
+        ) : ledger.length === 0 ? (
           <Text style={[styles.emptyText, { color: colors.textSecondary }]} allowFontScaling>
             {t('profil.no_points')}
           </Text>

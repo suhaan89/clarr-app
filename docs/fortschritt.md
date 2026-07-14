@@ -275,3 +275,61 @@ werden — Nachholen in Paket I.40 vermerkt.
     verifiziert, dass der Status korrekt sichtbar bleibt.
 
 `npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.
+
+## Paket D — Clari-Posen ⏳ blockiert (Assets), Wiring ✅
+
+18/19. Geprüft: `Mascot.tsx`s `SOURCES`-Map, `Celebration.tsx` (reicht
+`pose` durch) und die Aufrufer (`case/[id].tsx` → `pose="celebrate"`,
+`profil.tsx` → `pose="levelup"`) sind bereits korrekt verdrahtet — kein Bug
+wie ursprünglich angenommen. **Blockiert**: In dieser Session steht kein
+Text-zu-Bild-Generierungswerkzeug zur Verfügung (nur Adobe-Bildbearbeitung:
+Crop/Anpassungen/Vectorize — keine Neugenerierung von Inhalten/Posen).
+**Aktion für dich**: die drei Posen extern rendern (z. B. claude.ai/design,
+wie ursprünglich vorgeschlagen) und als `clari-celebrate.png`,
+`clari-levelup.png`, `clari-hint.png` unter `assets/mascot/` ablegen — die
+`SOURCES`-Map nimmt sie dann ohne weitere Codeänderung auf.
+
+## Paket E — Chatbot-Assistent ✅
+
+20. Neue Komponente `src/components/HelpChat.tsx`: regelbasierter FAQ-Chat
+    (4 feste Fragen/Antworten, kein LLM), Clari (Pose `hint`) als Gesicht,
+    Sprechblasen-Optik im bestehenden Card-/Modal-Stil (analog
+    `Celebration.tsx`). Erreichbar über ein schwebendes Hilfe-Icon, global
+    in `_layout.tsx` gerendert (nur sichtbar mit aktiver Session, nicht auf
+    dem Login-Screen). Alle Texte über `src/lib/i18n` (`chat.*`-Schlüssel,
+    nur `de` — Fallback greift für die anderen Sprachen).
+
+## Paket F — UI-Feinschliff ✅
+
+21. **Glas-Tab-Bar**: `tabBarBackground` (React-Navigation-Bottom-Tabs-
+    Erweiterungspunkt) rendert jetzt `GlassSurface` hinter der Tab-Bar,
+    `tabBarStyle` transparent. Bewusst NICHT `position: absolute` (das hätte
+    Screens mit eigenem Bottom-Padding/absoluten Elementen wie der
+    Karten-Legende zerbrochen) — die Bar bleibt im normalen Layoutfluss,
+    nur ihr Hintergrund ist jetzt die Glas-Fläche.
+22. **Skeleton-Loader**: neue Komponente `src/components/Skeleton.tsx`
+    (`Skeleton`/`SkeletonLine`, Shimmer mit Reduce-Motion-Fallback) und in
+    `profil.tsx` eingesetzt (Impact-Karte + Aktivitäts-Liste zeigen jetzt
+    Platzhalter statt kurz "0 Punkte"/"noch nichts" zu blitzen, bis der
+    erste Ladevorgang durch ist). Home bewusst NICHT retrofittet (eigenes,
+    fein abgestimmtes Eintritts-Animationssystem — Counter startet ohnehin
+    sauber bei 0, kein irreführender Null-Zustand); Karte zeigt nur kurze
+    Zahlen in der Legende, geringes Risiko.
+23. **Pull-to-Refresh**: `events.tsx` und `profil.tsx` (dort `load()` auf
+    `async`/`Promise.all` umgestellt, damit `RefreshControl` weiß, wann der
+    Refresh fertig ist) haben jetzt `RefreshControl`. `karte.tsx` bewusst
+    OHNE `RefreshControl` (das braucht eine ScrollView als Vorfahre, deren
+    Pan-Geste mit der Kartennavigation kollidieren würde) — stattdessen ein
+    expliziter Aktualisieren-Button oben rechts.
+24. **Hero-Übergang**: `case/[id].tsx` blendet den Inhalt jetzt per
+    Reanimated (Fade + leichtes Scale-in, 420 ms) ein, sobald der Fall
+    geladen ist, statt hart vom Spinner umzuschalten. Respektiert Reduce-
+    Motion.
+25. Splash-Hintergrundfarbe bereits in Paket B erledigt (`app.json`
+    `#1C8146`).
+26. **WeeklyChallenge**: eingebunden statt entfernt — `src/lib/week.ts`
+    (`startOfIsoWeek`) war erkennbar extra dafür gebaut, aber nie benutzt.
+    Home zählt jetzt neue `cases` seit Montag 00:00 (gemeinschaftsweit,
+    keine PII) und zeigt die Karte unter der bestehenden Chip-Reihe.
+
+`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.

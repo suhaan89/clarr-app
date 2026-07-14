@@ -1,6 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Redirect, Tabs } from 'expo-router';
+import { StyleSheet } from 'react-native';
 
+import { GlassSurface } from '@/components';
 import { useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
@@ -18,7 +20,12 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
+        // Bleibt im normalen Layoutfluss (keine `position: absolute`-Bar) –
+        // nur Hintergrund/Rand werden durch die schwebende Glas-Flaeche
+        // ersetzt, damit Screens mit eigenem Bottom-Padding (z. B. die
+        // Karten-Legende) unveraendert funktionieren.
+        tabBarStyle: { backgroundColor: 'transparent', borderTopWidth: 0, elevation: 0 },
+        tabBarBackground: () => <GlassSurface radius={0} style={StyleSheet.absoluteFill} />,
         headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700' },

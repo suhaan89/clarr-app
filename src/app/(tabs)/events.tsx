@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, LoadingState } from '@/components';
 import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
@@ -26,6 +26,7 @@ export default function EventsScreen() {
   const { session } = useSession();
   const [events, setEvents] = useState<CleanupEvent[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -57,6 +58,12 @@ export default function EventsScreen() {
     }, [load])
   );
 
+  async function onRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
+
   async function toggleSignup(ev: CleanupEvent) {
     if (!session) return;
     let error;
@@ -81,6 +88,9 @@ export default function EventsScreen() {
       contentContainerStyle={styles.list}
       data={events}
       keyExtractor={(e) => e.id}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }
       ListEmptyComponent={
         <EmptyState
           icon="people-outline"

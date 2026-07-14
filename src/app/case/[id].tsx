@@ -3,7 +3,14 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { Badge, Button, Card, Celebration, LoadingState } from '@/components';
 import { getCaseStatus, isOpenStatus } from '@/constants/status';
@@ -32,6 +39,10 @@ export default function CaseDetailScreen() {
   const [reportIds, setReportIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  // Sanfter Fade/Scale-Uebergang, sobald der Fall geladen ist (statt eines
+  // harten Umschlags vom Spinner auf den fertigen Inhalt).
+  const reduceMotion = useReducedMotion();
+  const enter = useSharedValue(0);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -62,6 +73,18 @@ export default function CaseDetailScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!caseRow) return;
+    enter.value = reduceMotion
+      ? 1
+      : withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
+  }, [caseRow, reduceMotion, enter]);
+
+  const enterStyle = useAnimatedStyle(() => ({
+    opacity: enter.value,
+    transform: [{ scale: 0.97 + enter.value * 0.03 }],
+  }));
 
   function flagCase() {
     if (!session || reportIds.length === 0) return;
@@ -133,8 +156,8 @@ export default function CaseDetailScreen() {
   const status = getCaseStatus(caseRow.status, t);
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.background }}
+    <Animated.ScrollView
+      style={[{ backgroundColor: colors.background }, enterStyle]}
       contentContainerStyle={styles.content}>
       <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]} allowFontScaling>
         {caseRow.title}
@@ -199,7 +222,7 @@ export default function CaseDetailScreen() {
         message={t('celebrate.close_message')}
         pose="celebrate"
       />
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 

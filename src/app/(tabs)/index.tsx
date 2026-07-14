@@ -23,11 +23,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Counter, GlassSurface, Mascot, PressableScale } from '@/components';
+import { Counter, GlassSurface, Mascot, PressableScale, WeeklyChallenge } from '@/components';
 import { DisplayFont, Radius, Spacing, Type, useGlass, useHomeGradient, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { startOfIsoWeek } from '@/lib/week';
 
 type EventRow = { id: string; title: string; event_date: string };
 
@@ -71,6 +72,7 @@ export default function HomeScreen() {
   const [places, setPlaces] = useState(0);
   const [openCount, setOpenCount] = useState(0);
   const [nextEvent, setNextEvent] = useState<EventRow | null>(null);
+  const [weekCount, setWeekCount] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -93,6 +95,13 @@ export default function HomeScreen() {
         .order('event_date', { ascending: true })
         .limit(1)
         .then(({ data }) => setNextEvent((data as EventRow[])?.[0] ?? null));
+      // Gemeinschafts-Challenge: neue Faelle seit Montag 00:00 (cases ist
+      // fuer alle lesbar, keine PII — siehe Migration 002).
+      supabase
+        .from('cases')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', startOfIsoWeek().toISOString())
+        .then(({ count }) => setWeekCount(count ?? 0));
     }, [session])
   );
 
@@ -294,6 +303,11 @@ export default function HomeScreen() {
               </GlassSurface>
             </PressableScale>
           </View>
+        </Rise>
+
+        {/* Gemeinschafts-Challenge: geteiltes Wochenziel, kein Zeitdruck. */}
+        <Rise progress={enter} index={4}>
+          <WeeklyChallenge count={weekCount} />
         </Rise>
       </Animated.ScrollView>
     </View>

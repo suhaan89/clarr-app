@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components';
 import { Radius, Shadow, Spacing, useThemeColors } from '@/constants/theme';
@@ -41,27 +42,41 @@ export default function KarteScreen() {
   const colors = useThemeColors();
   const { t } = useI18n();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [reports, setReports] = useState<MapReport[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   // Custom-Marker: kurz nachzeichnen lassen, dann fixieren (Android-Perf).
   const [tracksChanges, setTracksChanges] = useState(true);
 
+  const load = useCallback(async () => {
+    // RLS liefert nur veroeffentlichte/eigene Meldungen (Paket 8);
+    // Fotos kommen ausschliesslich geblurrt aus public-blurred.
+    // `reports_map` liefert Koordinaten gerundet auf den Geohash8-
+    // Zentroid statt exakter Lat/Lng (Migration 018) — schuetzt den
+    // genauen Meldeort auf der oeffentlichen Karte.
+    const { data, error } = await supabase
+      .from('reports_map')
+      .select('id, latitude, longitude, status, waste_type, case_id, case_status')
+      .in('status', ['veroeffentlicht', 'erledigt'])
+      .limit(500);
+    if (error) {
+      Alert.alert(t('map.error_title'), t('map.error_body'));
+      return;
+    }
+    if (data) setReports(data as unknown as MapReport[]);
+  }, [t]);
+
   useFocusEffect(
     useCallback(() => {
-      // RLS liefert nur veroeffentlichte/eigene Meldungen (Paket 8);
-      // Fotos kommen ausschliesslich geblurrt aus public-blurred.
-      // `reports_map` liefert Koordinaten gerundet auf den Geohash8-
-      // Zentroid statt exakter Lat/Lng (Migration 018) — schuetzt den
-      // genauen Meldeort auf der oeffentlichen Karte.
-      supabase
-        .from('reports_map')
-        .select('id, latitude, longitude, status, waste_type, case_id, case_status')
-        .in('status', ['veroeffentlicht', 'erledigt'])
-        .limit(500)
-        .then(({ data }) => {
-          if (data) setReports(data as unknown as MapReport[]);
-        });
-    }, [])
+      load();
+    }, [load])
   );
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   useEffect(() => {
     setTracksChanges(true);
@@ -102,6 +117,27 @@ export default function KarteScreen() {
         })}
       </MapView>
 
+      {/* Kein RefreshControl: das braucht eine ScrollView als Vorfahre,
+          deren Pan-Geste mit der eigenen Kartennavigation kollidieren
+          wuerde. Stattdessen ein expliziter Aktualisieren-Button. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('map.refresh_a11y')}
+        onPress={onRefresh}
+        disabled={refreshing}
+        style={({ pressed }) => [
+          styles.refreshBtn,
+          Shadow,
+          { top: insets.top + Spacing.two, backgroundColor: colors.backgroundElement, borderColor: colors.border },
+          pressed && styles.pressed,
+        ]}>
+        {refreshing ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Ionicons name="refresh" size={20} color={colors.text} />
+        )}
+      </Pressable>
+
       <Card
         style={styles.legend}
         accessibilityRole="summary"
@@ -135,6 +171,17 @@ export default function KarteScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  refreshBtn: {
+    position: 'absolute',
+    right: Spacing.three,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pressed: { opacity: 0.6 },
   pin: {
     width: 32,
     height: 32,
