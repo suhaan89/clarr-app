@@ -53,7 +53,12 @@ export function WeeklyChallenge({ count, target = WEEKLY_GOAL }: Props) {
         </Text>
       </View>
 
-      <ProgressBar fraction={safeCount / target} fillColors={grad.brand} height={12} />
+      <ProgressBar
+        fraction={safeCount / target}
+        fillColors={grad.brand}
+        height={12}
+        accessibilityLabel={t('home.challenge_a11y', { count: safeCount, target })}
+      />
 
       <Text
         style={[styles.footer, { color: reached ? colors.primaryStrong : colors.textSecondary }]}

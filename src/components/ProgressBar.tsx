@@ -22,6 +22,8 @@ type Props = {
   fillColor?: string;
   trackColor?: string;
   style?: StyleProp<ViewStyle>;
+  /** Beschreibung fuer Screenreader (z. B. "Wochenziel: 12 von 20 Fällen"). */
+  accessibilityLabel?: string;
 };
 
 /**
@@ -37,6 +39,7 @@ export function ProgressBar({
   fillColor,
   trackColor,
   style,
+  accessibilityLabel,
 }: Props) {
   const colors = useThemeColors();
   const reduceMotion = useReducedMotion();
@@ -59,6 +62,12 @@ export function ProgressBar({
   return (
     <View
       onLayout={onLayout}
+      // Eigene Rolle/Wert, damit auch eine freistehende ProgressBar (ohne
+      // umschliessendes accessibility-Element wie LevelProgress) fuer
+      // Screenreader verstaendlich ist.
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
+      accessibilityLabel={accessibilityLabel}
       style={[
         styles.track,
         { height, borderRadius: height / 2, backgroundColor: trackColor ?? colors.backgroundSelected },

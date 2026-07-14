@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Shadow, Spacing, Type, useThemeColors } from '@/constants/theme';
 import { type Achievement } from '@/lib/achievements';
@@ -7,7 +7,7 @@ import { useI18n, type TranslationKey } from '@/lib/i18n';
 
 /** Einzelnes Medaillon. Verdient = warmes Bernstein mit Haekchen; noch offen =
  *  ruhig gedaempft mit Fortschritt (x/ziel). Reward-Domaene, daher Accent. */
-export function AchievementMedal({ item }: { item: Achievement }) {
+export function AchievementMedal({ item, width }: { item: Achievement; width: `${number}%` }) {
   const colors = useThemeColors();
   const { t } = useI18n();
   const title = t(`badge.${item.id}.title` as TranslationKey);
@@ -15,7 +15,7 @@ export function AchievementMedal({ item }: { item: Achievement }) {
 
   return (
     <View
-      style={styles.item}
+      style={[styles.item, { width }]}
       accessibilityRole="image"
       accessibilityLabel={
         item.earned
@@ -55,12 +55,19 @@ export function AchievementMedal({ item }: { item: Achievement }) {
   );
 }
 
-/** Raster aller Abzeichen (drei pro Reihe). */
+/** Raster aller Abzeichen (drei pro Reihe; bei stark vergroesserter
+ *  Systemschrift nur zwei pro Reihe, sonst wuerden zweizeilige Titel bei
+ *  31% Spaltenbreite zu eng/abgeschnitten). */
 export function Badges({ items }: { items: Achievement[] }) {
+  // Grosse Bedienungshilfen-Schriftgroessen (iOS "groessere Schrift" /
+  // Android "groesste" Skalierung) melden ueber getFontScale() typischerweise
+  // > 1.6. Ab dann lieber zwei statt drei Spalten.
+  const columns = PixelRatio.getFontScale() > 1.6 ? 2 : 3;
+  const width = columns === 2 ? '47%' : '31%';
   return (
     <View style={styles.grid}>
       {items.map((a) => (
-        <AchievementMedal key={a.id} item={a} />
+        <AchievementMedal key={a.id} item={a} width={width} />
       ))}
     </View>
   );
@@ -73,7 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     rowGap: Spacing.three,
   },
-  item: { width: '31%', alignItems: 'center', gap: Spacing.one },
+  item: { alignItems: 'center', gap: Spacing.one },
   medal: {
     width: 60,
     height: 60,

@@ -313,6 +313,46 @@ werden — Nachholen in Paket I.40 vermerkt.
 `npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler (2 Vorbestand-Warnungen)
 · `npm test` ✅ 27/27.
 
+## Paket H — i18n & Barrierefreiheit ✅
+
+33. Erledigt vorgezogen (siehe oben) — `gsw` als `beta: true` markiert;
+    tatsächlicher Stand geprüft (Skript gezählt): `de`/`en` 227/227
+    Schlüssel vollständig, `gsw` 85/227, `de-AT` nur 6/227 (auch beta),
+    `fr`/`it`/`zh`/`nb`/`cs` je 149/227 (bereits korrekt beta) — die
+    Zahlen im ursprünglichen Prompt waren etwas ungenau, die Diagnose
+    (gsw faelschlich nicht als Beta markiert) stimmte.
+34. **accessibilityLabel/-Role**: `ProgressBar.tsx` hatte bisher GAR keine
+    Accessibility-Props — jetzt `accessibilityRole="progressbar"` +
+    `accessibilityValue` + optionales `accessibilityLabel` direkt am
+    Balken (nützt v. a. `WeeklyChallenge`, das nur eine "summary"-Rolle
+    auf der Karte hat, nicht "progressbar"). `LevelProgress.tsx` hatte das
+    bereits korrekt auf seinem äußeren Container. `Card.tsx`/`Badge.tsx`
+    geprüft: beide unterstützen Accessibility-Props bereits vollständig
+    (Card reicht `...rest` durch, Badge zeigt immer sichtbaren `Text` —
+    für Screenreader ohnehin automatisch lesbar) — kein Bug gefunden.
+35. **Reduce-Motion**: `Confetti.tsx` verließ sich nur auf Reanimateds
+    `useReducedMotion()` (liest die OS-Einstellung laut Reanimated-Doku
+    nur EINMAL beim App-Start, reagiert nicht live auf eine Änderung
+    während der Sitzung). Neuer geteilter Hook
+    `src/lib/accessibility.ts` (`useSystemReduceMotion`, live via
+    `AccessibilityInfo.addEventListener('reduceMotionChanged', ...)`,
+    analog zum bestehenden `useReduceTransparency` in `GlassSurface.tsx`)
+    — beide Signale jetzt kombiniert (`||`). **Nicht auf echtem Gerät
+    gegengetestet** (kein Geräte-/Simulator-Zugriff in dieser Session) —
+    das war explizit Teil des Auftrags; bitte vor Release einmal die
+    OS-Einstellung bei laufender App umschalten und prüfen, dass Konfetti
+    sofort ausbleibt.
+36. **Layout-Stresstest große Schrift**: `Badges.tsx` (3-Spalten-Raster,
+    31 % Breite + zweizeiliger Titel) wechselt jetzt bei
+    `PixelRatio.getFontScale() > 1.6` auf 2 Spalten (47 % Breite) —
+    vorher bei sehr großer Bedienungshilfen-Schrift eng/abgeschnitten.
+    `LanguagePicker.tsx` geprüft: Zeilen haben `minHeight` (kein festes
+    `height`/`maxHeight`, kein `numberOfLines`), wachsen also bei langen,
+    umgebrochenen Sprachnamen einfach nach unten mit — kein Layoutbruch
+    gefunden, keine Änderung nötig.
+
+`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 27/27.
+
 ## Paket D — Clari-Posen ⏳ blockiert (Assets), Wiring ✅
 
 18/19. Geprüft: `Mascot.tsx`s `SOURCES`-Map, `Celebration.tsx` (reicht

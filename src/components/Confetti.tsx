@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useThemeColors } from '@/constants/theme';
+import { useSystemReduceMotion } from '@/lib/accessibility';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -61,7 +62,12 @@ function ConfettiPiece({ p }: { p: PieceParams }) {
  */
 export function Confetti({ count = 80 }: { count?: number }) {
   const colors = useThemeColors();
-  const reduceMotion = useReducedMotion();
+  // Zwei Signale kombiniert: Reanimateds Hook (schnell, aber liest den Wert
+  // nur einmal beim App-Start) UND die live AccessibilityInfo-Abfrage
+  // (reagiert auch auf eine waehrend der Sitzung geaenderte OS-Einstellung).
+  const reanimatedReduceMotion = useReducedMotion();
+  const systemReduceMotion = useSystemReduceMotion();
+  const reduceMotion = reanimatedReduceMotion || systemReduceMotion;
 
   const pieces = useMemo<PieceParams[]>(() => {
     const palette = [colors.primary, colors.primaryBright, colors.accent, '#FFFFFF'];
