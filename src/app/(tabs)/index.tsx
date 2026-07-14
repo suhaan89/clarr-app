@@ -23,12 +23,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Counter, GlassSurface, Mascot, PressableScale, WeeklyChallenge } from '@/components';
+import { Counter, GlassSurface, Mascot, PressableScale } from '@/components';
 import { DisplayFont, Radius, Spacing, Type, useGlass, useHomeGradient, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { startOfIsoWeek } from '@/lib/week';
 
 type EventRow = { id: string; title: string; event_date: string };
 
@@ -72,12 +71,11 @@ export default function HomeScreen() {
   const [places, setPlaces] = useState(0);
   const [openCount, setOpenCount] = useState(0);
   const [nextEvent, setNextEvent] = useState<EventRow | null>(null);
-  const [weekCount, setWeekCount] = useState(0);
 
   const load = useCallback(async () => {
     if (!session) return;
     // Held-Wert: Orte, die DU sauber gemacht hast (eigene Abschluss-Buchungen).
-    const [placesRes, openRes, eventRes, weekRes] = await Promise.all([
+    const [placesRes, openRes, eventRes] = await Promise.all([
       supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'case_closed_after'),
       supabase
         .from('cases')
@@ -89,12 +87,9 @@ export default function HomeScreen() {
         .gte('event_date', new Date().toISOString())
         .order('event_date', { ascending: true })
         .limit(1),
-      // Gemeinschafts-Challenge: neue Faelle seit Montag 00:00 (cases ist
-      // fuer alle lesbar, keine PII — siehe Migration 002).
-      supabase.from('cases').select('id', { count: 'exact', head: true }).gte('created_at', startOfIsoWeek().toISOString()),
     ]);
 
-    if (placesRes.error || openRes.error || eventRes.error || weekRes.error) {
+    if (placesRes.error || openRes.error || eventRes.error) {
       Alert.alert(t('home.error_title'), t('home.error_body'), [
         { text: t('home.error_retry'), onPress: () => load() },
       ]);
@@ -104,7 +99,6 @@ export default function HomeScreen() {
     setPlaces(placesRes.count ?? 0);
     setOpenCount(openRes.count ?? 0);
     setNextEvent((eventRes.data as EventRow[])?.[0] ?? null);
-    setWeekCount(weekRes.count ?? 0);
   }, [session, t]);
 
   useFocusEffect(
@@ -311,11 +305,6 @@ export default function HomeScreen() {
               </GlassSurface>
             </PressableScale>
           </View>
-        </Rise>
-
-        {/* Gemeinschafts-Challenge: geteiltes Wochenziel, kein Zeitdruck. */}
-        <Rise progress={enter} index={4}>
-          <WeeklyChallenge count={weekCount} />
         </Rise>
       </Animated.ScrollView>
     </View>

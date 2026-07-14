@@ -30,6 +30,7 @@ import {
   SectionHeader,
   Skeleton,
   SkeletonLine,
+  WeeklyChallenge,
 } from '@/components';
 import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { computeAchievements, earnedCount } from '@/lib/achievements';
@@ -38,6 +39,7 @@ import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { isValidDisplayName } from '@/lib/validation';
+import { startOfIsoWeek } from '@/lib/week';
 
 const CONSENT_KEYS = ['kamera', 'standort', 'behoerden_weitergabe'] as const;
 
@@ -67,6 +69,7 @@ export default function ProfilScreen() {
   const [consents, setConsents] = useState<Record<string, boolean>>({});
   const [counts, setCounts] = useState({ reports: 0, confirms: 0, closes: 0, events: 0 });
   const [isModerator, setIsModerator] = useState(false);
+  const [weekCount, setWeekCount] = useState(0);
   // Bis der erste Ladevorgang durch ist: Skeleton statt kurzem "0 Punkte"-Blitzer.
   const [loaded, setLoaded] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
@@ -148,7 +151,17 @@ export default function ProfilScreen() {
       });
     });
 
-    await Promise.all([levelP, ledgerP, profileP, boardP, consentsP, countsP]);
+    // Gemeinschafts-Challenge: neue Faelle seit Montag 00:00 (cases ist fuer
+    // alle lesbar, keine PII — siehe Migration 002). Gehoert thematisch zur
+    // Bestenliste (Gemeinschaft), nicht auf den bewusst minimalistischen
+    // Home-Screen (Redesign-Runde 5, docs/design-notes.md).
+    const weekP = supabase
+      .from('cases')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', startOfIsoWeek().toISOString())
+      .then(({ count }) => setWeekCount(count ?? 0));
+
+    await Promise.all([levelP, ledgerP, profileP, boardP, consentsP, countsP, weekP]);
   }, [session, t]);
 
   useFocusEffect(
@@ -283,6 +296,11 @@ export default function ProfilScreen() {
           ))
         )}
       </Card>
+
+      {/* Gemeinschafts-Challenge: geteiltes Wochenziel, kein Zeitdruck.
+          Gehoert hier zur Gemeinschafts-Sektion (Bestenliste), nicht auf den
+          bewusst minimalistischen Home-Screen. */}
+      {loaded && <WeeklyChallenge count={weekCount} />}
 
       <SectionHeader title={t('profil.leaderboard')} />
       <Card style={styles.sectionCard}>
