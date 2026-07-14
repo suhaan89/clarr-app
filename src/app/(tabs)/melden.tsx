@@ -142,7 +142,10 @@ export default function MeldenScreen() {
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
         <View style={styles.cameraControls}>
           {queueLength > 0 && (
-            <Text style={styles.queueBadge} accessibilityLiveRegion="polite" allowFontScaling>
+            <Text
+              style={[styles.queueBadge, { backgroundColor: colors.overlay }]}
+              accessibilityLiveRegion="polite"
+              allowFontScaling>
               {t('report.queue_badge', { count: queueLength })}
             </Text>
           )}
@@ -157,7 +160,11 @@ export default function MeldenScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('report.gallery_a11y')}
             onPress={pickFromGallery}
-            style={({ pressed }) => [styles.galleryButton, pressed && styles.pressed]}>
+            style={({ pressed }) => [
+              styles.galleryButton,
+              { backgroundColor: colors.overlay },
+              pressed && styles.pressed,
+            ]}>
             <Ionicons name="images-outline" size={20} color="#fff" />
             <Text style={styles.galleryLabel} allowFontScaling>
               {t('report.gallery_short')}
@@ -368,12 +375,10 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: Spacing.three,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   galleryLabel: { color: '#fff', fontSize: 15, fontWeight: '600' },
   queueBadge: {
     color: '#fff',
-    backgroundColor: 'rgba(0,0,0,0.6)',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
     borderRadius: Radius.pill,

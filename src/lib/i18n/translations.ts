@@ -349,6 +349,9 @@ export const de = {
   'case.not_found_body':
     'Diese Meldung existiert nicht mehr oder ist nicht öffentlich sichtbar.',
   'error.retry': 'Erneut versuchen',
+  'error_boundary.title': 'Da ist etwas schiefgelaufen',
+  'error_boundary.body':
+    'Die App hatte einen unerwarteten Fehler. Deine Daten sind sicher – bitte versuche es erneut.',
 
   // Offline-Queue (Paket G.31)
   'queue.lost_title': 'Foto nicht mehr gefunden',

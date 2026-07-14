@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Gradients, Radius, Spacing, Type } from '@/constants/theme';
+import { Colors, Gradients, Radius, Spacing, Type } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 
 /**
@@ -83,7 +83,12 @@ export function BrandSplash({ onFinish }: { onFinish: () => void }) {
         <View style={styles.logoWrap}>
           <Animated.View style={[styles.ring, ringStyle]} />
           <Animated.View style={[styles.logoTile, logoStyle]}>
-            <Ionicons name="leaf" size={52} color="#1B7A43" />
+            {/* Logo-Kachel ist bewusst immer weiss (beide Modi) — daher fest
+                Colors.light.primary statt des theme-abhaengigen Gruens, das
+                im Dunkelmodus fuer dunkle Flaechen aufgehellt ist und auf
+                Weiss zu blass waere. Vorher stand hier abweichend "#1B7A43"
+                (Runde 7, Design-Audit: zwei leicht unterschiedliche Gruens). */}
+            <Ionicons name="leaf" size={52} color={Colors.light.primary} />
           </Animated.View>
         </View>
         <Animated.View style={[styles.copy, textStyle]}>
