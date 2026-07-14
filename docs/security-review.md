@@ -68,8 +68,9 @@ Secrets-Scan, Abuse-Case-Durchsprache.
 2. pHash-Duplikatabgleich automatisieren (Hamming-Distanz in submit/analyze).
 3. Auth-Dashboard-Checkliste (docs/auth.md) im DEV-Projekt verifizieren,
    insb. „Prevent email enumeration" und Mail-Rate-Limits.
-4. Storage-Aufräum-Job für verwaiste Objekte (Paket-5-Notiz) fehlt weiter.
-5. Moderations-Frontend fehlt (RPCs nur via Dashboard/SQL nutzbar).
+4. ✅ Storage-Aufräum-Job: `supabase/functions/storage-cleanup` (Runde 6,
+   Paket G.32), täglich per Scheduler, siehe docs/ops.md.
+5. ✅ Moderations-Frontend: `src/app/moderation.tsx` (Runde 6, Paket B.5).
 
 ---
 

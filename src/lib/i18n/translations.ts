@@ -57,6 +57,9 @@ export const de = {
   'home.next_event_label': 'Nächste Aktion',
   'home.event_none': 'Keine Aktion geplant',
   'home.event_a11y': 'Nächste Aktion: {title}',
+  'home.error_title': 'Konnte nicht geladen werden',
+  'home.error_body': 'Bitte prüfe deine Verbindung und versuche es erneut.',
+  'home.error_retry': 'Erneut versuchen',
   'stack.login': 'Anmelden',
   'stack.case': 'Fall',
   'stack.datenschutz': 'Datenschutz',
@@ -176,6 +179,7 @@ export const de = {
     'Die Liste startet jeden Montag bei null – es zählt die Woche, nicht der Dauer-Grind.',
   'profil.error_title': 'Das hat nicht geklappt',
   'profil.error_body': 'Bitte versuch es erneut.',
+  'profil.error_retry': 'Erneut versuchen',
   'profil.language': 'Sprache',
   'profil.language_hint': 'Rechtstexte (Datenschutz, Impressum) sind derzeit nur auf Deutsch verfügbar.',
   'profil.privacy': 'Datenschutz & deine Rechte',
@@ -336,6 +340,20 @@ export const de = {
     'Alle Infos zu deinen Daten stehen in der Datenschutzerklärung – erreichbar über ' +
     'dein Profil. Dort kannst du auch deine Daten exportieren oder dein Konto löschen.',
   'chat.privacy_link': 'Datenschutz öffnen',
+
+  // Fehlerzustände (Robustheit, Paket G)
+  'notfound.title': 'Seite nicht gefunden',
+  'notfound.body': 'Dieser Link führt ins Leere. Zurück geht es über den Start.',
+  'notfound.link': 'Zur Startseite',
+  'case.not_found_title': 'Fall nicht gefunden',
+  'case.not_found_body':
+    'Diese Meldung existiert nicht mehr oder ist nicht öffentlich sichtbar.',
+  'error.retry': 'Erneut versuchen',
+
+  // Offline-Queue (Paket G.31)
+  'queue.lost_title': 'Foto nicht mehr gefunden',
+  'queue.lost_body':
+    '{count} wartende Meldung(en) konnten nicht gesendet werden, weil das Foto nicht mehr auf dem Gerät ist. Bitte erneut aufnehmen und melden.',
 } as const;
 
 export type TranslationKey = keyof typeof de;

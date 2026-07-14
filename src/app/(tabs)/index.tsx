@@ -7,7 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Alert, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
@@ -74,35 +74,43 @@ export default function HomeScreen() {
   const [nextEvent, setNextEvent] = useState<EventRow | null>(null);
   const [weekCount, setWeekCount] = useState(0);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!session) return;
-      // Held-Wert: Orte, die DU sauber gemacht hast (eigene Abschluss-Buchungen).
-      supabase
-        .from('points_ledger')
-        .select('id', { count: 'exact', head: true })
-        .eq('reason', 'case_closed_after')
-        .then(({ count }) => setPlaces(count ?? 0));
+  const load = useCallback(async () => {
+    if (!session) return;
+    // Held-Wert: Orte, die DU sauber gemacht hast (eigene Abschluss-Buchungen).
+    const [placesRes, openRes, eventRes, weekRes] = await Promise.all([
+      supabase.from('points_ledger').select('id', { count: 'exact', head: true }).eq('reason', 'case_closed_after'),
       supabase
         .from('cases')
         .select('id', { count: 'exact', head: true })
-        .in('status', ['gemeldet', 'geprueft', 'weitergeleitet'])
-        .then(({ count }) => setOpenCount(count ?? 0));
+        .in('status', ['gemeldet', 'geprueft', 'weitergeleitet']),
       supabase
         .from('cleanup_events')
         .select('id, title, event_date')
         .gte('event_date', new Date().toISOString())
         .order('event_date', { ascending: true })
-        .limit(1)
-        .then(({ data }) => setNextEvent((data as EventRow[])?.[0] ?? null));
+        .limit(1),
       // Gemeinschafts-Challenge: neue Faelle seit Montag 00:00 (cases ist
       // fuer alle lesbar, keine PII — siehe Migration 002).
-      supabase
-        .from('cases')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', startOfIsoWeek().toISOString())
-        .then(({ count }) => setWeekCount(count ?? 0));
-    }, [session])
+      supabase.from('cases').select('id', { count: 'exact', head: true }).gte('created_at', startOfIsoWeek().toISOString()),
+    ]);
+
+    if (placesRes.error || openRes.error || eventRes.error || weekRes.error) {
+      Alert.alert(t('home.error_title'), t('home.error_body'), [
+        { text: t('home.error_retry'), onPress: () => load() },
+      ]);
+      return;
+    }
+
+    setPlaces(placesRes.count ?? 0);
+    setOpenCount(openRes.count ?? 0);
+    setNextEvent((eventRes.data as EventRow[])?.[0] ?? null);
+    setWeekCount(weekRes.count ?? 0);
+  }, [session, t]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
   );
 
   // Animationen (UI-Thread). Respektiert „Bewegung reduzieren".

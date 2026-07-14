@@ -3,9 +3,9 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 
-import { BrandSplash, HelpChat } from '@/components';
+import { BrandSplash, ErrorBoundary, HelpChat } from '@/components';
 import { Colors } from '@/constants/theme';
 import { I18nProvider, useI18n } from '@/lib/i18n';
 import { startAutoSync } from '@/lib/offline-queue';
@@ -20,6 +20,18 @@ function AppStack() {
   const { session } = useSession();
   // Marken-Splash nur beim Kaltstart; blendet sich selbst aus.
   const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Offline-Queue automatisch syncen, sobald Netz da ist. Ein Eintrag,
+    // dessen Foto trotz dauerhafter Kopie (Migration/Paket G.31) verloren
+    // ging (z. B. App-Daten manuell geleert), wird klar kommuniziert statt
+    // still fuer immer zu haengen.
+    return startAutoSync((r) => {
+      if (r.lost > 0) {
+        Alert.alert(t('queue.lost_title'), t('queue.lost_body', { count: r.lost }));
+      }
+    });
+  }, [t]);
 
   // Navigation-Theme an die CLAR-Palette angleichen (Header, Hintergründe).
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -65,11 +77,6 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Offline-Queue automatisch syncen, sobald Netz da ist.
-    return startAutoSync();
-  }, []);
-
-  useEffect(() => {
     // Nativen Splash erst schließen, wenn die Schrift steht (oder scheitert) –
     // vermeidet ein kurzes Umspringen der Überschriften vom System-Fallback.
     if (fontsLoaded || fontError) SplashScreen.hideAsync();
@@ -78,10 +85,12 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <SessionProvider>
-      <I18nProvider>
-        <AppStack />
-      </I18nProvider>
-    </SessionProvider>
+    <ErrorBoundary>
+      <SessionProvider>
+        <I18nProvider>
+          <AppStack />
+        </I18nProvider>
+      </SessionProvider>
+    </ErrorBoundary>
   );
 }

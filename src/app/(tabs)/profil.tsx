@@ -85,7 +85,14 @@ export default function ProfilScreen() {
       .select('*')
       .eq('user_id', uid)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          Alert.alert(t('profil.error_title'), t('profil.error_body'), [
+            { text: t('profil.error_retry'), onPress: () => load() },
+          ]);
+          setLoaded(true);
+          return;
+        }
         const row = data as LevelRow;
         setLevel(row);
         const lvl = row?.level ?? null;
@@ -142,7 +149,7 @@ export default function ProfilScreen() {
     });
 
     await Promise.all([levelP, ledgerP, profileP, boardP, consentsP, countsP]);
-  }, [session]);
+  }, [session, t]);
 
   useFocusEffect(
     useCallback(() => {

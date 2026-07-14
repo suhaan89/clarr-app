@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Badge, Button, Card, Celebration, LoadingState } from '@/components';
+import { Badge, Button, Card, Celebration, EmptyState, LoadingState } from '@/components';
 import { getCaseStatus, isOpenStatus } from '@/constants/status';
 import { DisplayFont, Spacing, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
@@ -35,6 +35,10 @@ export default function CaseDetailScreen() {
   const { t, dateLocale } = useI18n();
   const { session } = useSession();
   const [caseRow, setCaseRow] = useState<CaseRow | null>(null);
+  // Unterscheidet "laedt noch" von "geladen, aber nicht gefunden/RLS
+  // verweigert" — sonst haengt der Screen bei einem ungueltigen/fremden
+  // Link fuer immer im Spinner (Paket G.29).
+  const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
   const [reportIds, setReportIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -55,19 +59,22 @@ export default function CaseDetailScreen() {
       .eq('id', id)
       .maybeSingle();
     setCaseRow(c as CaseRow | null);
-    const { data: reports } = await supabase.from('reports').select('id').eq('case_id', id);
-    const ids = (reports ?? []).map((r) => r.id);
-    setReportIds(ids);
-    if (ids.length > 0) {
-      // Anzeige NUR aus public-blurred (approved + blurred_path).
-      const { data: ph } = await supabase
-        .from('report_photos')
-        .select('id, blurred_path, report_id')
-        .in('report_id', ids)
-        .eq('approved', true)
-        .not('blurred_path', 'is', null);
-      setPhotos((ph as PhotoRow[]) ?? []);
+    if (c) {
+      const { data: reports } = await supabase.from('reports').select('id').eq('case_id', id);
+      const ids = (reports ?? []).map((r) => r.id);
+      setReportIds(ids);
+      if (ids.length > 0) {
+        // Anzeige NUR aus public-blurred (approved + blurred_path).
+        const { data: ph } = await supabase
+          .from('report_photos')
+          .select('id, blurred_path, report_id')
+          .in('report_id', ids)
+          .eq('approved', true)
+          .not('blurred_path', 'is', null);
+        setPhotos((ph as PhotoRow[]) ?? []);
+      }
     }
+    setLoading(false);
   }, [id]);
 
   useEffect(() => {
@@ -148,8 +155,20 @@ export default function CaseDetailScreen() {
     }
   }
 
-  if (!caseRow) {
+  if (loading) {
     return <LoadingState label={t('case.loading')} />;
+  }
+
+  if (!caseRow) {
+    return (
+      <View style={[styles.notFound, { backgroundColor: colors.background }]}>
+        <EmptyState
+          icon="help-circle-outline"
+          title={t('case.not_found_title')}
+          body={t('case.not_found_body')}
+        />
+      </View>
+    );
   }
 
   const open = isOpenStatus(caseRow.status);
@@ -227,6 +246,7 @@ export default function CaseDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: Spacing.four, gap: Spacing.three, paddingBottom: Spacing.six },
   title: { fontFamily: DisplayFont.regular, fontSize: 22, fontWeight: '700' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },

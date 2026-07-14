@@ -10,6 +10,7 @@ export { GlassSurface } from './GlassSurface';
 export { HelpChat } from './HelpChat';
 export { Mascot, type MascotPose } from './Mascot';
 export { EmptyState } from './EmptyState';
+export { ErrorBoundary } from './ErrorBoundary';
 export { Input } from './Input';
 export { LanguagePicker } from './LanguagePicker';
 export { LevelProgress } from './LevelProgress';

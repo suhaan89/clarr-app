@@ -276,6 +276,43 @@ werden — Nachholen in Paket I.40 vermerkt.
 
 `npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.
 
+## Paket G — Robustheit & Fehlerbehandlung ✅
+
+27. **Globale ErrorBoundary**: `src/components/ErrorBoundary.tsx` (einzige
+    Klassenkomponente im Projekt — React-Fehlergrenzen gibt es nur so),
+    umschließt die gesamte App in `_layout.tsx`. Freundlicher Fallback +
+    "Erneut versuchen"-Button statt Absturz.
+28. **Fehlerbehandlung vereinheitlicht**: `index.tsx`, `karte.tsx`,
+    `profil.tsx` prüfen jetzt `error` aus der Supabase-Antwort und zeigen
+    `Alert.alert` mit Retry-Option (Muster aus `events.tsx` übernommen,
+    dort gab es das bisher nur für Mutationen, nicht den initialen Load —
+    wird hier zum ersten Mal konsequent für Ladevorgänge genutzt).
+29. **`case/[id].tsx` Not-Found**: `loading`/`caseRow`-Zustände jetzt
+    getrennt — vorher hing der Screen bei einem ungültigen/fremden Link
+    für immer im Spinner. Zeigt jetzt `EmptyState` "Fall nicht gefunden".
+30. **`+not-found.tsx`**: neue Route für ungültige Deep-Links (`EmptyState`
+    + Link zurück zur Startseite).
+31. **Offline-Queue robuster**: `enqueueReport` kopiert Fotos jetzt in
+    `FileSystem.documentDirectory` (dauerhaft), bevor der Eintrag in die
+    Queue kommt — die ursprüngliche Kamera-/Galerie-Cache-URI kann danach
+    jederzeit vom OS geräumt werden, ohne die Meldung zu gefährden. Fehlt
+    die Kopie trotzdem (z. B. App-Daten manuell geleert), wird der Eintrag
+    beim Sync als `lost` erkannt und NICHT endlos erneut versucht, sondern
+    entfernt + dem Nutzer klar gemeldet ("Foto verloren, bitte erneut
+    aufnehmen", Alert in `_layout.tsx`). Kopien werden nach erfolgreichem
+    Sync wieder gelöscht. Jest-Tests erweitert (neuer Fall + `lost`-Feld in
+    `SyncResult`).
+32. **Storage-Aufräum-Job**: neue Edge Function
+    `supabase/functions/storage-cleanup` (analog `authority-digest`:
+    Service-Role-Bearer, konstante-Zeit-Vergleich). Räumt `originals`/
+    `public-blurred` von Objekten ohne zugehörige `report_photos`-Zeile,
+    mit 24h-Schonfrist gegen Races mit laufenden Uploads. Geplant täglich
+    (docs/ops.md aktualisiert); `docs/security-review.md` offene Punkte
+    4+5 als erledigt markiert.
+
+`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler (2 Vorbestand-Warnungen)
+· `npm test` ✅ 27/27.
+
 ## Paket D — Clari-Posen ⏳ blockiert (Assets), Wiring ✅
 
 18/19. Geprüft: `Mascot.tsx`s `SOURCES`-Map, `Celebration.tsx` (reicht

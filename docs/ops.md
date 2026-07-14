@@ -28,7 +28,8 @@ supabase db push              # wendet ausstehende Migrationen an
 
 # 4. Edge Functions deployen
 supabase functions deploy submit-report analyze-photo process-photo \
-  close-case close-event-cases export-my-data delete-account authority-digest
+  close-case close-event-cases export-my-data delete-account authority-digest \
+  storage-cleanup
 supabase functions deploy confirm-case-done --no-verify-jwt   # Behoerden-Link ohne Login
 
 # 5. Secrets (nur Dashboard/CLI, NIE im Repo)
@@ -55,6 +56,10 @@ supabase secrets set ANTHROPIC_API_KEY=... RESEND_API_KEY=... DIGEST_FROM_EMAIL=
 
 - `authority-digest` wöchentlich (Dashboard → Edge Functions → Schedules
   oder pg_cron + pg_net) mit `Authorization: Bearer <service_role>`.
+- `storage-cleanup` (Runde 6, Paket G.32) täglich, gleiches Schema.
+  Räumt Objekte in `originals`/`public-blurred` ohne zugehörige
+  `report_photos`-Zeile auf (24h-Schonfrist gegen Races mit laufenden
+  Uploads). Schreibt eine Zusammenfassung (nur Zahlen) ins `audit_log`.
 
 ## Was NIE passieren darf
 
