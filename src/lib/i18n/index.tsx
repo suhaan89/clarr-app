@@ -6,15 +6,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import {
-  CATALOGS,
-  de,
-  LANGUAGES,
-  type LanguageCode,
-  type TranslationKey,
-} from './translations';
+import { LANGUAGES, type LanguageCode, type TranslationKey } from './translations';
+import { translate } from './translate';
 
-export { LANGUAGES, type LanguageCode, type TranslationKey };
+export { LANGUAGES, translate, type LanguageCode, type TranslationKey };
 
 const STORAGE_KEY = 'clar.language';
 
@@ -30,13 +25,6 @@ type I18nContextValue = {
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
-
-function interpolate(template: string, params?: Params): string {
-  if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-    name in params ? String(params[name]) : match
-  );
-}
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<LanguageCode>('de');
@@ -57,14 +45,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<I18nContextValue>(() => {
-    const catalog = CATALOGS[lang];
     const dateLocale = LANGUAGES.find((l) => l.code === lang)?.dateLocale ?? 'de-DE';
     return {
       lang,
       setLang,
-      // Fallback-Kette: gewaehlte Sprache -> Deutsch -> Schluessel selbst
-      // (letzteres nur bei Programmierfehlern, verhindert Abstuerze).
-      t: (key, params) => interpolate(catalog[key] ?? de[key] ?? key, params),
+      t: (key, params) => translate(lang, key, params),
       dateLocale,
     };
   }, [lang, setLang]);

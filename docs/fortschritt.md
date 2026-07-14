@@ -138,12 +138,12 @@ Details und Annahmen in `NOTIZEN.md`.
 
 ---
 
-# Runde 6 (Pakete A–B, docs/verbesserungs-prompt.md) — Stand 2026-07-14
+# Runde 6 (Pakete A–I, docs/verbesserungs-prompt.md) — Stand 2026-07-14
 
 Auftrag: langer, eigenständiger Lauf über Verifikation → Sicherheit →
 Recht (nur technisch) → Funktionen/Politur → Robustheit/i18n/Tests.
 Reihenfolge eingehalten. Nach jedem Paket `npm run lint`/`npx tsc --noEmit`/
-`npm test` grün gehalten (siehe unten).
+`npm test` grün gehalten (siehe jeweils am Paketende).
 
 ## Paket A — Verifikation ⏳ teilweise
 
@@ -247,13 +247,12 @@ Reihenfolge eingehalten. Nach jedem Paket `npm run lint`/`npx tsc --noEmit`/
     `xcode`) — keine Laufzeit-Abhängigkeit der App selbst, kein Fix ohne
     Expo-SDK-Upgrade verfügbar. **Review-Termin: nächstes Expo-SDK-Upgrade.**
 
-## Verifikation nach Paket A+B
-
-`npx tsc --noEmit` ✅ sauber · `npm run lint` ✅ 0 Fehler (2 Vorbestand-
-Warnungen in `offline-queue.test.ts`, nicht dieser Runde) · `npm test` ✅
-26/26 Tests grün. Neue pgTAP-Dateien (`security_hardening_2`,
-`gps_precision`, `rls_attacker`) konnten mangels Docker nicht ausgeführt
-werden — Nachholen in Paket I.40 vermerkt.
+**Verifikation nach Paket A+B**: `npx tsc --noEmit` ✅ sauber ·
+`npm run lint` ✅ 0 Fehler (2 Vorbestand-Warnungen in
+`offline-queue.test.ts`, nicht dieser Runde) · `npm test` ✅ 26/26 Tests
+grün. Neue pgTAP-Dateien (`security_hardening_2`, `gps_precision`,
+`rls_attacker`) konnten mangels Docker nicht ausgeführt werden —
+Nachholen in Paket I.40 vermerkt.
 
 ## Paket C — Rechtliches (nur technische Vorbereitung) ✅
 
@@ -273,6 +272,64 @@ werden — Nachholen in Paket I.40 vermerkt.
     PRÜFEN"-Banner plus `[JURISTISCH PRÜFEN]`-Marker in den Texten selbst.
     Nichts geändert (kein Rechtstext erfunden/ausformuliert), nur
     verifiziert, dass der Status korrekt sichtbar bleibt.
+
+`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.
+
+## Paket D — Clari-Posen ⏳ blockiert (Assets), Wiring ✅
+
+18/19. Geprüft: `Mascot.tsx`s `SOURCES`-Map, `Celebration.tsx` (reicht
+`pose` durch) und die Aufrufer (`case/[id].tsx` → `pose="celebrate"`,
+`profil.tsx` → `pose="levelup"`) sind bereits korrekt verdrahtet — kein Bug
+wie ursprünglich angenommen. **Blockiert**: In dieser Session steht kein
+Text-zu-Bild-Generierungswerkzeug zur Verfügung (nur Adobe-Bildbearbeitung:
+Crop/Anpassungen/Vectorize — keine Neugenerierung von Inhalten/Posen).
+**Aktion für dich**: die drei Posen extern rendern (z. B. claude.ai/design,
+wie ursprünglich vorgeschlagen) und als `clari-celebrate.png`,
+`clari-levelup.png`, `clari-hint.png` unter `assets/mascot/` ablegen — die
+`SOURCES`-Map nimmt sie dann ohne weitere Codeänderung auf.
+
+## Paket E — Chatbot-Assistent ✅
+
+20. Neue Komponente `src/components/HelpChat.tsx`: regelbasierter FAQ-Chat
+    (4 feste Fragen/Antworten, kein LLM), Clari (Pose `hint`) als Gesicht,
+    Sprechblasen-Optik im bestehenden Card-/Modal-Stil (analog
+    `Celebration.tsx`). Erreichbar über ein schwebendes Hilfe-Icon, global
+    in `_layout.tsx` gerendert (nur sichtbar mit aktiver Session, nicht auf
+    dem Login-Screen). Alle Texte über `src/lib/i18n` (`chat.*`-Schlüssel,
+    nur `de` — Fallback greift für die anderen Sprachen).
+
+## Paket F — UI-Feinschliff ✅
+
+21. **Glas-Tab-Bar**: `tabBarBackground` (React-Navigation-Bottom-Tabs-
+    Erweiterungspunkt) rendert jetzt `GlassSurface` hinter der Tab-Bar,
+    `tabBarStyle` transparent. Bewusst NICHT `position: absolute` (das hätte
+    Screens mit eigenem Bottom-Padding/absoluten Elementen wie der
+    Karten-Legende zerbrochen) — die Bar bleibt im normalen Layoutfluss,
+    nur ihr Hintergrund ist jetzt die Glas-Fläche.
+22. **Skeleton-Loader**: neue Komponente `src/components/Skeleton.tsx`
+    (`Skeleton`/`SkeletonLine`, Shimmer mit Reduce-Motion-Fallback) und in
+    `profil.tsx` eingesetzt (Impact-Karte + Aktivitäts-Liste zeigen jetzt
+    Platzhalter statt kurz "0 Punkte"/"noch nichts" zu blitzen, bis der
+    erste Ladevorgang durch ist). Home bewusst NICHT retrofittet (eigenes,
+    fein abgestimmtes Eintritts-Animationssystem — Counter startet ohnehin
+    sauber bei 0, kein irreführender Null-Zustand); Karte zeigt nur kurze
+    Zahlen in der Legende, geringes Risiko.
+23. **Pull-to-Refresh**: `events.tsx` und `profil.tsx` (dort `load()` auf
+    `async`/`Promise.all` umgestellt, damit `RefreshControl` weiß, wann der
+    Refresh fertig ist) haben jetzt `RefreshControl`. `karte.tsx` bewusst
+    OHNE `RefreshControl` (das braucht eine ScrollView als Vorfahre, deren
+    Pan-Geste mit der Kartennavigation kollidieren würde) — stattdessen ein
+    expliziter Aktualisieren-Button oben rechts.
+24. **Hero-Übergang**: `case/[id].tsx` blendet den Inhalt jetzt per
+    Reanimated (Fade + leichtes Scale-in, 420 ms) ein, sobald der Fall
+    geladen ist, statt hart vom Spinner umzuschalten. Respektiert Reduce-
+    Motion.
+25. Splash-Hintergrundfarbe bereits in Paket B erledigt (`app.json`
+    `#1C8146`).
+26. **WeeklyChallenge**: eingebunden statt entfernt — `src/lib/week.ts`
+    (`startOfIsoWeek`) war erkennbar extra dafür gebaut, aber nie benutzt.
+    Home zählt jetzt neue `cases` seit Montag 00:00 (gemeinschaftsweit,
+    keine PII) und zeigt die Karte unter der bestehenden Chip-Reihe.
 
 `npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.
 
@@ -353,60 +410,63 @@ werden — Nachholen in Paket I.40 vermerkt.
 
 `npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 27/27.
 
-## Paket D — Clari-Posen ⏳ blockiert (Assets), Wiring ✅
+## Paket I — Tests ✅ (bis auf pgTAP-Ausführung)
 
-18/19. Geprüft: `Mascot.tsx`s `SOURCES`-Map, `Celebration.tsx` (reicht
-`pose` durch) und die Aufrufer (`case/[id].tsx` → `pose="celebrate"`,
-`profil.tsx` → `pose="levelup"`) sind bereits korrekt verdrahtet — kein Bug
-wie ursprünglich angenommen. **Blockiert**: In dieser Session steht kein
-Text-zu-Bild-Generierungswerkzeug zur Verfügung (nur Adobe-Bildbearbeitung:
-Crop/Anpassungen/Vectorize — keine Neugenerierung von Inhalten/Posen).
-**Aktion für dich**: die drei Posen extern rendern (z. B. claude.ai/design,
-wie ursprünglich vorgeschlagen) und als `clari-celebrate.png`,
-`clari-levelup.png`, `clari-hint.png` unter `assets/mascot/` ablegen — die
-`SOURCES`-Map nimmt sie dann ohne weitere Codeänderung auf.
+37. **Component-/Screen-Tests**: `@testing-library/react-native` neu als
+    Dev-Dependency (Projekt hatte bisher NULL Komponenten-Tests). Neuer
+    Test `src/app/(tabs)/__tests__/melden.test.tsx` deckt den kompletten
+    Schrittzustand `foto → details → fertig` ab: Kamera-Foto UND
+    Galerie-Foto führen in den Details-Schritt (inkl. Galerie-Hinweistext),
+    Absenden zeigt den Erfolgs-Schritt, ein Sync-Fehlschlag zeigt den
+    Offline-Hinweis, „Abbrechen" führt zurück zum Kamera-Schritt. Kamera/
+    Standort/Vision/Offline-Queue sind für den Test vollständig gemockt
+    (native/modellabhängig) — getestet wird nur die Screen-Logik.
+    Nebenbei zwei Infra-Fixes, die jeden künftigen Komponenten-Test
+    betroffen hätten: `src/global.css`-Import (nur für Web relevant)
+    bricht Jest ohne Mock, neuer `moduleNameMapper`-Eintrag in
+    `package.json`; `render()` von RNTL ist async und muss awaited
+    werden, sonst ist `screen` leer.
+38. **Unit-Tests reine Funktionen**: `src/constants/__tests__/levels.test.ts`
+    (`levelProgress`/`nextRank`: Stufenübergänge, negativer Saldo,
+    Bruchteil-Saldo, höchster Rang erreicht) und
+    `src/constants/__tests__/status.test.ts` (`getCaseStatus`/
+    `isOpenStatus`: bekannte + unbekannte Status-Strings, leerer String) —
+    beide vorher ungetestet.
+39. **i18n-Test**: `translate()` aus `index.tsx` in ein eigenes, React-/
+    AsyncStorage-freies Modul `src/lib/i18n/translate.ts` extrahiert (reine
+    Funktion, direkt testbar ohne Mocks) — der Provider ruft es jetzt nur
+    noch auf. Neuer Test `translate.test.ts`: jeder `LANGUAGES`-Code hat
+    einen `CATALOGS`-Eintrag, Fallback auf Deutsch bei fehlendem Schlüssel
+    (mit `gsw` als echtem Lückenfall), unbekannter Schlüssel stürzt nicht
+    ab, Platzhalter-Interpolation (einzeln/mehrfach/fehlender Parameter).
+40. **pgTAP via Docker**: weiterhin nicht ausführbar in dieser Session
+    (kein Docker) — alle vier pgTAP-Dateien aus dieser Runde
+    (`security_hardening_2`, `gps_precision`, `rls_attacker`, plus die
+    bestehenden `auth`/`rewards`) sind geschrieben, aber ungetestet gegen
+    eine echte DB. **Aktion für den Betreiber**: Docker installieren,
+    `supabase start && supabase test db` einmal laufen lassen und das
+    Ergebnis hier nachtragen.
 
-## Paket E — Chatbot-Assistent ✅
+`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler (2 Vorbestand-Warnungen)
+· `npm test` ✅ **57/57**, 9 Suiten (vorher 26/26, 5 Suiten).
 
-20. Neue Komponente `src/components/HelpChat.tsx`: regelbasierter FAQ-Chat
-    (4 feste Fragen/Antworten, kein LLM), Clari (Pose `hint`) als Gesicht,
-    Sprechblasen-Optik im bestehenden Card-/Modal-Stil (analog
-    `Celebration.tsx`). Erreichbar über ein schwebendes Hilfe-Icon, global
-    in `_layout.tsx` gerendert (nur sichtbar mit aktiver Session, nicht auf
-    dem Login-Screen). Alle Texte über `src/lib/i18n` (`chat.*`-Schlüssel,
-    nur `de` — Fallback greift für die anderen Sprachen).
+---
 
-## Paket F — UI-Feinschliff ✅
+# Runde 6 — Abschluss (Stand 2026-07-14)
 
-21. **Glas-Tab-Bar**: `tabBarBackground` (React-Navigation-Bottom-Tabs-
-    Erweiterungspunkt) rendert jetzt `GlassSurface` hinter der Tab-Bar,
-    `tabBarStyle` transparent. Bewusst NICHT `position: absolute` (das hätte
-    Screens mit eigenem Bottom-Padding/absoluten Elementen wie der
-    Karten-Legende zerbrochen) — die Bar bleibt im normalen Layoutfluss,
-    nur ihr Hintergrund ist jetzt die Glas-Fläche.
-22. **Skeleton-Loader**: neue Komponente `src/components/Skeleton.tsx`
-    (`Skeleton`/`SkeletonLine`, Shimmer mit Reduce-Motion-Fallback) und in
-    `profil.tsx` eingesetzt (Impact-Karte + Aktivitäts-Liste zeigen jetzt
-    Platzhalter statt kurz "0 Punkte"/"noch nichts" zu blitzen, bis der
-    erste Ladevorgang durch ist). Home bewusst NICHT retrofittet (eigenes,
-    fein abgestimmtes Eintritts-Animationssystem — Counter startet ohnehin
-    sauber bei 0, kein irreführender Null-Zustand); Karte zeigt nur kurze
-    Zahlen in der Legende, geringes Risiko.
-23. **Pull-to-Refresh**: `events.tsx` und `profil.tsx` (dort `load()` auf
-    `async`/`Promise.all` umgestellt, damit `RefreshControl` weiß, wann der
-    Refresh fertig ist) haben jetzt `RefreshControl`. `karte.tsx` bewusst
-    OHNE `RefreshControl` (das braucht eine ScrollView als Vorfahre, deren
-    Pan-Geste mit der Kartennavigation kollidieren würde) — stattdessen ein
-    expliziter Aktualisieren-Button oben rechts.
-24. **Hero-Übergang**: `case/[id].tsx` blendet den Inhalt jetzt per
-    Reanimated (Fade + leichtes Scale-in, 420 ms) ein, sobald der Fall
-    geladen ist, statt hart vom Spinner umzuschalten. Respektiert Reduce-
-    Motion.
-25. Splash-Hintergrundfarbe bereits in Paket B erledigt (`app.json`
-    `#1C8146`).
-26. **WeeklyChallenge**: eingebunden statt entfernt — `src/lib/week.ts`
-    (`startOfIsoWeek`) war erkennbar extra dafür gebaut, aber nie benutzt.
-    Home zählt jetzt neue `cases` seit Montag 00:00 (gemeinschaftsweit,
-    keine PII) und zeigt die Karte unter der bestehenden Chip-Reihe.
+Alle Pakete A–I aus `docs/verbesserungs-prompt.md` durchlaufen. Nicht
+abschließbar in dieser Session (Infrastruktur-/Werkzeug-Limits, nicht
+inhaltlich blockiert):
 
-`npx tsc --noEmit` ✅ · `npm run lint` ✅ 0 Fehler · `npm test` ✅ 26/26.
+- **A.1/A.2**: Verifikation gegen das gehostete Supabase-Projekt (kein
+  `SUPABASE_ACCESS_TOKEN`/DB-Passwort in dieser Session).
+- **D.18/19**: echte Clari-Posen-Renders (kein Bildgenerierungswerkzeug
+  verfügbar) — Wiring ist fertig, wartet nur auf die drei PNG-Dateien.
+- **I.40**: pgTAP-Lauf gegen eine echte DB (kein Docker).
+- **B.4** (Legacy-Bucket-Cleanup) und **B.9** (SecureStore-Migration,
+  Geräte-/Simulator-Test): Skript bzw. Code steht, Ausführung/Verifikation
+  braucht echten Service-Role-Zugriff bzw. ein echtes Gerät.
+
+Alle anderen 33 Punkte sind inhaltlich umgesetzt, mit `npx tsc --noEmit`/
+`npm run lint`/`npm test` nach jedem Paket grün gehalten und in separaten
+Commits pro Paket festgehalten.

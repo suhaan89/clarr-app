@@ -49,6 +49,7 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
     "@types/aes-js": "^3.1.4",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
@@ -75,6 +76,7 @@
     ],
     "clearMocks": true,
     "moduleNameMapper": {
+      "\\.css$": "<rootDir>/src/lib/__mocks__/cssMock.js",
       "^@/(.*)$": "<rootDir>/src/$1"
     }
   }
