@@ -87,6 +87,7 @@ export const de = {
 
   // Karte
   'map.a11y': 'Karte mit geprüften Müll-Meldungen',
+  'map.loading': 'Karte wird geladen …',
   'map.marker_done': 'Erledigt 🎉',
   'map.marker_done_desc': 'Dieser Fall wurde aufgeräumt.',
   'map.marker_open_fallback': 'Müllfund',
@@ -100,6 +101,9 @@ export const de = {
   'map.refresh_a11y': 'Karte aktualisieren',
   'map.error_title': 'Karte konnte nicht geladen werden',
   'map.error_body': 'Bitte prüfe deine Verbindung und versuche es erneut.',
+  'map.web_fallback_title': 'Karte nur in der App',
+  'map.web_fallback_body':
+    'Die interaktive Karte gibt es in der CLAR-App für iOS und Android. Die Zusammenfassung unten zeigt dir trotzdem den aktuellen Stand.',
 
   // Melden
   'report.permission_title': 'Kamera freigeben',
@@ -357,6 +361,31 @@ export const de = {
   'queue.lost_title': 'Foto nicht mehr gefunden',
   'queue.lost_body':
     '{count} wartende Meldung(en) konnten nicht gesendet werden, weil das Foto nicht mehr auf dem Gerät ist. Bitte erneut aufnehmen und melden.',
+
+  // Onboarding-Tour (Coachmarks)
+  'tour.button_next': 'Weiter',
+  'tour.button_back': 'Zurück',
+  'tour.button_skip': 'Überspringen',
+  'tour.button_done': 'Fertig',
+  'tour.home.step_impact_title': 'Deine Wirkung',
+  'tour.home.step_impact_desc': 'Hier siehst du, wie viele Orte du schon sauber gemacht hast.',
+  'tour.home.step_cta_title': 'Müll melden',
+  'tour.home.step_cta_desc': 'Der wichtigste Knopf: Foto machen, der Ort wird automatisch erfasst – fertig.',
+  'tour.home.step_chips_title': 'Auf einen Blick',
+  'tour.home.step_chips_desc': 'Offene Fälle in deiner Nähe und die nächste Cleanup-Aktion.',
+  'tour.karte.step_legend_title': 'Die Karte',
+  'tour.karte.step_legend_desc':
+    'Rot = noch offen, Grün = schon aufgeräumt. Tippe auf einen Punkt für Details.',
+  'tour.profil.step_impact_title': 'Dein Punktestand',
+  'tour.profil.step_impact_desc': 'Dein aktueller Stand und dein Level – gesammelt durch echte Einsätze.',
+  'tour.profil.step_progress_title': 'Fortschritt zur nächsten Stufe',
+  'tour.profil.step_progress_desc': 'So viele Punkte fehlen dir noch bis zum nächsten Level.',
+  'tour.profil.step_badges_title': 'Abzeichen',
+  'tour.profil.step_badges_desc': 'Für echte Meilensteine – zum Sammeln, ohne Zeitdruck.',
+  'tour.restart_section': 'Einführung',
+  'tour.restart_label': 'Tour erneut anzeigen',
+  'tour.restart_hint': 'Zeigt dir noch einmal, wo du in CLAR als Erstes hinklicken kannst.',
+  'tour.restart_a11y': 'Einführungs-Tour erneut starten',
 } as const;
 
 export type TranslationKey = keyof typeof de;
@@ -430,6 +459,7 @@ const en: Catalog = {
   'login.language_a11y': 'Change language',
 
   'map.a11y': 'Map of verified litter reports',
+  'map.loading': 'Loading map …',
   'map.marker_done': 'Done 🎉',
   'map.marker_done_desc': 'This spot has been cleaned up.',
   'map.marker_open_fallback': 'Litter find',
@@ -440,6 +470,9 @@ const en: Catalog = {
   'map.legend_done': 'done',
   'map.legend_summary': '{total} reports · {closed} done',
   'map.summary_a11y': '{total} reports on the map, {closed} of them done',
+  'map.web_fallback_title': 'Map available in the app',
+  'map.web_fallback_body':
+    'The interactive map lives in the CLAR app for iOS and Android. The summary below still shows the current state.',
 
   'report.permission_title': 'Enable the camera',
   'report.permission_text':
@@ -611,6 +644,30 @@ const en: Catalog = {
 
   'language.title': 'Choose language',
   'language.close': 'Close',
+
+  // Onboarding tour (coach marks)
+  'tour.button_next': 'Next',
+  'tour.button_back': 'Back',
+  'tour.button_skip': 'Skip',
+  'tour.button_done': 'Done',
+  'tour.home.step_impact_title': 'Your impact',
+  'tour.home.step_impact_desc': "Here's how many places you've already cleaned up.",
+  'tour.home.step_cta_title': 'Report litter',
+  'tour.home.step_cta_desc': 'The most important button: take a photo, the location is captured automatically – done.',
+  'tour.home.step_chips_title': 'At a glance',
+  'tour.home.step_chips_desc': 'Open cases near you and the next cleanup event.',
+  'tour.karte.step_legend_title': 'The map',
+  'tour.karte.step_legend_desc': 'Red = still open, green = already cleaned up. Tap a pin for details.',
+  'tour.profil.step_impact_title': 'Your points',
+  'tour.profil.step_impact_desc': 'Your current balance and level – earned through real cleanups.',
+  'tour.profil.step_progress_title': 'Progress to the next level',
+  'tour.profil.step_progress_desc': "How many points you still need for the next level.",
+  'tour.profil.step_badges_title': 'Badges',
+  'tour.profil.step_badges_desc': 'For real milestones – yours to collect, no time pressure.',
+  'tour.restart_section': 'Introduction',
+  'tour.restart_label': 'Show tour again',
+  'tour.restart_hint': "Shows you again where to tap first in CLAR.",
+  'tour.restart_a11y': 'Restart the introduction tour',
 };
 
 /** Österreichisches Deutsch – weitgehend identisch mit Standarddeutsch;
@@ -652,6 +709,7 @@ const gsw: Catalog = {
   'login.wait': 'Bitte warte',
   'login.language_a11y': 'Sprach ändere',
 
+  'map.loading': 'Charte wird glade …',
   'map.marker_done': 'Erlediget 🎉',
   'map.marker_done_desc': 'Dä Fall isch ufgrüumt worde.',
   'map.marker_open_fallback': 'Abfallfund',
@@ -756,6 +814,7 @@ const fr: Catalog = {
   'login.language_a11y': 'Changer de langue',
 
   'map.a11y': 'Carte des signalements vérifiés',
+  'map.loading': 'Chargement de la carte …',
   'map.marker_done': 'Terminé 🎉',
   'map.marker_done_desc': 'Cet endroit a été nettoyé.',
   'map.marker_open_fallback': 'Déchets trouvés',
@@ -924,6 +983,7 @@ const it: Catalog = {
   'login.language_a11y': 'Cambia lingua',
 
   'map.a11y': 'Mappa delle segnalazioni verificate',
+  'map.loading': 'Caricamento della mappa …',
   'map.marker_done': 'Fatto 🎉',
   'map.marker_done_desc': 'Questo punto è stato ripulito.',
   'map.marker_open_fallback': 'Rifiuti trovati',
@@ -1091,6 +1151,7 @@ const zh: Catalog = {
   'login.language_a11y': '更改语言',
 
   'map.a11y': '经审核的垃圾上报地图',
+  'map.loading': '正在加载地图 …',
   'map.marker_done': '已完成 🎉',
   'map.marker_done_desc': '这里已被清理干净。',
   'map.marker_open_fallback': '垃圾点',
@@ -1252,6 +1313,7 @@ const nb: Catalog = {
   'login.language_a11y': 'Bytt språk',
 
   'map.a11y': 'Kart over verifiserte søppelrapporter',
+  'map.loading': 'Laster kart …',
   'map.marker_done': 'Ferdig 🎉',
   'map.marker_done_desc': 'Dette stedet er ryddet.',
   'map.marker_open_fallback': 'Søppelfunn',
@@ -1419,6 +1481,7 @@ const cs: Catalog = {
   'login.language_a11y': 'Změnit jazyk',
 
   'map.a11y': 'Mapa ověřených hlášení odpadků',
+  'map.loading': 'Načítání mapy …',
   'map.marker_done': 'Hotovo 🎉',
   'map.marker_done_desc': 'Toto místo bylo uklizeno.',
   'map.marker_open_fallback': 'Nález odpadků',

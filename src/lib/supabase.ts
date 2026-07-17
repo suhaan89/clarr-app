@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as aesjs from 'aes-js';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -69,9 +70,14 @@ class SecureSessionStorage {
 }
 
 // Nur der anon-Key: alles Schreibende laeuft ueber RLS bzw. Edge Functions.
+//
+// Web: expo-secure-store existiert dort nicht (Keychain/Keystore sind
+// Geraete-Features) — der AES-Adapter wuerde beim ersten setItem werfen.
+// Im Browser uebernimmt AsyncStorage (localStorage) die Session direkt,
+// wie es supabase-js auf Web standardmaessig auch tut.
 export const supabase = createClient(url, anonKey, {
   auth: {
-    storage: new SecureSessionStorage(),
+    storage: Platform.OS === 'web' ? AsyncStorage : new SecureSessionStorage(),
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
