@@ -4,9 +4,10 @@
 // die zentrale Aktion (Muell melden). Keine ueberladenen Listen.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useIsFocused } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
@@ -24,10 +25,11 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Counter, GlassSurface, Mascot, PressableScale } from '@/components';
-import { DisplayFont, Radius, Spacing, Type, useGlass, useHomeGradient, useThemeColors } from '@/constants/theme';
+import { Radius, Spacing, Type, useGlass, useHomeGradient, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { TOUR_IDS, useTour } from '@/lib/tour';
 
 type EventRow = { id: string; title: string; event_date: string };
 
@@ -72,6 +74,20 @@ export default function HomeScreen() {
   const [openCount, setOpenCount] = useState(0);
   const [nextEvent, setNextEvent] = useState<EventRow | null>(null);
 
+  // Onboarding-Tour (Coachmarks): Held-Wert, Melden-CTA, Kurzuebersicht.
+  const heroRef = useRef<View>(null);
+  const ctaRef = useRef<View>(null);
+  const chipsRef = useRef<View>(null);
+  const startTour = useTour(TOUR_IDS.home);
+  const isFocused = useIsFocused();
+  // startTour/t werden pro Render neu gebildet – ueber Refs greifen, damit der
+  // Fokus-Effekt eine stabile Abhaengigkeitsliste behaelt und pro Fokus genau
+  // einmal laeuft (nicht bei jedem Render).
+  const startTourRef = useRef(startTour);
+  startTourRef.current = startTour;
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const load = useCallback(async () => {
     if (!session) return;
     // Held-Wert: Orte, die DU sauber gemacht hast (eigene Abschluss-Buchungen).
@@ -106,6 +122,39 @@ export default function HomeScreen() {
       load();
     }, [load])
   );
+
+  useEffect(() => {
+    // Bei jedem Fokus anstossen (idempotent per AsyncStorage) – so erscheint die
+    // Tour auch nach dem "erneut anzeigen"-Reset wieder, obwohl der Tab-Screen
+    // gemountet bleibt. Die Ziel-Views (Held/CTA/Chips) sind immer gerendert.
+    if (!isFocused) return;
+    const t = tRef.current;
+    startTourRef.current([
+      {
+        id: 'impact',
+        targetRef: heroRef,
+        title: t('tour.home.step_impact_title'),
+        description: t('tour.home.step_impact_desc'),
+        tooltipPosition: 'auto',
+        // Wartet, bis die Eintritts-Animation (Fade/Aufsteigen) fertig ist.
+        delayBefore: 1000,
+      },
+      {
+        id: 'cta',
+        targetRef: ctaRef,
+        title: t('tour.home.step_cta_title'),
+        description: t('tour.home.step_cta_desc'),
+        tooltipPosition: 'auto',
+      },
+      {
+        id: 'chips',
+        targetRef: chipsRef,
+        title: t('tour.home.step_chips_title'),
+        description: t('tour.home.step_chips_desc'),
+        tooltipPosition: 'auto',
+      },
+    ]);
+  }, [isFocused]);
 
   // Animationen (UI-Thread). Respektiert „Bewegung reduzieren".
   const enter = useSharedValue(0);
@@ -194,7 +243,11 @@ export default function HomeScreen() {
 
         {/* EIN Held-Wert: gross, ruhig, mit Zaehl-Effekt. */}
         <Rise progress={enter} index={1} style={styles.heroBlock}>
-          <View accessibilityRole="summary" accessibilityLabel={t('home.hero_a11y', { count: places })}>
+          <View
+            ref={heroRef}
+            collapsable={false}
+            accessibilityRole="summary"
+            accessibilityLabel={t('home.hero_a11y', { count: places })}>
             <Counter value={places} duration={1100} style={[styles.heroNumber, { color: colors.text }]} />
             <Text style={[styles.heroLabel, { color: colors.primaryStrong }]} allowFontScaling>
               {t('home.hero_label')}
@@ -207,51 +260,55 @@ export default function HomeScreen() {
 
         {/* Zentrale Aktion: glaenzendes Glas-Element mit wanderndem Sheen. */}
         <Rise progress={enter} index={2}>
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel={t('home.cta_a11y')}
-            onPress={() => router.push('/melden')}
-            haptic="medium"
-            scaleTo={0.98}>
-            <GlassSurface intense radius={Radius.xl} style={styles.ctaSurface}>
-              <View onLayout={(e: LayoutChangeEvent) => setCtaW(e.nativeEvent.layout.width)} style={styles.ctaInner}>
-                {/* Zarte gruene Identitaets-Waesche und der Licht-Sheen darueber. */}
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[colors.primary + '2E', colors.primary + '08']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <Animated.View pointerEvents="none" style={[styles.sheen, sheenStyle]}>
+          <View ref={ctaRef} collapsable={false}>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={t('home.cta_a11y')}
+              onPress={() => router.push('/melden')}
+              haptic="medium"
+              scaleTo={0.98}>
+              <GlassSurface intense radius={Radius.xl} style={styles.ctaSurface}>
+                <View
+                  onLayout={(e: LayoutChangeEvent) => setCtaW(e.nativeEvent.layout.width)}
+                  style={styles.ctaInner}>
+                  {/* Zarte gruene Identitaets-Waesche und der Licht-Sheen darueber. */}
                   <LinearGradient
-                    colors={['transparent', glass.highlight, 'transparent']}
+                    pointerEvents="none"
+                    colors={[colors.primary + '2E', colors.primary + '08']}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
-                </Animated.View>
+                  <Animated.View pointerEvents="none" style={[styles.sheen, sheenStyle]}>
+                    <LinearGradient
+                      colors={['transparent', glass.highlight, 'transparent']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
 
-                <View style={[styles.ctaIcon, { backgroundColor: colors.primary }]}>
-                  <Ionicons name="camera" size={26} color={colors.onPrimary} />
+                  <View style={[styles.ctaIcon, { backgroundColor: colors.primary }]}>
+                    <Ionicons name="camera" size={26} color={colors.onPrimary} />
+                  </View>
+                  <View style={styles.ctaText}>
+                    <Text style={[styles.ctaTitle, { color: colors.primaryStrong }]} allowFontScaling>
+                      {t('home.cta_title')}
+                    </Text>
+                    <Text style={[styles.ctaSub, { color: colors.textSecondary }]} allowFontScaling>
+                      {t('home.cta_sub')}
+                    </Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={22} color={colors.primaryStrong} />
                 </View>
-                <View style={styles.ctaText}>
-                  <Text style={[styles.ctaTitle, { color: colors.primaryStrong }]} allowFontScaling>
-                    {t('home.cta_title')}
-                  </Text>
-                  <Text style={[styles.ctaSub, { color: colors.textSecondary }]} allowFontScaling>
-                    {t('home.cta_sub')}
-                  </Text>
-                </View>
-                <Ionicons name="arrow-forward" size={22} color={colors.primaryStrong} />
-              </View>
-            </GlassSurface>
-          </PressableScale>
+              </GlassSurface>
+            </PressableScale>
+          </View>
         </Rise>
 
         {/* Kompakt darunter: offene Faelle in der Naehe, naechste Aktion. */}
         <Rise progress={enter} index={3}>
-          <View style={styles.chipRow}>
+          <View ref={chipsRef} collapsable={false} style={styles.chipRow}>
             <PressableScale
               containerStyle={styles.chipFlex}
               accessibilityRole="button"
@@ -325,19 +382,17 @@ const styles = StyleSheet.create({
 
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },
   greetCol: { flex: 1, gap: 2 },
-  greeting: { fontFamily: DisplayFont.regular, fontSize: 22, fontWeight: '700' },
+  greeting: { ...Type.title },
   greetingSub: { ...Type.body },
 
   heroBlock: { marginTop: Spacing.two },
   heroNumber: {
-    fontFamily: DisplayFont.bold,
+    ...Type.numeric,
     fontSize: 84,
-    fontWeight: '800',
     lineHeight: 90,
     letterSpacing: -1.5,
-    fontVariant: ['tabular-nums'],
   },
-  heroLabel: { fontFamily: DisplayFont.regular, fontSize: 20, fontWeight: '700', marginTop: Spacing.one },
+  heroLabel: { ...Type.subtitle, marginTop: Spacing.one },
   heroSub: { ...Type.body, marginTop: Spacing.one, maxWidth: 320 },
 
   ctaSurface: { marginTop: Spacing.two },
@@ -357,14 +412,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaText: { flex: 1, gap: 2 },
-  ctaTitle: { fontFamily: DisplayFont.regular, fontSize: 20, fontWeight: '700' },
+  ctaTitle: { ...Type.subtitle },
   ctaSub: { ...Type.body },
 
   chipRow: { flexDirection: 'row', gap: Spacing.three },
   chipFlex: { flex: 1 },
   chipFill: { flex: 1 },
   chip: { padding: Spacing.three, gap: Spacing.one, minHeight: 96, justifyContent: 'center' },
-  chipValue: { fontFamily: DisplayFont.bold, fontSize: 30, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  chipValue: { ...Type.numeric, fontSize: 30 },
   chipEventTitle: { ...Type.label, fontWeight: '700' },
   chipLabel: { ...Type.caption },
 });

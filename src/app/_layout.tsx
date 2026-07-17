@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { TourGuideOverlay, TourGuideProvider } from '@wrack/react-native-tour-guide';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -49,22 +50,26 @@ function AppStack() {
 
   return (
     <ThemeProvider value={navTheme}>
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-          headerTitleStyle: { fontWeight: '700' },
-          headerShadowVisible: false,
-        }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ title: t('stack.login'), headerShown: false }} />
-        <Stack.Screen name="case/[id]" options={{ title: t('stack.case') }} />
-        <Stack.Screen name="legal/datenschutz" options={{ title: t('stack.datenschutz') }} />
-        <Stack.Screen name="legal/impressum" options={{ title: t('stack.impressum') }} />
-        <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
-      </Stack>
-      {session && !showSplash && <HelpChat />}
-      {showSplash && <BrandSplash onFinish={() => setShowSplash(false)} />}
+      <TourGuideProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
+            headerTitleStyle: { fontWeight: '700' },
+            headerShadowVisible: false,
+          }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ title: t('stack.login'), headerShown: false }} />
+          <Stack.Screen name="case/[id]" options={{ title: t('stack.case') }} />
+          <Stack.Screen name="legal/datenschutz" options={{ title: t('stack.datenschutz') }} />
+          <Stack.Screen name="legal/impressum" options={{ title: t('stack.impressum') }} />
+          <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
+        </Stack>
+        {session && !showSplash && <HelpChat />}
+        {showSplash && <BrandSplash onFinish={() => setShowSplash(false)} />}
+        {/* Ueberlagert immer alles Weitere -> muss als letztes Kind stehen. */}
+        {session && !showSplash && <TourGuideOverlay />}
+      </TourGuideProvider>
     </ThemeProvider>
   );
 }

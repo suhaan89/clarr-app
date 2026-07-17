@@ -1,14 +1,16 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useIsFocused } from '@react-navigation/native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card } from '@/components';
+import { Card, LoadingState, PressableScale } from '@/components';
+import { MapMarker as Marker, MapView } from '@/components/AppMap';
 import { Radius, Shadow, Spacing, useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+import { TOUR_IDS, useTour } from '@/lib/tour';
 
 type MapReport = {
   id: string;
@@ -33,7 +35,11 @@ function MapPin({ done }: { done: boolean }) {
   const colors = useThemeColors();
   return (
     <View style={[styles.pin, { backgroundColor: done ? colors.primary : colors.danger }]}>
-      <Ionicons name={done ? 'checkmark-sharp' : 'trash'} size={15} color="#fff" />
+      <Ionicons
+        name={done ? 'checkmark-sharp' : 'trash'}
+        size={15}
+        color={done ? colors.onPrimary : colors.onDanger}
+      />
     </View>
   );
 }
@@ -45,8 +51,19 @@ export default function KarteScreen() {
   const insets = useSafeAreaInsets();
   const [reports, setReports] = useState<MapReport[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   // Custom-Marker: kurz nachzeichnen lassen, dann fixieren (Android-Perf).
   const [tracksChanges, setTracksChanges] = useState(true);
+
+  // Onboarding-Tour (Coachmarks): einmaliger Hinweis auf die Kartenlegende.
+  const legendRef = useRef<View>(null);
+  const startTour = useTour(TOUR_IDS.karte);
+  const isFocused = useIsFocused();
+  // Ueber Refs, damit der Tour-Effekt eine stabile Abhaengigkeitsliste behaelt.
+  const startTourRef = useRef(startTour);
+  startTourRef.current = startTour;
+  const tRef = useRef(t);
+  tRef.current = t;
 
   const load = useCallback(async () => {
     // RLS liefert nur veroeffentlichte/eigene Meldungen (Paket 8);
@@ -61,9 +78,11 @@ export default function KarteScreen() {
       .limit(500);
     if (error) {
       Alert.alert(t('map.error_title'), t('map.error_body'));
+      setLoaded(true);
       return;
     }
     if (data) setReports(data as unknown as MapReport[]);
+    setLoaded(true);
   }, [t]);
 
   useFocusEffect(
@@ -84,9 +103,29 @@ export default function KarteScreen() {
     return () => clearTimeout(timer);
   }, [reports]);
 
+  useEffect(() => {
+    // Legende (und damit ihr Ref) existiert erst, sobald die Karte geladen ist.
+    // Bei jedem Fokus anstossen (idempotent per AsyncStorage) – so kommt die Tour
+    // auch nach dem "erneut anzeigen"-Reset wieder, obwohl der Screen gemountet
+    // bleibt.
+    if (!isFocused || !loaded) return;
+    const t = tRef.current;
+    startTourRef.current([
+      {
+        id: 'legend',
+        targetRef: legendRef,
+        title: t('tour.karte.step_legend_title'),
+        description: t('tour.karte.step_legend_desc'),
+        tooltipPosition: 'auto',
+      },
+    ]);
+  }, [isFocused, loaded]);
+
   const closedCount = reports.filter(
     (r) => r.case_status === 'erledigt' || r.case_status === 'geschlossen'
   ).length;
+
+  if (!loaded) return <LoadingState label={t('map.loading')} />;
 
   return (
     <View style={styles.container}>
@@ -120,60 +159,71 @@ export default function KarteScreen() {
       {/* Kein RefreshControl: das braucht eine ScrollView als Vorfahre,
           deren Pan-Geste mit der eigenen Kartennavigation kollidieren
           wuerde. Stattdessen ein expliziter Aktualisieren-Button. */}
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={t('map.refresh_a11y')}
         onPress={onRefresh}
         disabled={refreshing}
-        style={({ pressed }) => [
+        haptic="light"
+        hitSlop={8}
+        containerStyle={[styles.refreshBtnContainer, { top: insets.top + Spacing.two }]}
+        style={[
           styles.refreshBtn,
           Shadow,
-          { top: insets.top + Spacing.two, backgroundColor: colors.backgroundElement, borderColor: colors.border },
-          pressed && styles.pressed,
+          { backgroundColor: colors.backgroundElement, borderColor: colors.border },
         ]}>
         {refreshing ? (
           <ActivityIndicator size="small" color={colors.primary} />
         ) : (
           <Ionicons name="refresh" size={20} color={colors.text} />
         )}
-      </Pressable>
+      </PressableScale>
 
-      <Card
-        style={styles.legend}
-        accessibilityRole="summary"
-        accessibilityLabel={t('map.summary_a11y', { total: reports.length, closed: closedCount })}>
-        <View style={styles.legendRow}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendChip, { backgroundColor: colors.dangerSoft }]}>
-              <Ionicons name="trash" size={13} color={colors.danger} />
+      {/* Der Mess-Wrapper traegt selbst die absolute Legenden-Position (unten,
+          links/rechts eingerueckt) und `collapsable={false}`. So misst der
+          Coachmark-Spotlight genau die Legende – nicht (wie bei einem
+          bildschirmfuellenden Wrapper) die ganze Karte. `Card` reicht keine
+          Refs durch, deshalb sitzt das Ref hier auf dem umschliessenden View. */}
+      <View ref={legendRef} collapsable={false} style={styles.legend}>
+        <Card
+          style={styles.legendCard}
+          accessibilityRole="summary"
+          accessibilityLabel={t('map.summary_a11y', { total: reports.length, closed: closedCount })}>
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendChip, { backgroundColor: colors.dangerSoft }]}>
+                <Ionicons name="trash" size={13} color={colors.danger} />
+              </View>
+              <Text style={[styles.legendText, { color: colors.text }]} allowFontScaling>
+                {t('map.legend_open')}
+              </Text>
             </View>
-            <Text style={[styles.legendText, { color: colors.text }]} allowFontScaling>
-              {t('map.legend_open')}
+            <View style={styles.legendItem}>
+              <View style={[styles.legendChip, { backgroundColor: colors.successSoft }]}>
+                <Ionicons name="checkmark-sharp" size={13} color={colors.primaryStrong} />
+              </View>
+              <Text style={[styles.legendText, { color: colors.text }]} allowFontScaling>
+                {t('map.legend_done')}
+              </Text>
+            </View>
+            {/* See-Übersicht im „Wasser"-Teal – Locate-Akzent, kein Status. */}
+            <Text style={[styles.legendSummary, { color: colors.waterStrong }]} allowFontScaling>
+              {t('map.legend_summary', { total: reports.length, closed: closedCount })}
             </Text>
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendChip, { backgroundColor: colors.successSoft }]}>
-              <Ionicons name="checkmark-sharp" size={13} color={colors.primaryStrong} />
-            </View>
-            <Text style={[styles.legendText, { color: colors.text }]} allowFontScaling>
-              {t('map.legend_done')}
-            </Text>
-          </View>
-          {/* See-Übersicht im „Wasser"-Teal – Locate-Akzent, kein Status. */}
-          <Text style={[styles.legendSummary, { color: colors.waterStrong }]} allowFontScaling>
-            {t('map.legend_summary', { total: reports.length, closed: closedCount })}
-          </Text>
-        </View>
-      </Card>
+        </Card>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  refreshBtn: {
+  refreshBtnContainer: {
     position: 'absolute',
     right: Spacing.three,
+  },
+  refreshBtn: {
     width: 44,
     height: 44,
     borderRadius: Radius.pill,
@@ -181,7 +231,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pressed: { opacity: 0.6 },
   pin: {
     width: 32,
     height: 32,
@@ -197,8 +246,10 @@ const styles = StyleSheet.create({
     bottom: Spacing.three,
     left: Spacing.three,
     right: Spacing.three,
+  },
+  legendCard: {
     borderRadius: Radius.md,
-    paddingVertical: Spacing.two + 2,
+    paddingVertical: Spacing.twoHalf,
     paddingHorizontal: Spacing.three,
   },
   legendRow: {
@@ -207,7 +258,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     flexWrap: 'wrap',
   },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one + 2 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.oneHalf },
   legendChip: {
     width: 24,
     height: 24,

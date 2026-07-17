@@ -5,11 +5,11 @@
 // Wochen-Reset.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useIsFocused } from '@react-navigation/native';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Pressable,
   RefreshControl,
   ScrollView,
   Share,
@@ -27,17 +27,19 @@ import {
   Input,
   LanguagePicker,
   LevelProgress,
+  PressableScale,
   SectionHeader,
   Skeleton,
   SkeletonLine,
   WeeklyChallenge,
 } from '@/components';
-import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { Radius, Spacing, Type, useThemeColors } from '@/constants/theme';
 import { computeAchievements, earnedCount } from '@/lib/achievements';
 import { callFunction } from '@/lib/api';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { TOUR_IDS, useResetAllTours, useTour } from '@/lib/tour';
 import { isValidDisplayName } from '@/lib/validation';
 import { startOfIsoWeek } from '@/lib/week';
 
@@ -76,6 +78,19 @@ export default function ProfilScreen() {
   // Zuletzt gesehene Stufe; erst ein ECHTER Anstieg (nicht der erste Ladevorgang)
   // löst die Feier aus. Keine künstlichen Trigger.
   const lastLevel = useRef<number | null>(null);
+
+  // Onboarding-Tour (Coachmarks): Punktestand, Fortschritt, Abzeichen.
+  const impactRef = useRef<View>(null);
+  const progressRef = useRef<View>(null);
+  const badgesRef = useRef<View>(null);
+  const startTour = useTour(TOUR_IDS.profil);
+  const isFocused = useIsFocused();
+  const resetAllTours = useResetAllTours();
+  // Ueber Refs, damit der Tour-Effekt eine stabile Abhaengigkeitsliste behaelt.
+  const startTourRef = useRef(startTour);
+  startTourRef.current = startTour;
+  const tRef = useRef(t);
+  tRef.current = t;
 
   // Async + Promise.all, damit RefreshControl weiss, wann der Refresh fertig ist
   // (statt der vorherigen Fire-and-forget-.then()-Ketten ohne Rueckgabewert).
@@ -170,6 +185,43 @@ export default function ProfilScreen() {
     }, [load])
   );
 
+  useEffect(() => {
+    // Impact-Karte und Fortschritt existieren erst, sobald `loaded` steht.
+    // Bei jedem Fokus anstossen (idempotent per AsyncStorage) – so kommt die Tour
+    // auch nach dem "erneut anzeigen"-Reset wieder, obwohl der Screen gemountet
+    // bleibt.
+    if (!isFocused || !loaded) return;
+    const t = tRef.current;
+    startTourRef.current([
+      {
+        id: 'impact',
+        targetRef: impactRef,
+        title: t('tour.profil.step_impact_title'),
+        description: t('tour.profil.step_impact_desc'),
+        tooltipPosition: 'auto',
+      },
+      {
+        id: 'progress',
+        targetRef: progressRef,
+        title: t('tour.profil.step_progress_title'),
+        description: t('tour.profil.step_progress_desc'),
+        tooltipPosition: 'auto',
+      },
+      {
+        id: 'badges',
+        targetRef: badgesRef,
+        title: t('tour.profil.step_badges_title'),
+        description: t('tour.profil.step_badges_desc'),
+        tooltipPosition: 'auto',
+      },
+    ]);
+  }, [isFocused, loaded]);
+
+  async function restartTour() {
+    await resetAllTours();
+    router.replace('/');
+  }
+
   const [refreshing, setRefreshing] = useState(false);
   async function onRefresh() {
     setRefreshing(true);
@@ -221,33 +273,39 @@ export default function ProfilScreen() {
           <Skeleton width={80} height={16} />
         </Card>
       ) : (
-        <Card
-          tone="soft"
-          style={styles.impactCard}
-          accessibilityRole="summary"
-          accessibilityLabel={t('profil.impact_a11y', {
-            points: level?.balance ?? 0,
-            level: levelName,
-          })}>
-          <View style={[styles.impactIcon, { backgroundColor: colors.primary }]}>
-            <Ionicons name="leaf" size={22} color={colors.onPrimary} />
-          </View>
-          <Text style={[styles.points, { color: colors.primaryStrong }]} allowFontScaling>
-            {level?.balance ?? 0}
-          </Text>
-          <Text style={[styles.pointsLabel, { color: colors.text }]} allowFontScaling>
-            {t('profil.points_unit')}
-          </Text>
-          <Badge label={levelName} tone="success" />
-          <Text style={[styles.cosmeticNote, { color: colors.textSecondary }]} allowFontScaling>
-            {t('profil.cosmetic_note')}
-          </Text>
-        </Card>
+        <View ref={impactRef} collapsable={false}>
+          <Card
+            tone="soft"
+            style={styles.impactCard}
+            accessibilityRole="summary"
+            accessibilityLabel={t('profil.impact_a11y', {
+              points: level?.balance ?? 0,
+              level: levelName,
+            })}>
+            <View style={[styles.impactIcon, { backgroundColor: colors.primary }]}>
+              <Ionicons name="leaf" size={22} color={colors.onPrimary} />
+            </View>
+            <Text style={[styles.points, { color: colors.primaryStrong }]} allowFontScaling>
+              {level?.balance ?? 0}
+            </Text>
+            <Text style={[styles.pointsLabel, { color: colors.text }]} allowFontScaling>
+              {t('profil.points_unit')}
+            </Text>
+            <Badge label={levelName} tone="success" />
+            <Text style={[styles.cosmeticNote, { color: colors.textSecondary }]} allowFontScaling>
+              {t('profil.cosmetic_note')}
+            </Text>
+          </Card>
+        </View>
       )}
 
       {/* Fortschritt zur naechsten Stufe – klarer naechster Schritt, aus dem
           Saldo abgeleitet (keine Reward-Logik im Client). */}
-      {loaded && <LevelProgress balance={level?.balance ?? 0} levelName={levelName} />}
+      {loaded && (
+        <View ref={progressRef} collapsable={false}>
+          <LevelProgress balance={level?.balance ?? 0} levelName={levelName} />
+        </View>
+      )}
 
       {/* Sammelbare Abzeichen fuer echte Meilensteine (kein Geldwert). */}
       <View style={styles.badgesHead}>
@@ -256,9 +314,11 @@ export default function ProfilScreen() {
           {t('profil.badges_count', { earned, total: achievements.length })}
         </Text>
       </View>
-      <Card style={styles.sectionCard}>
-        <Badges items={achievements} />
-      </Card>
+      <View ref={badgesRef} collapsable={false}>
+        <Card style={styles.sectionCard}>
+          <Badges items={achievements} />
+        </Card>
+      </View>
 
       <SectionHeader title={t('profil.activity')} />
       <Card style={styles.sectionCard}>
@@ -362,6 +422,24 @@ export default function ProfilScreen() {
         </Text>
       </Card>
 
+      <SectionHeader title={t('tour.restart_section')} />
+      <Card style={styles.sectionCard}>
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel={t('tour.restart_a11y')}
+          onPress={restartTour}
+          haptic="light"
+          style={styles.rightsButton}>
+          <Ionicons name="help-circle-outline" size={18} color={colors.text} />
+          <Text style={[styles.rightsLabel, { color: colors.text }]} allowFontScaling>
+            {t('tour.restart_label')}
+          </Text>
+        </PressableScale>
+        <Text style={[styles.resetNote, { color: colors.textSecondary }]} allowFontScaling>
+          {t('tour.restart_hint')}
+        </Text>
+      </Card>
+
       <SectionHeader title={t('profil.privacy')} />
       <Card style={styles.sectionCard}>
         {CONSENT_KEYS.map((key) => {
@@ -389,7 +467,7 @@ export default function ProfilScreen() {
           );
         })}
 
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t('profil.export_a11y')}
           onPress={async () => {
@@ -403,14 +481,15 @@ export default function ProfilScreen() {
               Alert.alert(t('profil.error_generic'), t('profil.export_error'));
             }
           }}
-          style={({ pressed }) => [styles.rightsButton, pressed && styles.pressed]}>
+          haptic="light"
+          style={styles.rightsButton}>
           <Ionicons name="download-outline" size={18} color={colors.text} />
           <Text style={[styles.rightsLabel, { color: colors.text }]} allowFontScaling>
             {t('profil.export')}
           </Text>
-        </Pressable>
+        </PressableScale>
 
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t('profil.delete_a11y')}
           onPress={() => {
@@ -432,25 +511,27 @@ export default function ProfilScreen() {
               },
             ]);
           }}
-          style={({ pressed }) => [styles.rightsButton, pressed && styles.pressed]}>
+          haptic="medium"
+          style={styles.rightsButton}>
           <Ionicons name="trash-outline" size={18} color={colors.danger} />
           <Text style={[styles.rightsLabel, { color: colors.danger }]} allowFontScaling>
             {t('profil.delete')}
           </Text>
-        </Pressable>
+        </PressableScale>
       </Card>
 
       {isModerator && (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t('moderation.title')}
           onPress={() => router.push('/moderation')}
-          style={({ pressed }) => [styles.rightsButton, pressed && styles.pressed]}>
+          haptic="light"
+          style={styles.rightsButton}>
           <Ionicons name="shield-checkmark-outline" size={18} color={colors.text} />
           <Text style={[styles.rightsLabel, { color: colors.text }]} allowFontScaling>
             {t('moderation.title')}
           </Text>
-        </Pressable>
+        </PressableScale>
       )}
 
       <View style={styles.legalLinks}>
@@ -466,15 +547,16 @@ export default function ProfilScreen() {
         </Link>
       </View>
 
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={t('profil.signout')}
         onPress={() => supabase.auth.signOut()}
-        style={({ pressed }) => [styles.signOut, pressed && styles.pressed]}>
+        haptic="light"
+        style={styles.signOut}>
         <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
           {t('profil.signout')}
         </Text>
-      </Pressable>
+      </PressableScale>
 
       <Celebration
         visible={levelUp != null}
@@ -498,7 +580,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.one,
   },
-  points: { fontFamily: DisplayFont.bold, fontSize: 48, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  points: { ...Type.numeric, fontSize: 48 },
   pointsLabel: { fontSize: 15, fontWeight: '600', marginBottom: Spacing.one },
   cosmeticNote: { fontSize: 12, marginTop: Spacing.two, textAlign: 'center' },
   sectionCard: { gap: Spacing.two },
@@ -555,5 +637,4 @@ const styles = StyleSheet.create({
   },
   signOut: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   footerLabel: { fontSize: 15 },
-  pressed: { opacity: 0.6 },
 });
