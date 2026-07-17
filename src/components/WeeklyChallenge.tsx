@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Card } from './Card';
 import { ProgressBar } from './ProgressBar';
-import { DisplayFont, Radius, Spacing, Type, useGradients, useThemeColors } from '@/constants/theme';
+import { Radius, Spacing, Type, useGradients, useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 
 /** Gemeinsames Wochenziel (Fälle am Bodensee). Bewusst als GEMEINSCHAFTSziel,
@@ -71,7 +71,7 @@ export function WeeklyChallenge({ count, target = WEEKLY_GOAL }: Props) {
 
 const styles = StyleSheet.create({
   card: { gap: Spacing.three },
-  head: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two + 2 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: Spacing.twoHalf },
   icon: {
     width: 36,
     height: 36,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   headText: { flex: 1, gap: 1 },
   title: { ...Type.label, fontWeight: '700' },
   goal: { ...Type.caption },
-  count: { fontFamily: DisplayFont.bold, fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  count: { ...Type.numeric, fontSize: 22 },
   countTotal: { fontSize: 15, fontWeight: '600' },
   footer: { ...Type.caption },
 });

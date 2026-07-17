@@ -11,6 +11,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Mascot } from './Mascot';
+import { PressableScale } from './PressableScale';
 import { Radius, Shadow, Spacing, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 
@@ -40,20 +41,23 @@ export function HelpChat() {
 
   return (
     <>
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={t('chat.open_a11y')}
         onPress={() => setOpen(true)}
-        style={({ pressed }) => [
+        haptic="light"
+        hitSlop={6}
+        style={[
           styles.fab,
           Shadow,
           { backgroundColor: colors.primary, bottom: insets.bottom + Spacing.six + Spacing.three },
-          pressed && styles.pressed,
         ]}>
         <Ionicons name="help" size={24} color={colors.onPrimary} />
-      </Pressable>
+      </PressableScale>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
+        {/* Backdrop/Sheet sind reine Tipp-Faenger (schliessen/Bubble-Stop),
+            keine echten Buttons -> bewusst ohne PressableScale-Feder. */}
         <Pressable
           style={[styles.backdrop, { backgroundColor: colors.overlay }]}
           accessibilityRole="button"
@@ -67,13 +71,15 @@ export function HelpChat() {
               <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]} allowFontScaling>
                 {t('chat.title')}
               </Text>
-              <Pressable
+              <PressableScale
                 accessibilityRole="button"
                 accessibilityLabel={t('chat.close_a11y')}
                 onPress={close}
+                haptic="light"
+                hitSlop={8}
                 style={styles.closeBtn}>
                 <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </Pressable>
+              </PressableScale>
             </View>
 
             <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -85,29 +91,31 @@ export function HelpChat() {
                     </Text>
                   </View>
                   {active.id === 'privacy' && (
-                    <Pressable
+                    <PressableScale
                       accessibilityRole="button"
                       onPress={() => {
                         close();
                         router.push('/legal/datenschutz');
                       }}
+                      haptic="light"
                       style={[styles.linkBtn, { borderColor: colors.border }]}>
                       <Ionicons name="lock-closed-outline" size={16} color={colors.primaryStrong} />
                       <Text style={[styles.linkText, { color: colors.primaryStrong }]} allowFontScaling>
                         {t('chat.privacy_link')}
                       </Text>
-                    </Pressable>
+                    </PressableScale>
                   )}
-                  <Pressable
+                  <PressableScale
                     accessibilityRole="button"
                     accessibilityLabel={t('chat.back_a11y')}
                     onPress={() => setActiveId(null)}
+                    haptic="light"
                     style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
                     <Text style={[styles.backText, { color: colors.textSecondary }]} allowFontScaling>
                       {t('chat.back')}
                     </Text>
-                  </Pressable>
+                  </PressableScale>
                 </>
               ) : (
                 <>
@@ -117,16 +125,17 @@ export function HelpChat() {
                     </Text>
                   </View>
                   {QUESTIONS.map((q) => (
-                    <Pressable
+                    <PressableScale
                       key={q.id}
                       accessibilityRole="button"
                       onPress={() => setActiveId(q.id)}
-                      style={({ pressed }) => [styles.qBtn, { borderColor: colors.border }, pressed && styles.pressed]}>
+                      haptic="selection"
+                      style={[styles.qBtn, { borderColor: colors.border }]}>
                       <Text style={[styles.qText, { color: colors.text }]} allowFontScaling>
                         {t(q.q)}
                       </Text>
                       <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
-                    </Pressable>
+                    </PressableScale>
                   ))}
                 </>
               )}
@@ -149,7 +158,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
   },
-  pressed: { opacity: 0.8 },
   backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
   sheet: {
     width: '100%',
@@ -179,7 +187,7 @@ const styles = StyleSheet.create({
   linkBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one + 2,
+    gap: Spacing.oneHalf,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,

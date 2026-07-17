@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   hintPill: {
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one + 2,
+    paddingVertical: Spacing.oneHalf,
     marginTop: Spacing.one,
   },
   hint: { ...Type.caption, fontWeight: '600' },

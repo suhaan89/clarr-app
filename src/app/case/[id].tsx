@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -12,9 +12,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Badge, Button, Card, Celebration, EmptyState, LoadingState } from '@/components';
+import { Badge, Button, Card, Celebration, EmptyState, LoadingState, PressableScale } from '@/components';
 import { getCaseStatus, isOpenStatus } from '@/constants/status';
-import { DisplayFont, Spacing, useThemeColors } from '@/constants/theme';
+import { Spacing, Type, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
@@ -223,16 +223,18 @@ export default function CaseDetailScreen() {
         </View>
       )}
 
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={t('case.flag_a11y')}
         onPress={flagCase}
-        style={({ pressed }) => [styles.flagButton, pressed && styles.pressed]}>
+        haptic="light"
+        hitSlop={8}
+        style={styles.flagButton}>
         <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
         <Text style={[styles.flagLabel, { color: colors.textSecondary }]} allowFontScaling>
           {t('case.flag')}
         </Text>
-      </Pressable>
+      </PressableScale>
 
       <Celebration
         visible={celebrate}
@@ -248,9 +250,9 @@ export default function CaseDetailScreen() {
 const styles = StyleSheet.create({
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: Spacing.four, gap: Spacing.three, paddingBottom: Spacing.six },
-  title: { fontFamily: DisplayFont.regular, fontSize: 22, fontWeight: '700' },
+  title: { ...Type.title },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },
-  meta: { fontSize: 14, lineHeight: 20, flexShrink: 1 },
+  meta: { ...Type.meta, flexShrink: 1 },
   photo: { width: '100%', aspectRatio: 4 / 3 },
   pendingCard: {
     flexDirection: 'row',
@@ -263,8 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.one + 2,
+    gap: Spacing.oneHalf,
   },
   flagLabel: { fontSize: 14 },
-  pressed: { opacity: 0.6 },
 });

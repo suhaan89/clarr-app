@@ -16,7 +16,7 @@
 
 import '@/global.css';
 
-import { Platform, useColorScheme } from 'react-native';
+import { Platform, useColorScheme, type TextStyle } from 'react-native';
 
 export const Colors = {
   light: {
@@ -46,6 +46,7 @@ export const Colors = {
     successSoft: '#E6F3E9',
     danger: '#C23A2A',
     dangerSoft: '#FAEAE6',
+    onDanger: '#FFFFFF',
     warning: '#9A6B1B',
     warningSoft: '#F7EEDB',
 
@@ -87,6 +88,8 @@ export const Colors = {
     successSoft: '#173626',
     danger: '#E5786A',
     dangerSoft: '#3A1B16',
+    // Dunkelmodus-Rot ist hell (wie primary/accent/water dort) -> dunkle Schrift/Icon statt Weiss.
+    onDanger: '#33110B',
     warning: '#DFAE5B',
     warningSoft: '#33270F',
 
@@ -185,7 +188,11 @@ export const DisplayFont = {
 export const Spacing = {
   half: 2,
   one: 4,
+  /** Zwischenschritt zwischen `one` (4) und `two` (8) – z. B. enge Icon+Text-Zeilen. */
+  oneHalf: 6,
   two: 8,
+  /** Zwischenschritt zwischen `two` (8) und `three` (16) – z. B. Legenden-/Chip-Innenabstand. */
+  twoHalf: 10,
   three: 16,
   four: 24,
   five: 32,
@@ -212,15 +219,19 @@ export const Type = {
     letterSpacing: -0.5,
   },
   title: { fontFamily: DisplayFont.regular, fontSize: 24, fontWeight: '700' as const },
+  /** Zwischenschritt zwischen `heading` (17) und `title` (24) – z. B. Home-Held-Label, CTA-Titel. */
+  subtitle: { fontFamily: DisplayFont.regular, fontSize: 20, fontWeight: '700' as const },
   heading: { fontFamily: DisplayFont.regular, fontSize: 17, fontWeight: '700' as const },
   /** Große Impact-Zahlen (Punkte, Zähler) – Display-Schrift, tabellarische Ziffern. */
   numeric: {
     fontFamily: DisplayFont.bold,
     fontWeight: '800' as const,
-    fontVariant: ['tabular-nums'] as const,
+    fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
   },
   body: { fontSize: 15, lineHeight: 22 },
   bodyLarge: { fontSize: 16, lineHeight: 23 },
+  /** Sekundäre Meta-Zeile neben Badge/Titel (Datum, Status, „wird geprüft" …). */
+  meta: { fontSize: 14, lineHeight: 20 },
   label: { fontSize: 16, fontWeight: '600' as const },
   caption: { fontSize: 13, lineHeight: 18 },
   tiny: { fontSize: 12, lineHeight: 17 },

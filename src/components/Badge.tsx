@@ -1,11 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 
 import { Radius, Spacing, useThemeColors } from '@/constants/theme';
 
 type Tone = 'success' | 'danger' | 'warning' | 'neutral';
 
-type Props = {
+type Props = ViewProps & {
   label: string;
   tone?: Tone;
   /** Aussagekräftiges Icon vor dem Label – bevorzugt für Status (nicht nur Farbe). */
@@ -15,7 +15,7 @@ type Props = {
 };
 
 /** Status-Pille, z. B. „Erledigt", „Voll belegt", „Du bist dabei". */
-export function Badge({ label, tone = 'neutral', icon, dot = false }: Props) {
+export function Badge({ label, tone = 'neutral', icon, dot = false, style, ...rest }: Props) {
   const colors = useThemeColors();
   const palette = {
     success: { bg: colors.successSoft, fg: colors.primaryStrong },
@@ -25,7 +25,7 @@ export function Badge({ label, tone = 'neutral', icon, dot = false }: Props) {
   }[tone];
 
   return (
-    <View style={[styles.base, { backgroundColor: palette.bg }]}>
+    <View {...rest} style={[styles.base, { backgroundColor: palette.bg }, style]}>
       {icon ? (
         <Ionicons name={icon} size={14} color={palette.fg} />
       ) : dot ? (
@@ -42,10 +42,10 @@ const styles = StyleSheet.create({
   base: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one + 2,
+    gap: Spacing.oneHalf,
     alignSelf: 'flex-start',
     borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.two + 2,
+    paddingHorizontal: Spacing.twoHalf,
     paddingVertical: Spacing.one,
   },
   dot: { width: 8, height: 8, borderRadius: 4 },

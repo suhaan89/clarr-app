@@ -19,7 +19,7 @@
 -- 1. Settings (aenderbar ohne Deploy). Leerer Empfaenger = Digest AUS.
 -- ----------------------
 INSERT INTO public.system_settings (key, value) VALUES
-  ('authority_digest_email', ''),
+  ('authority_digest_email', '""'),
   ('authority_token_ttl_days', '30')
 ON CONFLICT (key) DO NOTHING;
 

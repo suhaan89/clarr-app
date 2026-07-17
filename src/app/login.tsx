@@ -143,20 +143,22 @@ export default function LoginScreen() {
               </Card>
             )}
 
-            <View style={styles.ageRow}>
-              <Switch
-                accessibilityLabel={t('login.age_confirm_a11y')}
-                value={ageConfirmed}
-                onValueChange={setAgeConfirmed}
-                trackColor={{ true: colors.primary }}
-              />
-              <Text style={[styles.ageLabel, { color: colors.text }]} allowFontScaling>
-                {t('login.age_confirm')}
+            <View style={styles.ageGroup}>
+              <View style={styles.ageRow}>
+                <Switch
+                  accessibilityLabel={t('login.age_confirm_a11y')}
+                  value={ageConfirmed}
+                  onValueChange={setAgeConfirmed}
+                  trackColor={{ true: colors.primary }}
+                />
+                <Text style={[styles.ageLabel, { color: colors.text }]} allowFontScaling>
+                  {t('login.age_confirm')}
+                </Text>
+              </View>
+              <Text style={[styles.ageHint, { color: colors.textSecondary }]} allowFontScaling>
+                {t('login.age_confirm_hint')}
               </Text>
             </View>
-            <Text style={[styles.ageHint, { color: colors.textSecondary }]} allowFontScaling>
-              {t('login.age_confirm_hint')}
-            </Text>
 
             {busy ? (
               <ActivityIndicator color={colors.primary} accessibilityLabel={t('login.wait')} />
@@ -216,16 +218,17 @@ const styles = StyleSheet.create({
   title: { fontFamily: DisplayFont.bold, fontSize: 40, fontWeight: '800', letterSpacing: 2, textAlign: 'center' },
   subtitle: { fontSize: 16, textAlign: 'center' },
   form: { gap: Spacing.three },
+  ageGroup: { gap: Spacing.half },
   ageRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, minHeight: 44 },
   ageLabel: { fontSize: 14, flexShrink: 1 },
-  ageHint: { fontSize: 12, lineHeight: 16, marginTop: -Spacing.two },
+  ageHint: { fontSize: 12, lineHeight: 16 },
   message: { fontSize: 15, lineHeight: 21 },
   buttons: { gap: Spacing.two },
   hintRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.one + 2,
+    gap: Spacing.oneHalf,
     paddingHorizontal: Spacing.three,
   },
   hint: { fontSize: 13, textAlign: 'center', flexShrink: 1 },

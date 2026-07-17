@@ -6,14 +6,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { Button, Card, EmptyState, Input } from '@/components';
+import { Button, Card, EmptyState, Input, PressableScale } from '@/components';
 import { Radius, Spacing, Type, useThemeColors } from '@/constants/theme';
 import { newClientKey, type PendingReport, type PhotoSource } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
@@ -149,27 +148,28 @@ export default function MeldenScreen() {
               {t('report.queue_badge', { count: queueLength })}
             </Text>
           )}
-          <Pressable
+          <PressableScale
             accessibilityRole="button"
             accessibilityLabel={t('report.shutter_a11y')}
             onPress={takePhoto}
-            style={({ pressed }) => [styles.shutterOuter, pressed && styles.pressed]}>
-            <View style={styles.shutterInner} />
-          </Pressable>
-          <Pressable
+            haptic="medium"
+            hitSlop={12}
+            containerStyle={styles.shutterOuter}
+            style={styles.shutterInner}>
+            {null}
+          </PressableScale>
+          <PressableScale
             accessibilityRole="button"
             accessibilityLabel={t('report.gallery_a11y')}
             onPress={pickFromGallery}
-            style={({ pressed }) => [
-              styles.galleryButton,
-              { backgroundColor: colors.overlay },
-              pressed && styles.pressed,
-            ]}>
+            haptic="light"
+            hitSlop={8}
+            style={[styles.galleryButton, { backgroundColor: colors.overlay }]}>
             <Ionicons name="images-outline" size={20} color="#fff" />
             <Text style={styles.galleryLabel} allowFontScaling>
               {t('report.gallery_short')}
             </Text>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
     );
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   },
   details: { padding: Spacing.four, gap: Spacing.three },
   preview: { width: '100%', aspectRatio: 4 / 3 },
-  visionRow: { flexDirection: 'row', gap: Spacing.two + 2, alignItems: 'center' },
+  visionRow: { flexDirection: 'row', gap: Spacing.twoHalf, alignItems: 'center' },
   visionText: { flex: 1, gap: 2 },
   visionTitle: { ...Type.heading, flexShrink: 1 },
   visionNote: { ...Type.caption, flexShrink: 1 },
@@ -395,5 +395,4 @@ const styles = StyleSheet.create({
   privacyRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   privacyNote: { fontSize: 13, lineHeight: 19, flexShrink: 1 },
   detailActions: { gap: Spacing.two },
-  pressed: { opacity: 0.7 },
 });

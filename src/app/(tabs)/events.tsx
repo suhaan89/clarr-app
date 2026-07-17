@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, LoadingState } from '@/components';
-import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { DisplayFont, Radius, Spacing, Type, useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -27,6 +27,7 @@ export default function EventsScreen() {
   const [events, setEvents] = useState<CleanupEvent[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -65,7 +66,8 @@ export default function EventsScreen() {
   }
 
   async function toggleSignup(ev: CleanupEvent) {
-    if (!session) return;
+    if (!session || busyId) return;
+    setBusyId(ev.id);
     let error;
     if (ev.my_signup.length > 0) {
       ({ error } = await supabase.from('cleanup_signups').delete().eq('id', ev.my_signup[0].id));
@@ -77,7 +79,8 @@ export default function EventsScreen() {
     if (error) {
       Alert.alert(t('events.error_title'), t('events.error_body'));
     }
-    load();
+    await load();
+    setBusyId(null);
   }
 
   if (!loaded) return <LoadingState label={t('events.loading')} />;
@@ -166,6 +169,7 @@ export default function EventsScreen() {
               }
               onPress={() => toggleSignup(item)}
               disabled={full}
+              loading={busyId === item.id}
               variant={joined ? 'ghost' : 'primary'}
             />
           </Card>
@@ -189,8 +193,8 @@ const styles = StyleSheet.create({
   dateDay: { fontFamily: DisplayFont.bold, fontSize: 20, fontWeight: '800', lineHeight: 24 },
   dateMonth: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
   headText: { flex: 1, gap: 2 },
-  title: { fontFamily: DisplayFont.regular, fontSize: 17, fontWeight: '700' },
-  meta: { fontSize: 14 },
+  title: { ...Type.heading },
+  meta: { ...Type.meta },
   description: { fontSize: 15, lineHeight: 21 },
   capacityRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   track: { flex: 1, height: 6, borderRadius: Radius.pill, overflow: 'hidden' },

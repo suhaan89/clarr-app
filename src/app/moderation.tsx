@@ -12,7 +12,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, LoadingState } from '@/components';
-import { Spacing, useThemeColors } from '@/constants/theme';
+import { Spacing, Type, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl } from '@/lib/api';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
@@ -38,6 +38,7 @@ export default function ModerationScreen() {
   const [reports, setReports] = useState<Record<string, ReportRow>>({});
   const [photos, setPhotos] = useState<Record<string, PhotoRow[]>>({});
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -106,12 +107,12 @@ export default function ModerationScreen() {
   }
 
   async function decidePhoto(photoId: string, approve: boolean) {
-    setBusyId(-1);
+    setBusyPhotoId(photoId);
     const { data, error } = await supabase.rpc('approve_photo', {
       p_photo_id: photoId,
       p_approve: approve,
     });
-    setBusyId(null);
+    setBusyPhotoId(null);
     if (error || !data?.ok) {
       Alert.alert(t('moderation.error_generic'));
       return;
@@ -185,6 +186,7 @@ export default function ModerationScreen() {
                           label={p.approved ? t('moderation.reject_photo') : t('moderation.approve_photo')}
                           variant={p.approved ? 'destructive' : 'secondary'}
                           onPress={() => decidePhoto(p.id, !p.approved)}
+                          loading={busyPhotoId === p.id}
                         />
                       </View>
                     ) : (
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.six },
   card: { gap: Spacing.two },
   headRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  meta: { fontSize: 13 },
+  meta: { ...Type.meta },
   wasteType: { fontSize: 15, fontWeight: '600' },
   photoRow: { gap: Spacing.two },
   photoWrap: { gap: Spacing.one },

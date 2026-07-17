@@ -6,6 +6,7 @@ import { Radius, Spacing, useThemeColors } from '@/constants/theme';
 import { LANGUAGES, useI18n, type LanguageCode } from '@/lib/i18n';
 
 import { Badge } from './Badge';
+import { PressableScale } from './PressableScale';
 
 type Props = {
   /** 'row' = Zeile mit Label (Profil), 'icon' = runder Globus-Button (Login). */
@@ -28,11 +29,12 @@ export function LanguagePicker({ variant = 'row' }: Props) {
   return (
     <>
       {variant === 'row' ? (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={`${t('profil.language')}: ${current?.label}`}
           onPress={() => setOpen(true)}
-          style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+          haptic="light"
+          style={styles.row}>
           <View style={styles.rowLeft}>
             <Ionicons name="globe-outline" size={20} color={colors.textSecondary} />
             <Text style={[styles.rowLabel, { color: colors.text }]} allowFontScaling>
@@ -41,49 +43,57 @@ export function LanguagePicker({ variant = 'row' }: Props) {
             {current?.beta && <Badge label="Beta" tone="warning" />}
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-        </Pressable>
+        </PressableScale>
       ) : (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t('login.language_a11y')}
           onPress={() => setOpen(true)}
-          style={({ pressed }) => [
-            styles.iconButton,
-            { backgroundColor: colors.backgroundElement },
-            pressed && styles.pressed,
-          ]}>
+          haptic="light"
+          hitSlop={8}
+          style={[styles.iconButton, { backgroundColor: colors.backgroundElement }]}>
           <Ionicons name="globe-outline" size={22} color={colors.text} />
-        </Pressable>
+        </PressableScale>
       )}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        {/* Backdrop/Sheet sind reine Tipp-Faenger, keine echten Buttons ->
+            bewusst ohne PressableScale-Feder (wie in HelpChat). */}
         <Pressable
           style={[styles.backdrop, { backgroundColor: colors.overlay }]}
           accessibilityLabel={t('language.close')}
           onPress={() => setOpen(false)}>
           <Pressable style={[styles.sheet, { backgroundColor: colors.background }]} onPress={() => {}}>
-            <Text
-              accessibilityRole="header"
-              style={[styles.sheetTitle, { color: colors.text }]}
-              allowFontScaling>
-              {t('language.title')}
-            </Text>
+            <View style={styles.sheetHeader}>
+              <Text
+                accessibilityRole="header"
+                style={[styles.sheetTitle, { color: colors.text }]}
+                allowFontScaling>
+                {t('language.title')}
+              </Text>
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={t('language.close')}
+                onPress={() => setOpen(false)}
+                haptic="light"
+                hitSlop={8}
+                style={styles.closeBtn}>
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
+              </PressableScale>
+            </View>
             <FlatList
               data={LANGUAGES}
               keyExtractor={(l) => l.code}
               renderItem={({ item }) => {
                 const active = item.code === lang;
                 return (
-                  <Pressable
+                  <PressableScale
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
                     accessibilityLabel={item.beta ? `${item.label} (Beta)` : item.label}
                     onPress={() => choose(item.code)}
-                    style={({ pressed }) => [
-                      styles.option,
-                      active && { backgroundColor: colors.primarySoft },
-                      pressed && styles.pressed,
-                    ]}>
+                    haptic="selection"
+                    style={[styles.option, active && { backgroundColor: colors.primarySoft }]}>
                     <View style={styles.optionLeft}>
                       <Text
                         style={[
@@ -97,7 +107,7 @@ export function LanguagePicker({ variant = 'row' }: Props) {
                       {item.beta && <Badge label="Beta" tone="warning" />}
                     </View>
                     {active && <Ionicons name="checkmark" size={20} color={colors.primaryStrong} />}
-                  </Pressable>
+                  </PressableScale>
                 );
               }}
             />
@@ -133,7 +143,14 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
-  sheetTitle: { fontSize: 18, fontWeight: '700', marginBottom: Spacing.two },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    marginBottom: Spacing.two,
+  },
+  sheetTitle: { fontSize: 18, fontWeight: '700', flex: 1 },
+  closeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -150,5 +167,4 @@ const styles = StyleSheet.create({
   },
   optionLabel: { fontSize: 16 },
   optionActive: { fontWeight: '700' },
-  pressed: { opacity: 0.7 },
 });

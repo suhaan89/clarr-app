@@ -503,3 +503,131 @@ einen anderen Wert umstellen (z. B. Gemeinschaftssumme oder Impact-Punkte).
   Events oder Profil wandern. Bewusste Entscheidung, hier notiert.
 - **Auf echtem Geraet noch zu pruefen** (60fps, Glas-Lesbarkeit, Sheen-Timing):
   verifiziert sind nur tsc und eslint, nicht ein Live-Lauf.
+
+---
+
+# Redesign-Runde 8 (Juli 2026): Runde-7-Backlog abgearbeitet + eigener Durchgang
+
+**Auftrag:** Den in `docs/verbesserungs-prompt-runde7.md` hinterlassenen,
+ungenutzten Auftrag abarbeiten (Paket A/B/C), danach eigenständig
+weitersuchen und beheben, solange sinnvoll — keine Rückfrage pro Fund. Nur
+Frontend/UX, keine Backend-/Sicherheitslogik. Reihenfolge wie im Auftrag
+vorgegeben: B → A → C, dann ein eigener Durchgang.
+
+## Paket B — Interaktions-/Icon-/Modal-Konsistenz
+
+- **`PressableScale` app-weit nachgezogen**: `melden.tsx` (Ausloeser +
+  Galerie-Button — die wichtigste Interaktion der App), `karte.tsx`
+  (Aktualisieren), `profil.tsx` (Export/Loeschen/Moderation/Abmelden),
+  `case/[id].tsx` (Flag), `HelpChat.tsx` (FAB, Schliessen, Zurueck,
+  Datenschutz-Link, Fragen-Liste), `LanguagePicker.tsx` (beide Trigger-
+  Varianten, Sprachoptionen). Bewusst NICHT umgestellt: Backdrop-/Sheet-
+  Pressables in `HelpChat`, `LanguagePicker`, `Celebration` — das sind reine
+  Tipp-Faenger zum Schliessen, keine echten Buttons; eine Feder-Animation
+  darauf waere falsches Signal.
+- **`hitSlop` ergaenzt** (neu, nicht im Runde-7-Auftrag): Kein einziger
+  `hitSlop`-Aufruf existierte im ganzen Code. Fuer eine App, die oft
+  drausen/einhaendig bedient wird (Muell fotografieren), macht das bei
+  Icon-only-Buttons einen echten Unterschied. Ergaenzt bei Kamera-Ausloeser/
+  Galerie (`melden.tsx`), Karten-Refresh, Flag-Button, HelpChat-FAB/Schliessen,
+  Sprachwahl-Icon-Variante/Schliessen.
+- **`onDanger`-Token ergaenzt** (`theme.ts`): Kartenpin-Icon nutzte hartes
+  `color="#fff"` unabhaengig vom Modus. Hell bleibt Weiss, Dunkel bekommt
+  (wie bei primary/accent/water) einen dunklen Ton, weil Dunkelmodus-Rot dort
+  ein helles Korallrot ist — Weiss darauf waere schlecht lesbar gewesen.
+- **Modal-Schliessen vereinheitlicht**: `LanguagePicker`s Sheet hatte keine
+  sichtbare Schliessen-Affordanz (nur Backdrop-Tap). Jetzt ein Kopfzeilen-
+  Layout mit sichtbarem ×-Button wie in `HelpChat`.
+- **Korrektur am eigenen Auftrag**: Runde 7 behauptete, `karte.tsx` (gefuelltes
+  `trash`) und `profil.tsx` (`trash-outline`) waeren dieselbe Ikonografie
+  uneinheitlich behandelt. Stimmt nicht — `karte.tsx`s `trash` meint
+  „Muellfund" (Kartenpin/Legende), `profil.tsx`s `trash-outline` meint
+  „Konto loeschen" (Papierkorb-Symbol fuer Loeschen, universelle Konvention).
+  Zwei verschiedene Konzepte, keine Vereinheitlichung noetig — bewusst NICHT
+  angefasst, um kein falsches Icon-Vokabular einzufuehren.
+
+## Paket A — Typografie-/Spacing-Disziplin
+
+- **Home-Screen auf Tokens umgestellt**: `greeting` (22px) → `Type.title`
+  (24px, 2px Unterschied ist nicht wahrnehmbar); `heroLabel`/`ctaTitle` waren
+  identische Ad-hoc-Objekte (20px) → neuer Token `Type.subtitle` (Luecke
+  zwischen `heading` 17 und `title` 24); `heroNumber`/`chipValue` nutzten
+  Familie/Gewicht/Ziffernvariante manuell statt des bereits existierenden,
+  aber bis dahin ungenutzten `Type.numeric` — jetzt `{...Type.numeric,
+  fontSize: X}`, das Muster, fuer das `numeric` erkennbar gedacht war.
+- **`Type.numeric` Bugfix**: `fontVariant` war mit `as const` auf ein
+  `readonly`-Tupel getypt, das sich nicht in RNs mutablen `TextStyle`
+  einsetzen liess (tsc-Fehler beim ersten Verwenden). Auf `TextStyle['fontVariant']`
+  umgestellt.
+- **`Spacing.one + 2` / `Spacing.two + 2` beseitigt** (9 Fundstellen): neue
+  Zwischenschritte `Spacing.oneHalf` (6) und `Spacing.twoHalf` (10) in der
+  Skala ergaenzt, alle Rechen-Stellen (login, Badge, Celebration, HelpChat,
+  WeeklyChallenge, case/[id], karte ×2, melden) darauf umgestellt.
+- **Meta-Text vereinheitlicht**: `events.tsx`/`case/[id].tsx`/`moderation.tsx`
+  hatten je eine eigene, leicht abweichende Sekundaertext-Style fuer dieselbe
+  Rolle (Datum/Status-Zeile neben Badge) → neuer Token `Type.meta` (14/20),
+  an allen drei Stellen verwendet. `events.tsx`s Karten-`title` war zufaellig
+  identisch mit `Type.heading` → ebenfalls auf den Token umgestellt.
+- **`login.tsx` negative-margin-Hack behoben**: `ageHint` zog sich per
+  `marginTop: -Spacing.two` naeher an die Altersabfrage. Jetzt eine eigene
+  `ageGroup`-View mit `gap: Spacing.half`, die Switch-Zeile und Hinweistext
+  eng gruppiert — kein negativer Wert mehr noetig.
+- **Weitere gefundene Duplikate desselben Ad-hoc-Musters** (nicht im
+  Runde-7-Auftrag, beim Umsetzen aufgefallen): `profil.tsx`s Impact-Punktzahl
+  (48px) und `WeeklyChallenge.tsx`s Zaehler (22px) nutzten dieselbe
+  Familie/Gewicht/Ziffernvariante wie Home ad-hoc statt `Type.numeric` — beide
+  umgestellt.
+
+## Paket C — Ladezustand Karte
+
+- `karte.tsx` zeigte beim ersten Oeffnen kurz eine leere Karte + „0/0" in der
+  Legende. Jetzt ein `loaded`-Flag, das bis zum ersten Request-Ende (Erfolg
+  *und* Fehlerfall) `LoadingState` zeigt — neuer i18n-Schluessel `map.loading`
+  in allen 8 Sprachen mit eigenem Karten-Abschnitt ergaenzt (Oesterreichisches
+  Deutsch faellt bewusst auf Deutsch zurueck, wie der Rest seiner Eintraege).
+
+## A11y-Nachtrag: `Badge.tsx`
+
+Runde 6 hatte a11y-Props fuer Card/Badge/ProgressBar versprochen, aber nur
+`Card` und `ProgressBar` spreaden tatsaechlich `...rest` durch — `Badge` nahm
+gar keine zusaetzlichen Props an. Nachgezogen (`ViewProps & Props`, `...rest`
++ `style`-Merge wie bei `Card`).
+
+## Eigener Durchgang (ohne Auftrag, zwei echte Bugs gefunden)
+
+- **`moderation.tsx`**: `decidePhoto()` setzte `busyId(-1)`, aber der
+  Foto-Freigeben/Ablehnen-Button las diesen State nie — keinerlei
+  Lade-Feedback bei der Aktion, Doppel-Tap moeglich. Eigener
+  `busyPhotoId`-State (pro Foto-ID statt eines geteilten Platzhalterwerts)
+  ergaenzt und ans `loading`-Prop gehaengt.
+- **`events.tsx`**: `toggleSignup()` hatte ueberhaupt keinen Busy-Schutz —
+  ein schneller Doppel-Tap auf „Mitmachen"/„Abmelden" haette zwei
+  Insert-/Delete-Aufrufe vor dem naechsten `load()` auslaufen lassen koennen.
+  `busyId`-State ergaenzt (Guard am Funktionsanfang + `loading`-Prop am
+  Button), analog zum bereits vorhandenen Muster in `case/[id].tsx`s
+  `closeCase()`.
+- Stichprobenartig auf hartkodierte Hex-Farben ausserhalb `theme.ts`
+  geprueft: die einzigen Treffer (`melden.tsx`s Kamera-Overlay-Weiss/Schwarz,
+  `karte.tsx`s Pin-Rand-Weiss, `BrandSplash`s Logo-Weiss, `Confetti`s
+  Weiss-Partikel) sind bewusste Ausnahmen — Kamera-Sucher, Karten-Halo und
+  Splash liegen nicht auf der Theme-Flaeche, sondern auf Kamerabild/Kartenkachel/
+  Marken-Verlauf, wo Hell/Dunkelmodus keine Rolle spielt. Keine Aenderung.
+
+## Selbstkritik
+
+- **Kein Geraet/Simulator verfuegbar** (wie schon in Runde 7 vermerkt): alle
+  Aenderungen sind code-gepruft (`tsc`, `eslint`, `jest`, alle 57 Tests
+  gruen), aber nicht visuell/live bestaetigt. Insbesondere `hitSlop`-Werte,
+  der neue `Spacing.oneHalf`/`twoHalf`-Feinschliff und die Typografie-Token-
+  Umstellung am Home-Screen sollten auf einem echten Geraet gegengeprueft
+  werden, sobald eines verfuegbar ist.
+- **`map.*`-Uebersetzungsluecke nicht angefasst**: beim Ergaenzen von
+  `map.loading` ist aufgefallen, dass die englische Katalog-Sektion
+  `map.refresh_a11y`/`map.error_title`/`map.error_body` gar nicht enthaelt
+  (faellt auf Deutsch zurueck) — englischsprachige Nutzer:innen saehen dort
+  deutschen Text. Vorbestehende Luecke, nicht Teil dieses Auftrags (Runde 6
+  Paket H war i18n/Barrierefreiheit, hat das offenbar uebersehen); hier nur
+  dokumentiert, nicht repariert, um den Scope (Design/UX) nicht zu sprengen.
+- **Konsequent nicht committet**: alle Aenderungen dieser Runde liegen im
+  Arbeitsverzeichnis, nicht in einem Commit — das bleibt bewusst der
+  naechsten Durchsicht durch den Menschen ueberlassen.
