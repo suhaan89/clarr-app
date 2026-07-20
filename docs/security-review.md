@@ -220,3 +220,63 @@ Edge-Function-Härtung. Methode: RPC-Grant-Audit (jede Funktion gegen ihr
 - **Auth-Enumeration:** neutrale Client-Meldungen + `config.toml`-Rate-Limits;
   Dashboard-Setting „Prevent email enumeration" bleibt Betreiber-Checkliste
   (docs/auth.md).
+
+---
+
+# Security-Review — Runde 3 (Pre-Release-Audit, Stand 2026-07-20)
+
+Fokus: Store-Freigabe (App Store / Play Store). Erneuter Durchlauf ueber den
+gesamten Branch-Delta gegen `origin/main` (Migrationen 001–021, alle Edge
+Functions, Client inkl. Onboarding-Tour, Web-Session-Storage, Karten-Weiche).
+Methode: `/security-review` (Datenfluss User-Input → Senke, Authz-Grenzen,
+Crypto/Secrets, Injection). **Keine neuen ausnutzbaren Befunde** — die Punkte
+aus Runde 1/2 bleiben geschlossen bzw. als Betreiber-/Restrisiko dokumentiert.
+
+## Bestaetigt (Store-Checkliste des Betreibers)
+
+- **Nur anon-Key im Client**: `src/lib/supabase.ts` nutzt ausschliesslich
+  `EXPO_PUBLIC_SUPABASE_ANON_KEY`; `grep service_role src/` = leer. Der
+  `service_role`-Key existiert nur in Edge Functions (`Deno.env`).
+- **Session-Storage**: nativ AES-256-CTR in AsyncStorage, Schluessel in
+  SecureStore (`SecureSessionStorage`); auf **Web** direkt AsyncStorage
+  (localStorage) — expo-secure-store existiert dort nicht. Web ist nicht das
+  Store-Ziel; Restrisiko wie B3 (localStorage XSS-exponierbar) bleibt.
+- **Edge-Function-Authz**:
+  - `delete-account` / `export-my-data` leiten die `user_id` aus dem **JWT**
+    (`supabaseUser.auth.getUser()`) ab und filtern jede Service-Role-Query
+    strikt `.eq('user_id', uid)` — kein Fremdzugriff moeglich.
+  - `authority-digest`: Service-Role-Bearer jetzt **konstant-zeit** verglichen
+    (`timingSafeEqual`, `_shared/security.ts`) → Runde-2-Befund **B4 geschlossen**.
+  - `confirm-case-done` (`--no-verify-jwt`): Token base64url-formatgeprueft,
+    IP-Hash-ratenbegrenzt, nur als SHA-256-Hash eingeloest (einmalig, atomar);
+    die HTML-Fehlerseite interpoliert **nur String-Literale**, kein User-Input
+    → kein XSS. Das `token` wird nie gerendert.
+- **CORS** (`_shared/security.ts`): Wildcard entfernt; erlaubte Origins per
+  `ALLOWED_ORIGINS`-Secret, sonst enge Dev-Default-Liste. Unbekannter Origin
+  → SOP blockt die Antwort clientseitig. Mobile-`fetch` (kein Origin) unberuehrt.
+- **Foto-Pipeline**: oeffentlich nur `public-blurred` (EXIF gestrippt,
+  Gesichter/Kennzeichen pixeliert, Personen-im-Bild → Review-Gate, fail-safe).
+- **Geodaten-Rundung**: neue View `reports_map` (Migration 018,
+  `security_invoker`) liefert der Karte nur den **Geohash8-Zentroid**
+  (~19–38 m Zelle); `karte.tsx` liest ab sofort diese View statt der
+  Basistabelle → Runde-2-Befund **B2 geschlossen**. Exakte Koordinaten bleiben
+  serverseitig (Fall-Buendelung/Moderation) und beim eigenen Fall-Detail.
+- **Consent-RPC** (`record_consent`, Migration 021): `SECURITY DEFINER` +
+  festes `search_path`, prueft `auth.uid()`, Whitelist der Keys,
+  `REVOKE … FROM PUBLIC, anon` / `GRANT … TO authenticated`. Append-only.
+- **Anti-Enumeration** (Login): neutrale Erfolgsmeldung; Dashboard-Setting
+  „Prevent email enumeration" bleibt Betreiber-Checkliste (docs/auth.md).
+- **Rate-Limits**: unveraendert aktiv (Melden, Vision-Budget/Kill-Switch,
+  Punkte-Deckel, Flags/Tag, neu auch `confirm_case_done`).
+
+## Offene Betreiber-/Restpunkte (nicht im Repo fixbar)
+
+1. **`npm audit`: 18 moderate** — `postcss` (CSS-XSS, Web-Build-Zeit) und
+   `uuid` (buf-Pfad, ungenutzt), beide **transitiv** ueber die Expo-Toolchain.
+   `npm audit fix --force` zoege `expo@57` (Major-Bruch, Projekt = SDK 54).
+   Nicht erzwungen; Empfehlung: geplantes SDK-Upgrade oder getestete `overrides`.
+2. **Auth-Dashboard** (DEV/PROD): „Prevent email enumeration" + Mail-/Signup-
+   Rate-Limits im Supabase-Dashboard verifizieren (docs/auth.md).
+3. **Legacy-Bucket `report-photos`**: Alt-Objekte sichten/leeren (Runde 1, P.1).
+4. **Web-Session** (localStorage): nur relevant, falls Web ausgeliefert wird;
+   Stores sind nativ (iOS/Android) → dort AES/SecureStore.
