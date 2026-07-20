@@ -3,6 +3,7 @@ import { TourGuideOverlay, TourGuideProvider } from '@wrack/react-native-tour-gu
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Alert, useColorScheme } from 'react-native';
 
@@ -50,6 +51,10 @@ function AppStack() {
 
   return (
     <ThemeProvider value={navTheme}>
+      {/* Status-Bar-Icons an Hell/Dunkel koppeln (Edge-to-Edge: ohne dies
+          koennen die System-Icons unlesbar auf gleichfarbigem Grund liegen).
+          "auto" waehlt hell/dunkel gegenteilig zum aktuellen Schema. */}
+      <StatusBar style="auto" />
       <TourGuideProvider>
         <Stack
           screenOptions={{
