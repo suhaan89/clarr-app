@@ -1,0 +1,49 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://DEIN-DEV-PROJEKT.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "DEV-ANON-KEY-HIER"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://DEIN-STAGING-PROJEKT.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "STAGING-ANON-KEY-HIER"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": false,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://DEIN-PROD-PROJEKT.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "PROD-ANON-KEY-HIER"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "DEINE-APPLE-ID-EMAIL",
+        "ascAppId": "APP-STORE-CONNECT-APP-ID",
+        "appleTeamId": "DEIN-APPLE-TEAM-ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}
