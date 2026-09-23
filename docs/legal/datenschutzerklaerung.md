@@ -1,177 +1,215 @@
 <!--
   ============================================================
-  ENTWURF — JURISTISCH PRÜFEN — NICHT OHNE ANWALTLICHE/DATENSCHUTZ-
-  RECHTLICHE PRÜFUNG VERÖFFENTLICHEN.
-  ============================================================
-  Dies ist ein hostbares Dokument (nicht der In-App-Screen). Beide Stores
-  verlangen eine ÖFFENTLICH erreichbare Datenschutz-URL — diese Datei ist die
-  Vorlage dafür. Sie basiert auf docs/legal/data-flows.md (der geprüften
-  Mechanik) und ist BEWUSST als Entwurf formuliert. Alle [PLATZHALTER] muss
-  der Betreiber füllen; alle Rechtsgrundlagen/AVV/Drittland-Aussagen muss eine
-  fachkundige Person (Datenschutzbeauftragte:r / Anwalt) prüfen.
+  HOSTBARE FASSUNG der Datenschutzerklärung. Beide App-Stores verlangen eine
+  ÖFFENTLICH erreichbare Datenschutz-URL ohne Login; diese Datei ist die
+  Quelle dafür (Rendering siehe hosting-checkliste.md).
 
-  Sonderkontext (ERHÖHTES RISIKO):
-   - Zielgruppe ist TEILWEISE MINDERJÄHRIG (Art. 8 DSGVO, KJM, ggf. COPPA).
-   - Betreiber sind mutmaßlich selbst minderjährig — KEINE private Wohnadresse
-     ohne Beratung veröffentlichen (siehe impressum.md).
+  WICHTIG: Der Text muss WORTGLEICH zu src/app/legal/datenschutz.tsx sein.
+  Wer eine Fassung ändert, ändert beide und erhöht POLICY_VERSION in
+  src/constants/legal.ts sowie den Default in einer neuen Migration.
+
+  [ANWALT PRÜFEN] markiert die Stellen, deren Bewertung eine fachkundige
+  Person bestätigen muss. Sie sind bewusst ausformuliert und in Betrieb, nicht
+  offen gelassen. [BETREIBER EINTRAGEN] markiert Angaben, die dieses Repo
+  nicht kennt (siehe FRAGEN.md).
   ============================================================
 -->
 
 # Datenschutzerklärung – CLAR
 
-**Stand:** [DATUM EINSETZEN] · **Version:** 1.0 (Entwurf)
+**Fassung:** 2026-09-23-v1 · **Stand:** 23.09.2026
 
-> ⚠️ **ENTWURF – JURISTISCH PRÜFEN.** Dieser Text ist noch keine
-> rechtsverbindliche Datenschutzerklärung.
+## 1. Wer ist verantwortlich
 
-## 1. Verantwortlicher
+Verantwortlich für die Verarbeitung deiner Daten im Sinne der DSGVO ist der
+Anbieter von CLAR. Die vollständigen Angaben (Name, ladungsfähige Anschrift,
+Kontakt) stehen im Impressum dieser App.
 
-Verantwortlich für die Datenverarbeitung im Sinne der DSGVO ist:
+Fragen zum Datenschutz, Auskunft, Löschung, Widerspruch:
+[BETREIBER EINTRAGEN: Datenschutz-E-Mail].
 
-- **Anbieter:** [NAME/ORGANISATION – JURISTISCH PRÜFEN]
-- **Anschrift:** [LADUNGSFÄHIGE ANSCHRIFT – JURISTISCH PRÜFEN; bei
-  minderjährigen Betreibern Alternative prüfen, z. B. Trägerverein/Schule/
-  c-o-Adresse]
-- **Kontakt Datenschutz:** [E-MAIL – JURISTISCH PRÜFEN]
-- **Datenschutzbeauftragte:r:** [falls benannt/erforderlich – JURISTISCH PRÜFEN]
+## 2. Der Grundsatz: Müll melden, keine Personen
 
-## 2. Grundprinzip: Datenminimierung
+CLAR dokumentiert illegal abgelagerten Müll. Wir erheben so wenig über dich wie
+möglich: kein Klarname, kein Geburtsdatum, keine Werbe- oder Hardware-IDs,
+keine Bewegungsprofile. Es gibt kein Feld für einen „Verursacher".
 
-CLAR meldet **Müll, keine Personen**. Wir erheben bewusst so wenig wie möglich:
-**kein Klarname, kein Geburtsdatum, keine Werbe- oder Hardware-IDs, keine
-Standort-Bewegungsprofile.** Es gibt kein „Verursacher"-Feld.
+Es gibt in CLAR keine Werbung, kein Tracking über App-Grenzen hinweg und keinen
+Verkauf von Daten. Es ist kein Analyse- oder Absturzberichts-SDK eingebaut.
 
-## 3. Welche Daten wir verarbeiten und warum
+## 3. Welche Daten wir verarbeiten
 
-| Datenkategorie | Zweck | Rechtsgrundlage (JURISTISCH PRÜFEN) |
+| Kategorie | Zweck | Rechtsgrundlage |
 |---|---|---|
-| E-Mail-Adresse, Passwort-Hash, E-Mail-Bestätigungsstatus | Konto/Login, Verifikation | Art. 6 (1) b DSGVO (Vertrag) |
-| Meldungen: Standort (Lat/Lng), Zeitpunkt, Beschreibung, Abfallart | Kernfunktion (Müllkarte) | Art. 6 (1) b DSGVO |
-| Fotos: Original (privat) + anonymisierte, geblurrte Kopie (öffentlich) | Beleg der Meldung; öffentlich nur anonymisiert | Art. 6 (1) b / (1) f DSGVO |
-| Punkte-/Level-Historie | spielerisches Feedback (kosmetisch) | Art. 6 (1) b DSGVO |
-| Einwilligungen (Journal: Kamera, Standort, Behörden-Weitergabe, Altersbestätigung) | Nachweis erteilter Einwilligungen | Art. 6 (1) c / Art. 7 DSGVO |
-| Geräte-/IP-**Hashes** (SHA-256, nie im Klartext) | Missbrauchs-/Spam-Schutz (Rate-Limit) | Art. 6 (1) f DSGVO (berechtigtes Interesse) |
-| Push-Token (nur bei Opt-in) | Benachrichtigung bei Fallabschluss | Art. 6 (1) a DSGVO (Einwilligung) |
-| Audit-/Kostenzähler-Zeilen (nach Löschung ohne Personenbezug) | Sicherheit, Kostenkontrolle | Art. 6 (1) f DSGVO |
+| E-Mail-Adresse, Passwort-Hash, Bestätigungsstatus | Login, Missbrauchsschutz | Art. 6 (1) b DSGVO |
+| Meldungen: Koordinaten, Zeitpunkt, Beschreibung, Abfallart, Status | Müllkarte, Weitergabe an die zuständige Stelle | Art. 6 (1) b DSGVO |
+| Fotos: Original privat, anonymisierte Kopie öffentlich | Beleg der Meldung, öffentliche Darstellung des Fundorts | Art. 6 (1) b und f DSGVO |
+| Punkte, Level, Abzeichen | kosmetisches Feedback | Art. 6 (1) b DSGVO |
+| Einwilligungen inkl. Altersbestätigung, mit Zeitpunkt und Fassung | Nachweisbarkeit | Art. 7 (1), Art. 5 (2) DSGVO |
+| Geräte- und IP-Prüfsummen (SHA-256, nie Klartext) | Rate-Limit, Spam-Schutz | Art. 6 (1) f DSGVO |
+| Inhaltsmeldungen und Überprüfungsanfragen | Moderation | Art. 6 (1) c DSGVO iVm DSA |
+| Kosten- und Sicherheitsprotokolle | Kostendeckel, Sicherheit | Art. 6 (1) f DSGVO |
+| Auf dem Gerät: verschlüsselte Sitzung, Offline-Queue, Sprachwahl, Tour-Stand | Betrieb der App | § 25 (2) Nr. 2 TDDDG, unbedingt erforderlich |
 
-## 4. Empfänger / Auftragsverarbeiter
+[ANWALT PRÜFEN] Zuordnung der Rechtsgrundlagen je Zeile, insbesondere ob die
+öffentliche Kartendarstellung auf Art. 6 (1) b oder f zu stützen ist und ob für
+Art. 6 (1) f eine dokumentierte Interessenabwägung beizulegen ist.
 
-Wir setzen folgende Dienstleister ein. Für jeden ist ein Auftrags-
-verarbeitungsvertrag (AVV, Art. 28 DSGVO) und – bei Drittlandbezug – eine
-Transfergrundlage (z. B. Standardvertragsklauseln) erforderlich. **[Region,
-AVV-Status und Drittlandtransfer je Dienst: JURISTISCH PRÜFEN.]**
+## 4. Was wir bewusst nicht tun
 
-| Empfänger | Übermittelte Daten | Zweck |
+Wir erstellen kein Profil über dich, bewerten dein Verhalten nicht und setzen
+keine Werbe-Identifikatoren. Die Bestenliste ist standardmäßig aus; wenn du sie
+einschaltest, erscheint nur ein frei gewähltes Pseudonym, nie deine
+E-Mail-Adresse.
+
+Aus deinem Foto lesen wir keine Metadaten aus. Im Gegenteil: bevor ein Foto
+dein Gerät verlässt, werden EXIF- und GPS-Daten entfernt, indem das Bild neu
+gespeichert wird. Der Ort einer Meldung stammt ausschließlich aus der
+Standortbestimmung, die du beim Absenden erlaubst.
+
+## 5. Wer deine Daten bekommt
+
+| Empfänger | Übermittelte Daten | Rolle |
 |---|---|---|
-| **Supabase** (Hosting, Datenbank, Auth, Storage) | alle o. g. Konto-/Meldungsdaten | Betrieb der App |
-| **Anthropic** (KI-Foto-Prüfung) | nur verkleinertes Foto, **kein** Name/Account-Bezug | Müll-Klassifikation + Erkennung von Gesichtern/Kennzeichen fürs Blurring |
-| **Behörde** (E-Mail-Digest) | Fall-Titel, Fallort, **geblurrtes** Foto, Erledigt-Link – **keine** Melder-Daten | Beseitigung des Mülls |
-| **Resend** (E-Mail-Versand) | Behörden-Adresse, Digest-Inhalt | Versand des Behörden-Digests |
-| **Expo Push** (nur bei Opt-in) | Push-Token, Benachrichtigungstext | Abschluss-Benachrichtigung |
+| **Supabase** | alle Konto- und Meldungsdaten, Fotos | Auftragsverarbeiter, Art. 28 DSGVO |
+| **Anthropic** | nur das verkleinerte Foto, kein Name, keine E-Mail, keine Konto-ID | Auftragsverarbeiter, Art. 28 DSGVO |
+| **Zuständige Stelle** (Gemeinde, Bauhof) | Falltitel, Fundort, anonymisiertes Foto, Einmal-Link | eigenständig Verantwortliche |
+| **Resend** | Behörden-Adresse, Inhalt des Berichts | Auftragsverarbeiter, Art. 28 DSGVO |
+| **Google Maps** (Android) bzw. **Apple Maps** (iOS) | technisch der angezeigte Kartenausschnitt | eigenständig Verantwortliche, Art. 6 (1) f DSGVO |
 
-Es findet **kein Verkauf** von Daten und **keine Werbung** statt.
+An die zuständige Stelle gehen **keine** Daten über dich: kein Name, keine
+E-Mail-Adresse, keine Konto-ID, kein Originalfoto.
 
-## 5. Öffentlich sichtbare Inhalte
+[ANWALT PRÜFEN] AV-Verträge je Dienstleister, Einordnung der Kartenanbieter,
+Einordnung der Behörde als eigenständig Verantwortliche.
 
-Veröffentlichte Meldungen erscheinen auf einer öffentlichen Karte. Dabei:
+## 6. Übermittlung in Drittländer
 
-- werden **nur anonymisierte, geblurrte** Fotos gezeigt (EXIF/GPS entfernt,
-  Gesichter/Kennzeichen pixeliert; ein Review-Schritt geht der Veröffentlichung
-  voraus),
-- werden Kartenkoordinaten **gerundet** (Geohash-8-Zelle, ~20–40 m) angezeigt,
-  nicht die exakte Position,
-- werden Meldungen aus Privatgrund-/Wohnkontext **nie** öffentlich gestellt,
-- ist **kein** Melder-Name oder -Konto sichtbar.
+Anthropic hat seinen Sitz in den Vereinigten Staaten. Die Prüfung deines Fotos
+findet daher außerhalb der EU statt. Grundlage der Übermittlung sind die
+Standardvertragsklauseln der EU-Kommission beziehungsweise, soweit der Anbieter
+zertifiziert ist, das EU-US Data Privacy Framework.
 
-## 6. Speicherdauer & Löschung
+Übermittelt wird ausschließlich das verkleinerte Bild. Wenn auf deinem Foto
+zufällig Menschen zu sehen sind, werden deren Abbildungen mitübermittelt, um
+sie anschließend unkenntlich machen zu können.
 
-- **Original-Fotos** liegen in einem privaten Speicher (`originals`), nie
-  öffentlich, Zugriff nur durch die/den Eigentümer:in.
-- **Konto-Löschung** (in der App unter *Profil → Konto löschen* sowie über die
-  Web-Löschseite, siehe Abschnitt 9) entfernt Speicher-Objekte (Original +
-  Kopien) und anschließend das Konto; per Datenbank-Kaskade werden Profil,
-  Meldungen, Foto-Metadaten, Punkte, Einwilligungen, Flags und Anmeldungen
-  gelöscht. Reine Kostenzähler-/Audit-Zeilen bleiben **ohne Personenbezug**
-  (`user_id = NULL`) erhalten.
-- **[Konkrete Aufbewahrungsfristen** je Kategorie – JURISTISCH PRÜFEN.]
+Für Supabase und Resend gilt: ob und in welchem Umfang eine Verarbeitung
+außerhalb der EU stattfindet, hängt von der gewählten Region ab.
+[BETREIBER EINTRAGEN: Region und Transfergrundlage je Dienst].
 
-## 7. Ihre Rechte
+[ANWALT PRÜFEN] Welche Transfergrundlage tatsächlich trägt und ob ein
+Transfer Impact Assessment zu dokumentieren ist.
 
-Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung
-(Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20) und
-Widerspruch (Art. 21) sowie das Recht, erteilte Einwilligungen jederzeit zu
-widerrufen (Art. 7 (3)).
+## 7. Was öffentlich sichtbar wird
 
-- **Auskunft/Export:** *Profil → Meine Daten exportieren* (JSON).
-- **Löschung:** *Profil → Konto löschen* bzw. Web-Löschseite (Abschnitt 9).
-- **Widerruf:** *Profil → Datenschutz-Einstellungen*.
-- **Beschwerderecht** bei einer Aufsichtsbehörde: [ZUSTÄNDIGE AUFSICHTSBEHÖRDE
-  EINSETZEN – JURISTISCH PRÜFEN].
+- Nur eine anonymisierte Kopie des Fotos: Metadaten entfernt, erkannte
+  Gesichter und Kennzeichen großflächig verpixelt.
+- Der Ort nur gerundet (Zelle von etwa 20 bis 40 Metern), nicht als exakter
+  Punkt.
+- Meldungen, die nach privatem Grundstück oder Wohnumfeld aussehen, werden nie
+  automatisch veröffentlicht.
+- Dein Name, deine E-Mail-Adresse und deine Konto-ID erscheinen nirgends.
+- Die automatische Erkennung kann Bereiche übersehen. Deshalb sieht bei
+  erkannten Personen zusätzlich ein Mensch das Foto an, bevor es öffentlich
+  wird. Schlägt die Erkennung fehl, wird das Foto gar nicht veröffentlicht.
 
-## 8. Minderjährige (Art. 8 DSGVO)
+## 8. Automatisierte Prüfung deiner Meldung
 
-CLAR richtet sich auch an junge Menschen. Bei der Registrierung ist eine
-Selbstauskunft „Ich bin 16 Jahre oder älter" erforderlich; der Zeitpunkt wird
-als Einwilligungs-Nachweis gespeichert (kein Geburtsdatum).
+Dein Foto wird nach dem Absenden automatisch geprüft. Ein KI-Modell beurteilt,
+ob Müll zu sehen ist, wie sicher es sich dabei ist, ob der Inhalt unzulässig
+ist (Gewalt, Nacktheit) und ob der Ort nach Privatgrund aussieht.
 
-> ⚠️ **JURISTISCH PRÜFEN (kritisch):** Altersgrenze (16 als Annahme für DE nach
-> Art. 8 DSGVO), Notwendigkeit und Ausgestaltung einer **elterlichen
-> Einwilligung** unter der Altersgrenze, Vorgaben der KJM/des JMStV sowie – bei
-> Verfügbarkeit in den USA – **COPPA** (< 13 Jahre). Die aktuelle Fassung
-> setzt **keine** serverseitige Sperre unter 16 durch (nur Hinweistext). Ob das
-> ausreicht bzw. wie ein Alters-Gate auszugestalten ist, muss vor Release
-> geklärt werden (siehe docs/legal/minderjaehrige-und-loeschung.md).
+Daraus ergibt sich unmittelbar, was mit deiner Meldung passiert: Veröffentlichung,
+Ablehnung oder Vorlage bei einem Menschen. Bei geringer Sicherheit, bei Verdacht
+auf Privatgrund, bei erkannten Personen und in einer Stichprobe schaut immer ein
+Mensch drauf.
 
-## 9. Web-Löschseite (Google-Play-Anforderung)
+Das ist eine automatisierte Entscheidung im Sinne von Art. 22 DSGVO. Du hast
+das Recht, dass ein Mensch sie überprüft, deinen Standpunkt darzulegen und die
+Entscheidung anzufechten: in der App in der Fallansicht über „Überprüfung
+anfordern". Das kostet nichts und hat keine Nachteile für dich.
 
-Unabhängig von der In-App-Löschung stellen wir eine öffentlich erreichbare
-Möglichkeit zur Kontolöschung bereit unter: **[LÖSCH-URL EINSETZEN]**. Dort
-können Sie die Löschung Ihres Kontos und der zugehörigen Daten beantragen bzw.
-durchführen. [Ausgestaltung – JURISTISCH/TECHNISCH PRÜFEN, siehe
-hosting-checkliste.md.]
+Wird deine Meldung abgelehnt, siehst du in der Fallansicht den Grund und den
+Hinweis, ob automatisch entschieden wurde (gespeichert in
+`reports.decision_reason` und `reports.decision_automated`). Eine Ablehnung
+führt dazu, dass es für diese Meldung keine Punkte gibt. Punkte sind kosmetisch
+und haben keinen Geldwert.
 
-## 10. Änderungen dieser Erklärung
+Auf deinem Gerät läuft zusätzlich eine kleine Vorab-Erkennung, die dir vor dem
+Absenden einen unverbindlichen Hinweis gibt. Sie entscheidet nichts, blockiert
+nichts und sendet nichts an uns.
 
-Wir passen diese Erklärung an, wenn sich die Verarbeitung ändert. Die jeweils
-aktuelle Version ist unter [DATENSCHUTZ-URL] abrufbar.
+Der Hilfe-Chat in der App ist keine KI. Er besteht aus einer festen Liste von
+Fragen mit jeweils einer festen Antwort.
 
-<!-- Entwurf, juristisch nicht geprüft, Stand 2026-08-14 -->
+[ANWALT PRÜFEN] Welcher Buchstabe des Art. 22 (2) DSGVO trägt (Vertrag,
+ausdrückliche Einwilligung, gesetzliche Erlaubnis) und ob die Ablehnung einer
+Meldung überhaupt eine „rechtliche Wirkung oder ähnlich erhebliche
+Beeinträchtigung" ist, wenn die Punkte keinen Geldwert haben.
 
-## 11. Automatisierte Entscheidungen bei der Foto-Prüfung
+## 9. Wie lange wir speichern
 
-Fotos zu gemeldetem Müll werden serverseitig automatisiert geprüft
-(Auftragsverarbeiter: **Anthropic**, siehe Abschnitt 4). Diese Prüfung
-entscheidet in vielen Fällen unmittelbar über die Sichtbarkeit deiner
-Meldung – das ist eine automatisierte Entscheidung im Sinne von Art. 22
-DSGVO.
+| Kategorie | Dauer |
+|---|---|
+| Konto, Meldungen, Fotos, Punkte, Einwilligungen | bis zur Löschung des Kontos |
+| Prüfsummen für den Missbrauchsschutz | 30 Tage |
+| Einmal-Links für die zuständige Stelle | 30 Tage ab Versand |
+| Kosten- und Sicherheitsprotokolle | bis zu 24 Monate, nach Kontolöschung ohne Personenbezug |
+| Anonymisierte öffentliche Fotos | bis zur Löschung des Kontos |
 
-**Grundlogik:** Ein KI-Modell bewertet das Foto (Müll ja/nein, Sicherheit,
-Hinweise auf Privatgrund-/Wohnkontext) und gibt eine Konfidenz (Sicherheit
-der Einschätzung) aus. Bei niedriger Konfidenz oder Verdacht auf
-Privatgrund geht die Meldung automatisch in eine manuelle Prüfung durch
-unser Team, statt automatisch veröffentlicht oder abgelehnt zu werden.
+[BETREIBER EINTRAGEN: abweichende Fristen, falls gesetzliche
+Aufbewahrungspflichten bestehen.]
 
-**Auswirkung:** Je nach Ergebnis wird deine Meldung automatisch
-veröffentlicht, automatisch abgelehnt oder zur menschlichen Prüfung
-vorgemerkt.
+## 10. Deine Rechte
 
-**Menschliche Überprüfung & Widerspruch (Art. 22 (3) DSGVO):** Du kannst bei
-jeder automatisierten Entscheidung eine menschliche Überprüfung anfordern
-und Widerspruch einlegen – kostenlos und ohne Nachteile für dich. In der
-App: Fallansicht → „Überprüfung anfordern" (siehe auch Abschnitt 7, „Ihre
-Rechte").
+Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung
+(Art. 18), Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21), Widerruf von
+Einwilligungen (Art. 7 (3)).
 
-> ⚠️ **TODO(legal):** Rechtsgrundlage der automatisierten Entscheidung (Art.
-> 22 (2) DSGVO – welcher Buchstabe greift: Vertrag, ausdrückliche
-> Einwilligung oder gesetzliche Erlaubnis?); Drittlandübermittlung an
-> Anthropic (Serverstandort, Standardvertragsklauseln?); konkrete
-> Speicherdauer des Prüfergebnisses (Konfidenzwert, Modellname/-version,
-> Zeitstempel – aktuell nicht durchgehend gespeichert, siehe
-> docs/vision.md); Umgang mit erkennbaren Dritten im Bild (Gesichter,
-> Kennzeichen) – Blurring-Zeitpunkt und -Zuverlässigkeit; ob EXIF-/GPS-Daten
-> auch in der öffentlich sichtbaren (geblurrten) Foto-Kopie entfernt werden
-> (die an Anthropic gesendete Kopie wird laut docs/vision.md serverseitig
-> neu kodiert, was Metadaten bereits entfernt – für die öffentliche Kopie
-> ist das hier nicht verifiziert); ob aus der öffentlichen (gerundeten)
-> Kartenposition auf die meldende Person rückgeschlossen werden kann;
-> Kontaktweg für Rückfragen zu automatisierten Entscheidungen.
+- **Auskunft und Übertragbarkeit:** Profil, „Meine Daten exportieren" (JSON,
+  inklusive zeitlich begrenzter Links auf die Originalfotos).
+- **Löschung:** Profil, „Konto löschen". Entfernt Fotos samt Kopien und danach
+  das Konto; per Datenbank-Kaskade auch Profil, Meldungen, Foto-Daten, Punkte,
+  Einwilligungen, Inhaltsmeldungen und Anmeldungen zu Aktionen. Lokal auf dem
+  Gerät werden dabei Offline-Queue und Install-ID gelöscht. Ohne die App:
+  [BETREIBER EINTRAGEN: Web-Lösch-URL].
+- **Widerruf:** Profil, Bereich „Datenschutz".
+- **Beschwerde:** Landesbeauftragter für den Datenschutz und die
+  Informationsfreiheit Baden-Württemberg, Lautenschlagerstraße 20,
+  70173 Stuttgart.
+
+## 11. Junge Nutzerinnen und Nutzer
+
+CLAR richtet sich ausdrücklich auch an junge Menschen. Bei der Anmeldung
+bestätigst du, dass du mindestens 16 Jahre alt bist. Wir fragen bewusst kein
+Geburtsdatum ab.
+
+In Deutschland kannst du ab 16 selbst einwilligen. Bist du jünger, brauchen wir
+die Zustimmung deiner Eltern oder Erziehungsberechtigten. Schreib uns in dem
+Fall zusammen mit ihnen an [BETREIBER EINTRAGEN: Datenschutz-E-Mail], bevor du
+ein Konto anlegst.
+
+Es gibt keine Werbung, keine Profilbildung, keine Streaks und keine
+Zufallsbelohnungen. Die Bestenliste ist von Anfang an ausgeschaltet.
+
+[ANWALT PRÜFEN] Altersgrenze 16 für Deutschland, ob eine Selbstauskunft
+genügt oder ein technisches Alters-Gate nötig ist, Ausgestaltung einer
+verifizierbaren elterlichen Einwilligung, Vorgaben JMStV und KJM, und bei
+Verfügbarkeit in den USA COPPA.
+
+## 12. Sicherheit
+
+TLS auf allen Verbindungen, verschlüsselte Sitzung auf dem Gerät, zeilenweise
+Zugriffskontrolle in der Datenbank (Row Level Security auf jeder Tabelle),
+Originalfotos in einem privaten, nicht öffentlich adressierbaren Speicher.
+
+Sicherheitslücken bitte an [BETREIBER EINTRAGEN: Sicherheits-E-Mail]. Wir
+behandeln solche Hinweise vertraulich (Prozess: `docs/ops.md`).
+
+## 13. Änderungen
+
+Wenn sich die Verarbeitung ändert, passen wir diese Erklärung an. Die aktuelle
+Fassung steht in der App und unter [BETREIBER EINTRAGEN: Datenschutz-URL].
+Welche Fassung du bestätigt hast, speichern wir mit deinen Einwilligungen
+(`consents.policy_version`).

@@ -24,9 +24,19 @@ Datenverkauf.
 | Nutzer-Inhalte (Beschreibungstext der Meldung) | Ja | Ja | Nein | App-Funktion |
 | Identifikatoren: **nur** zufällige Install-ID (serverseitig gehasht) | Ja | Nein (gehasht) | Nein | Missbrauchsschutz |
 | Nutzungsdaten (Punkte/Level, kosmetisch) | Ja | Ja | Nein | App-Funktion |
-| Diagnose/Crash | [PRÜFEN: nur falls ein Crash-SDK eingebunden wird — aktuell keins] | — | Nein | — |
+| Diagnose/Crash | **Nein** (kein Crash-SDK eingebunden) | — | Nein | — |
 
-> Hinweis: **Push-Token** nur bei Opt-in. **Präzise** Standortdaten werden
+> Hinweis: **Kein Push.** Die App bindet `expo-notifications` nicht ein und
+> fordert keine Push-Berechtigung an; „Push-Token" darf im Formular **nicht**
+> angegeben werden (Stand 2026-09-23, verifiziert in `package.json` und `src/`).
+>
+> Hinweis: **Kartenanbieter.** `react-native-maps` nutzt auf Android Google
+> Maps und auf iOS Apple Maps. Die Kartenanbieter erhalten technisch den
+> angesehenen Ausschnitt. Für Apples Formular ist das i. d. R. keine eigene
+> „Datenerhebung durch den Entwickler", für Play Data Safety ist es
+> [PRÜFEN]. In der Datenschutzerklärung sind beide benannt.
+>
+> Hinweis: **Präzise** Standortdaten werden
 > erfasst (Meldung/Fallabschluss brauchen ~100 m), aber **öffentlich nur
 > gerundet** angezeigt — im Formular als Standort „Precise" **oder** „Coarse"
 > je nach Apple-Definition einstufen (JURISTISCH PRÜFEN; Erfassung ist
@@ -48,6 +58,21 @@ Zusätzlich in Data Safety anzugeben:
 - **Nutzer kann Löschung beantragen:** Ja — **Web-Löschroute-URL angeben**
   (siehe minderjaehrige-und-loeschung.md §4).
 - **Daten werden verkauft:** Nein.
+
+## B1. Was NICHT angegeben werden darf
+
+Diese Zeilen standen früher im Entwurf oder liegen nahe, treffen aber nicht zu.
+Falsche Angaben in den Store-Formularen sind ein eigener Ablehnungsgrund.
+
+- **Push-Benachrichtigungen / Push-Token:** nicht implementiert.
+- **Diagnose- oder Absturzdaten:** kein Crash-SDK eingebunden.
+- **Werbe-IDs, Tracking, Datenverkauf:** findet nicht statt.
+- **Kontakte, Kalender, Mikrofon, Gesundheitsdaten:** keine Berechtigung, kein
+  Zugriff.
+- **Biometrische Daten:** Gesichter werden nur erkannt, um sie zu verpixeln.
+  Es entsteht kein biometrisches Template, es findet kein Abgleich und keine
+  Identifikation statt. In den Formularen daher **nicht** als biometrische
+  Datenerhebung angeben. [JURISTISCH PRÜFEN]
 
 \* „Nein" bei *geteilt* nur zutreffend, wenn Supabase/Anthropic/Resend als
 **Auftragsverarbeiter** (nicht als „Dritte" i. S. des Formulars) gewertet

@@ -14,8 +14,17 @@ App (Expo)
  │                       close-case, close-event-cases, export-my-data,
  │                       delete-account, authority-digest, confirm-case-done
  ├─ Anthropic API        Foto (verkleinert) zur Müll-/PII-Erkennung
- ├─ Expo Push (Opt-in)   Push-Token, Abschluss-Benachrichtigung
+ ├─ Kartenanbieter       Google Maps (Android) / Apple Maps (iOS):
+ │                       Kartenkacheln, implizit der angesehene Ausschnitt
  └─ E-Mail (Resend)      Behörden-Digest: anonymisierte Fallinfos
+
+NICHT aktiv: Push. Die Spalten `user_profiles.push_token` /
+`notify_case_closed` und die RPC `set_push_preferences` existieren, aber die
+App hat kein `expo-notifications`, fordert keine Push-Berechtigung an und
+setzt nie ein Token. Es fließt also nichts an Expo Push. Solange das so ist,
+darf Push in Datenschutzerklärung und Store-Angaben NICHT auftauchen (Art. 13
+DSGVO: keine Verarbeitung angeben, die nicht stattfindet). Wird Push gebaut,
+sind beide Dokumente und `store-angaben.md` zuerst zu ergänzen.
 ```
 
 ## Datenkategorien je Empfänger
@@ -25,7 +34,7 @@ App (Expo)
 | Supabase (Hosting) | E-Mail, Passwort-Hash, Meldungen (Lat/Lng, Zeit, Text), Fotos, Punkte, Consents, Gerät-/IP-HASHES (Rate-Limit), Audit | Betrieb der App | Auftragsverarbeiter [JURISTISCH PRUEFEN: Region/AVV] |
 | Anthropic (Vision) | verkleinertes Foto, KEIN Name/Account-Bezug im Prompt | Müll-Klassifikation, Gesichter/Kennzeichen-Erkennung fürs Blurring | Nur serverseitig, Budget/Kill-Switch; [JURISTISCH PRUEFEN: AVV, Drittland] |
 | Behörde (E-Mail-Digest) | Fall-Titel, Fallort, GEBLURRTES Foto, Erledigt-Link | Beseitigung | KEINE Melder-Daten, keine Originale |
-| Expo Push | Push-Token, Benachrichtigungstext | Abschluss-Info (Opt-in) | Token löschbar via RPC |
+| Google Maps (Android) / Apple Maps (iOS) | angesehener Kartenausschnitt | Kartendarstellung über `react-native-maps` | eigenständig Verantwortliche, Art. 6 (1) f DSGVO |
 | Resend (Mail) | Behörden-Adresse, Digest-Inhalt | Digest-Versand | optional; ohne Key nur Protokoll |
 
 ## Speicherung & Löschung
@@ -47,7 +56,16 @@ App (Expo)
   JWT, kein Fremdzugriff möglich).
 - **Consents**: append-only-Journal (`consents`), jede Änderung neue Zeile
   mit Zeitstempel + Policy-Version → nachweisbar. Granular:
-  `kamera`, `standort`, `behoerden_weitergabe`.
+  `kamera`, `standort`, `behoerden_weitergabe` und `altersbestaetigung`
+  (Migration 021). Die Policy-Version ist seit Migration 022 die echte
+  Fassung aus `src/constants/legal.ts`, nicht mehr ein Platzhalter.
+  Liefert `signUp()` wegen E-Mail-Bestätigung noch keine Session, wird die
+  Altersbestätigung lokal vorgemerkt und beim ersten Login nachgetragen
+  (`src/lib/consent.ts`).
+
+- **Entscheidungs-Metadaten**: `reports.decision_reason` (stabiler Code),
+  `decision_automated` und `decided_at` halten fest, warum und wie über eine
+  Meldung entschieden wurde (Art. 17 DSA, Art. 22 DSGVO).
 
 ## Was CLAR bewusst NICHT erhebt
 
@@ -55,11 +73,19 @@ Kein Klarname, kein Geburtsdatum, keine Werbe-/Hardware-IDs (nur zufällige
 Install-ID, serverseitig gehasht), kein „Verursacher"-Feld, keine
 Standort-Tracks (nur Punkt je Meldung).
 
-## Offene juristische Punkte (Platzhalter im Produkt)
+## Offene juristische Punkte
 
-1. Datenschutzerklärung + Impressum (Screens sind Entwürfe).
-2. Alters-/Einwilligungslogik Minderjährige (Art. 8 DSGVO).
+Stand nach dem Legal-Audit 2026-09-23. Erledigte Punkte sind gestrichen.
+
+1. ~~Datenschutzerklärung + Impressum (Screens sind Entwürfe)~~ — erledigt:
+   `src/app/legal/*` enthält jetzt ausformulierte Texte, zusätzlich AGB,
+   DSA-Kontaktstelle und Lizenzen.
+2. Alters-/Einwilligungslogik Minderjährige (Art. 8 DSGVO): Selbstauskunft
+   und Nachweis funktionieren, ein verifizierbares Alters-Gate gibt es
+   bewusst nicht. JURISTISCH PRUEFEN.
 3. Ob `behoerden_weitergabe`-Consent die Digest-Aufnahme technisch gaten
    muss (derzeit: Digest enthält keine personenbezogenen Daten; Consent
    wird erhoben und gespeichert, aber nicht als Filter durchgesetzt).
 4. Anonymisierte Nachweiskopie der Consents nach Konto-Löschung.
+5. Web-Löschroute und öffentliche Datenschutz-URL hosten (Betreiberaufgabe,
+   `hosting-checkliste.md`, `FRAGEN.md`).
