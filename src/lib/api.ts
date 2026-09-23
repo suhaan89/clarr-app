@@ -2,6 +2,7 @@
 // reports/points_ledger – alles laeuft serverseitig validiert.
 
 import * as FileSystem from 'expo-file-system/legacy';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { decode } from 'base64-arraybuffer';
 
 import { supabase } from '@/lib/supabase';
@@ -31,11 +32,35 @@ async function requireUserId(): Promise<string> {
   return data.user.id;
 }
 
+/**
+ * Entfernt EXIF-/GPS-Metadaten, indem das Bild lokal neu kodiert wird.
+ *
+ * Datenminimierung (Art. 5 (1) c DSGVO): Kamera- und vor allem GALERIE-Fotos
+ * tragen oft GPS-Koordinaten, Aufnahmezeit, Geraete-Seriennummer und teils den
+ * Besitzernamen im EXIF-Block. Davon braucht CLAR nichts — der Standort einer
+ * Meldung kommt bewusst aus `Location.getCurrentPositionAsync()`, nicht aus dem
+ * Bild. Ein Galerie-Foto koennte sonst einen ganz anderen Ort (z. B. die
+ * Wohnadresse) in den privaten Bucket tragen, als die Meldung angibt.
+ *
+ * `manipulateAsync` mit leerer Aktionsliste dekodiert und kodiert neu; das
+ * Ergebnis traegt keine Metadaten mehr. Schlaegt das fehl (z. B. exotisches
+ * Format), brechen wir bewusst ab, statt ein unbereinigtes Original
+ * hochzuladen — lieber eine fehlgeschlagene Meldung als GPS im Storage.
+ */
+async function stripMetadata(localUri: string): Promise<string> {
+  const cleaned = await manipulateAsync(localUri, [], {
+    compress: 0.85,
+    format: SaveFormat.JPEG,
+  });
+  return cleaned.uri;
+}
+
 /** Foto in den PRIVATEN originals-Bucket laden; Rueckgabe = storage_path. */
 export async function uploadOriginal(localUri: string): Promise<string> {
   const userId = await requireUserId();
   const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const base64 = await FileSystem.readAsStringAsync(localUri, {
+  const sanitizedUri = await stripMetadata(localUri);
+  const base64 = await FileSystem.readAsStringAsync(sanitizedUri, {
     encoding: FileSystem.EncodingType.Base64,
   });
   const { error } = await supabase.storage

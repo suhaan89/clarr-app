@@ -31,7 +31,10 @@ App (Expo)
 ## Speicherung & Löschung
 
 - **Original-Fotos**: privater Bucket `originals`, nie öffentlich, Zugriff
-  nur Eigentümer (RLS) bzw. kurzlebige Signed URLs (Export: 1 h).
+  nur Eigentümer (RLS) bzw. kurzlebige Signed URLs (Export: 1 h). Bereits
+  **vor dem Upload** werden EXIF-/GPS-Metadaten entfernt (`stripMetadata()`
+  in `src/lib/api.ts` kodiert das Bild lokal neu) — es landet also auch im
+  privaten Bucket kein Aufnahmeort und keine Geräte-Seriennummer.
 - **Veröffentlichte Fotos**: nur anonymisierte Kopien in `public-blurred`
   (EXIF gestrippt, Gesichter/Kennzeichen pixeliert — fehlbar, darum
   Review-Gate davor).
