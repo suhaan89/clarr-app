@@ -313,7 +313,21 @@ export const de = {
   'case.ai_badge_a11y': 'Diese Meldung wurde automatisiert durch eine KI ermittelt',
   'case.rejected_title': 'Meldung abgelehnt',
   'case.rejected_summary':
-    'Deine Meldung wurde nach der Foto-Prüfung abgelehnt. Einen Ein-Satz-Grund speichert das System dafür aktuell nicht.',
+    'Deine Meldung wurde nach der Foto-Prüfung abgelehnt. Zu dieser Meldung ist kein Grund hinterlegt, sie stammt aus der Zeit vor der Begründungspflicht.',
+  // Grund-Codes aus reports.decision_reason (Migration 022). Stabile Codes in
+  // der Datenbank, uebersetzter Satz hier — so bleibt die Begruendung nach
+  // Art. 17 DSA in der Sprache der Nutzerin lesbar.
+  'case.reason_not_waste': 'Auf dem Foto war kein Müll zu erkennen.',
+  'case.reason_unsafe':
+    'Das Foto enthielt Inhalte, die wir nicht zeigen dürfen (Gewalt oder Nacktheit). Es wurde nie veröffentlicht.',
+  'case.reason_private_context':
+    'Der Ort sah nach einem privaten Grundstück oder Wohnumfeld aus. Solche Meldungen stellen wir nicht öffentlich.',
+  'case.reason_low_confidence':
+    'Die automatische Prüfung war sich zu unsicher, deshalb ging die Meldung an einen Menschen.',
+  'case.reason_vision_skipped':
+    'Die automatische Prüfung war gerade nicht verfügbar, deshalb schaut ein Mensch drauf.',
+  'case.reason_moderator_rejected':
+    'Jemand aus unserem Team hat die Meldung nach Sichtung abgelehnt.',
   'case.rejected_automated': 'Die Entscheidung wurde automatisiert durch eine KI-Bildprüfung getroffen.',
   'case.rejected_human': 'Diese Entscheidung hat ein Mensch aus unserem Team getroffen.',
   'case.rejected_appeal_info':
@@ -708,7 +722,18 @@ const en: Catalog = {
   'case.ai_badge_a11y': 'This report was automatically determined by an AI',
   'case.rejected_title': 'Report rejected',
   'case.rejected_summary':
-    'Your report was rejected after the photo review. A one-line reason is not currently stored for this.',
+    'Your report was rejected after the photo review. No reason is stored for this report, it predates the statement of reasons.',
+  'case.reason_not_waste': 'No litter could be recognised in the photo.',
+  'case.reason_unsafe':
+    'The photo contained material we are not allowed to show (violence or nudity). It was never published.',
+  'case.reason_private_context':
+    'The location looked like private property or a residential setting. We do not publish those reports.',
+  'case.reason_low_confidence':
+    'The automatic review was too unsure, so the report went to a person.',
+  'case.reason_vision_skipped':
+    'The automatic review was unavailable, so a person is taking a look.',
+  'case.reason_moderator_rejected':
+    'Someone from our team rejected the report after reviewing it.',
   'case.rejected_automated': 'The decision was made automatically through an AI photo review.',
   'case.rejected_human': 'This decision was made by a person from our team.',
   'case.rejected_appeal_info':

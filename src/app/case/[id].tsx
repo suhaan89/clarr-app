@@ -16,7 +16,7 @@ import { Badge, Button, Card, Celebration, EmptyState, LoadingState, PressableSc
 import { getCaseStatus, isOpenStatus } from '@/constants/status';
 import { Spacing, Type, useThemeColors } from '@/constants/theme';
 import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -34,6 +34,23 @@ type ReportRow = {
   status: string;
   verification: string;
   ai_confidence: number | null;
+  // Seit Migration 022: stabiler Grund-Code plus die Angabe, ob ohne
+  // menschliches Zutun entschieden wurde (Art. 17 DSA, Art. 22 DSGVO).
+  // Aeltere Meldungen haben hier NULL — dann sagen wir das ehrlich.
+  decision_reason: string | null;
+  decision_automated: boolean | null;
+};
+
+// Grund-Codes aus reports.decision_reason auf i18n-Schluessel abbilden.
+// Unbekannte Codes (z. B. aus einer neueren Serverversion) fallen bewusst auf
+// den allgemeinen Text zurueck, statt einen rohen Code anzuzeigen.
+const DECISION_REASON_KEYS: Record<string, TranslationKey> = {
+  not_waste: 'case.reason_not_waste',
+  unsafe_content: 'case.reason_unsafe',
+  private_context: 'case.reason_private_context',
+  low_confidence: 'case.reason_low_confidence',
+  vision_skipped: 'case.reason_vision_skipped',
+  moderator_rejected: 'case.reason_moderator_rejected',
 };
 
 export default function CaseDetailScreen() {
@@ -73,7 +90,9 @@ export default function CaseDetailScreen() {
     if (c) {
       const { data: reportRows } = await supabase
         .from('reports')
-        .select('id, status, verification, ai_confidence, created_at')
+        .select(
+          'id, status, verification, ai_confidence, decision_reason, decision_automated, created_at'
+        )
         .eq('case_id', id)
         .order('created_at', { ascending: true });
       const ids = (reportRows ?? []).map((r) => r.id);
@@ -214,10 +233,18 @@ export default function CaseDetailScreen() {
   // ai_confidence gesetzt heisst ebenfalls, dass die KI beteiligt war – auch
   // wenn ein Mensch die Meldung danach noch abgelehnt hat. Im Zweifel wird
   // hier eher zu oft als zu selten auf die KI-Beteiligung hingewiesen.
+  // Ob automatisiert entschieden wurde, sagt seit Migration 022 der Server
+  // selbst (decision_automated). Nur wo dieser Wert fehlt (Altbestand),
+  // schliessen wir es wie bisher aus verification/ai_confidence — und dann
+  // lieber einmal zu oft auf die KI-Beteiligung hinweisen als zu selten.
   const aiInvolved =
-    primaryReport != null &&
-    (primaryReport.verification === 'ki_verifiziert' || primaryReport.ai_confidence != null);
+    primaryReport?.decision_automated ??
+    (primaryReport != null &&
+      (primaryReport.verification === 'ki_verifiziert' || primaryReport.ai_confidence != null));
   const isRejected = primaryReport?.status === 'abgelehnt';
+  const reasonKey = primaryReport?.decision_reason
+    ? DECISION_REASON_KEYS[primaryReport.decision_reason]
+    : undefined;
 
   return (
     <Animated.ScrollView
@@ -258,7 +285,7 @@ export default function CaseDetailScreen() {
             </Text>
           </View>
           <Text style={[styles.rejectedText, { color: colors.text }]} allowFontScaling>
-            {t('case.rejected_summary')}
+            {reasonKey ? t(reasonKey) : t('case.rejected_summary')}
           </Text>
           <Text style={[styles.rejectedText, { color: colors.text }]} allowFontScaling>
             {aiInvolved ? t('case.rejected_automated') : t('case.rejected_human')}
