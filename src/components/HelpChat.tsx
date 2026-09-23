@@ -82,6 +82,15 @@ export function HelpChat() {
               </PressableScale>
             </View>
 
+            {/* EU AI Act Art. 50 (1): Menschen muessen erkennen koennen, ob
+                sie mit einer KI sprechen. Clari ist KEINE KI, sieht mit
+                Maskottchen und Sprechblasen aber danach aus. Der Hinweis
+                steht deshalb dauerhaft im Kopf des Fensters, nicht im
+                Kleingedruckten und nicht erst nach einem Tipp. */}
+            <Text style={[styles.noAiNote, { color: colors.textSecondary }]} allowFontScaling>
+              {t('chat.no_ai_note')}
+            </Text>
+
             <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
               {active ? (
                 <>
@@ -171,6 +180,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   title: { fontSize: 18, fontWeight: '700', flex: 1 },
   closeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  noAiNote: { fontSize: 12, lineHeight: 17 },
   body: { gap: Spacing.two },
   bubble: { borderRadius: Radius.lg, padding: Spacing.three },
   bubbleText: { fontSize: 15, lineHeight: 21 },

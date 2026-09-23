@@ -7,14 +7,18 @@
     "icon": "./assets/images/icon.png",
     "scheme": "clarrapp",
     "userInterfaceStyle": "automatic",
+    "locales": {
+      "de": "./assets/locales/de.json",
+      "en": "./assets/locales/en.json"
+    },
     "ios": {
       "bundleIdentifier": "app.clar.mobile",
       "buildNumber": "1",
       "icon": "./assets/expo.icon",
       "infoPlist": {
-        "NSCameraUsageDescription": "CLAR nutzt die Kamera, um Fotos von gemeldetem Müll direkt vor Ort aufzunehmen.",
-        "NSPhotoLibraryUsageDescription": "CLAR braucht Zugriff auf deine Fotomediathek, damit du beim Melden ein vorhandenes Foto auswählen kannst.",
-        "NSLocationWhenInUseUsageDescription": "CLAR nutzt deinen Standort, um den ungefähren Ort einer Müllmeldung zu erfassen.",
+        "NSCameraUsageDescription": "CLAR nutzt die Kamera, damit du den gefundenen Müll direkt vor Ort fotografieren kannst. Das Foto gehört zur Meldung; veröffentlicht wird nur eine Kopie, in der Gesichter und Kennzeichen unkenntlich gemacht sind.",
+        "NSPhotoLibraryUsageDescription": "CLAR greift auf deine Fotos zu, damit du für eine Meldung ein bereits vorhandenes Bild auswählen kannst. Wir lesen nur das Bild, das du aussuchst, und entfernen vor dem Hochladen Ort und Zeit aus den Bilddaten.",
+        "NSLocationWhenInUseUsageDescription": "CLAR nutzt deinen Standort nur während du die App benutzt, um den Fundort einer Müllmeldung zu erfassen. Auf der öffentlichen Karte wird der Ort gerundet angezeigt, nicht als exakter Punkt. Es findet keine Standortverfolgung im Hintergrund statt.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {

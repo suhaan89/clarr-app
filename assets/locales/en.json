@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "CLAR uses the camera so you can photograph the litter you found, on the spot. The photo belongs to the report; only a copy with faces and number plates obscured is ever published.",
+  "NSPhotoLibraryUsageDescription": "CLAR accesses your photos so you can pick an existing picture for a report. We only read the image you choose, and we strip location and time from the image data before uploading.",
+  "NSLocationWhenInUseUsageDescription": "CLAR uses your location only while you are using the app, to record where the litter was found. The public map shows a rounded position, never an exact point. There is no background location tracking."
+}

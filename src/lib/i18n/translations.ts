@@ -372,6 +372,11 @@ export const de = {
   'chat.open_a11y': 'Hilfe von Clari öffnen',
   'chat.title': 'Frag Clari',
   'chat.intro': 'Hallo! Wobei kann ich helfen?',
+  // EU AI Act Art. 50 (1) verlangt Offenlegung, WENN ein KI-System mit
+  // Menschen interagiert. Clari ist keins — genau das muss sichtbar sein,
+  // damit niemand faelschlich eine KI (oder einen Menschen) vermutet.
+  'chat.no_ai_note':
+    'Clari ist keine KI und kein Mensch: Es gibt feste Fragen mit festen Antworten. Was du hier tippst, wird nirgendwohin gesendet.',
   'chat.close_a11y': 'Hilfe schließen',
   'chat.back': 'Zurück zu den Fragen',
   'chat.back_a11y': 'Zurück zur Fragenübersicht',
@@ -523,6 +528,10 @@ const en: Catalog = {
   'legal.german_only': 'We deliberately do not machine translate legal texts. The German version is the binding one. If something is unclear, ask us through the contact point.',
   'legal.licenses_title': 'Open source licences',
   'legal.licenses_intro': 'CLAR is built on free software. These are the packages we use directly, with their licence.',
+  // Der uebrige chat.*-Block ist historisch nur auf Deutsch gepflegt und
+  // faellt zurueck; dieser Hinweis ist rechtlich relevant und daher auch hier.
+  'chat.no_ai_note':
+    'Clari is neither an AI nor a person: fixed questions, fixed answers. Nothing you type here is sent anywhere.',
 
   'map.a11y': 'Map of verified litter reports',
   'map.loading': 'Loading map …',
