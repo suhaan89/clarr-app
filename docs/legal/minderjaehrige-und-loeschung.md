@@ -24,8 +24,17 @@ Freigabe. Dieses Dokument listet auf, was für App Store und Play Store fehlt.
   `delete-account` (JWT-basiert, nur eigenes Konto) — verifiziert.
 - **Daten-Export (in-App):** `Profil → Meine Daten exportieren` ruft
   `export-my-data` (JWT-basiert, nur eigenes Konto) — verifiziert.
-- **Datenschutz/Impressum:** bisher nur In-App-Screens (Entwurf); jetzt zusätzlich
-  hostbare Dokumente (datenschutzerklaerung.md, impressum.md).
+- **Datenschutz/Impressum:** seit dem Legal-Audit 2026-09-23 ausformulierte
+  In-App-Screens (`src/app/legal/datenschutz.tsx`, `impressum.tsx`) plus
+  Nutzungsbedingungen (`agb.tsx`), DSA-Kontaktstelle (`kontakt.tsx`) und
+  Lizenzen (`lizenzen.tsx`). Datenschutz, Nutzungsbedingungen und Impressum
+  sind jetzt auch **vor** der Registrierung vom Login-Screen aus erreichbar.
+- **Nachweis der Altersbestätigung** funktioniert seit dem Audit auch bei
+  eingeschalteter E-Mail-Bestätigung: er wird lokal vorgemerkt und beim ersten
+  Login nachgetragen (`src/lib/consent.ts`). Vorher ging er in genau dieser
+  Konfiguration verloren.
+- **Lokale Daten bei Kontolöschung:** Offline-Queue samt kopierter Fotos und
+  die Install-ID werden seit dem Audit mitgelöscht.
 
 ## 2. Apple App Store — Minderjährige
 

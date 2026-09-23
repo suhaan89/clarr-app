@@ -1,13 +1,25 @@
 <!--
-  ENTWURF — JURISTISCH PRÜFEN. Nutzungsbedingungen/EULA-Gerüst. Apple stellt
-  eine Standard-EULA bereit (nutzbar, wenn keine eigene verlinkt wird); eine
-  eigene EULA/ToS ist v. a. wegen UGC + minderjähriger Zielgruppe sinnvoll.
-  Nichts hier ist final; alle Klauseln inhaltlich prüfen lassen.
+  ÜBERHOLT seit dem Legal-Audit 2026-09-23.
+
+  Die verbindlichen Nutzungsbedingungen stehen jetzt ausformuliert in
+  `src/app/legal/agb.tsx` und sind in der App vor und nach der Registrierung
+  erreichbar. Sie erfüllen zugleich Art. 14 DSA (Moderationsregeln inkl.
+  automatisierter Mittel, in einfacher Sprache).
+
+  Diese Datei bleibt als STICHWORTLISTE für die juristische Prüfung erhalten:
+  sie sagt knapp, welche Punkte geregelt sind und wo die offenen Bewertungen
+  sitzen. Wer den Vertragstext ändern will, ändert `agb.tsx`, nicht diese
+  Datei, und erhöht POLICY_VERSION in `src/constants/legal.ts`.
+
+  Apple stellt eine Standard-EULA bereit (gilt, wenn keine eigene verlinkt
+  wird). Wegen nutzergenerierter Inhalte und minderjähriger Zielgruppe ist die
+  eigene Fassung vorzuziehen.
 -->
 
-# Nutzungsbedingungen (ToS) / EULA – CLAR (Entwurf)
+# Nutzungsbedingungen – Prüfliste zur Fassung in `src/app/legal/agb.tsx`
 
-> ⚠️ **ENTWURF – JURISTISCH PRÜFEN.**
+> ⚠️ **JURISTISCH PRÜFEN.** Der Text ist geschrieben und in Betrieb; die
+> Bestätigung der folgenden Punkte steht aus.
 
 1. **Geltungsbereich & Anbieter.** [Anbieter, siehe impressum.md]. Mit der
    Nutzung von CLAR stimmst du diesen Bedingungen zu.
@@ -41,3 +53,28 @@
 **Apple-Hinweis:** Wird keine eigene EULA hinterlegt, gilt Apples
 Standard-Lizenzvereinbarung (Apple Standard EULA). Eigene EULA nur verlinken,
 wenn geprüft.
+
+## Was die Fassung in `agb.tsx` zusätzlich regelt (Stand 2026-09-23)
+
+1. **Moderationsregeln ausformuliert** (Art. 14 DSA): welche Prüfung
+   automatisch läuft, wann ein Mensch entscheidet, dass ein Flag den Inhalt
+   sofort unsichtbar macht, dass eine Ablehnung begründet wird.
+2. **Anfechtung** einer Entscheidung mit Verweis auf „Überprüfung anfordern"
+   und auf die Kontaktstelle.
+3. **Punkte** ausdrücklich ohne Geldwert, nicht übertragbar, nicht
+   einlösbar, keine Verlosung; Galerie-Fotos ohne Punkte.
+4. **Haftung** nach dem üblichen dreistufigen Modell (Vorsatz und grobe
+   Fahrlässigkeit, Kardinalpflichten, ProdHaftG) plus Verweis auf Art. 6 und 8
+   DSA für Nutzerinhalte.
+5. **Sicherheitsregel** für das Fotografieren (kein Straßenverkehr, keine
+   Gefahrstoffe anfassen) wegen der jungen Zielgruppe.
+6. **Kündigung** beidseitig, Konto-Löschung in der App und über die Web-Route.
+
+## Offene Bewertungen
+
+- Umfang der Rechteeinräumung an den Fotos (derzeit einfaches, nicht
+  ausschließliches Nutzungsrecht für den App-Zweck).
+- Wirksamkeit gegenüber beschränkt Geschäftsfähigen (§§ 107 ff. BGB).
+- Haftungsklausel gegenüber Verbrauchern.
+- Rechtswahl und Gerichtsstand.
+- Ob eine eigene EULA gegenüber der Apple-Standard-EULA hinterlegt wird.

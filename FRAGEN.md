@@ -38,3 +38,99 @@ Geräten; das Restrisiko betrifft gerootete Geräte / unverschlüsselte Backups.
 
 **JURISTISCH/EXTERN PRÜFEN:** ob für die Zielgruppe (teils minderjährig) die
 verschlüsselte Token-Ablage verpflichtend einzustufen ist.
+
+---
+
+# Offene Fragen aus dem Legal-Compliance-Audit (2026-09-23)
+
+Diese Fragen lassen sich aus dem Repo nicht beantworten. Sie sind NICHT
+geraten worden. Alles Uebrige aus dem Audit ist umgesetzt; der Bericht steht
+in `docs/legal/audit-2026-09-23.md`.
+
+## 2. Wer ist der Verantwortliche, und unter welcher Anschrift?
+
+Impressum (§ 5 DDG) und Datenschutzerklaerung (Art. 13 (1) a DSGVO) brauchen
+Name und ladungsfaehige Anschrift. Die Screens und Dokumente sind fertig
+gebaut; die Felder sind als `[BETREIBER EINTRAGEN]` markiert.
+
+**Besonderheit:** Ist der Betreiber selbst minderjaehrig, sollte keine private
+Wohnanschrift veroeffentlicht werden. Ueblich sind ein Traegerverein, die
+Schule oder ein Dienstleister mit ladungsfaehiger Adresse. Das ist zugleich
+eine Frage der Geschaeftsfaehigkeit: ein Nutzungsvertrag mit beschraenkt
+Geschaeftsfaehigen als Anbieter ist eigenstaendig zu pruefen.
+
+**Gebraucht werden:** Name, Anschrift, vertretungsberechtigte Person,
+allgemeine Kontaktadresse, Datenschutz-Adresse, Sicherheits-Adresse,
+Melde-Adresse fuer Inhalte, Behoerden-Kontaktadresse.
+
+## 3. Gibt es unterschriebene AV-Vertraege?
+
+Fuer Supabase, Anthropic und Resend ist je ein Vertrag nach Art. 28 DSGVO
+noetig. Ob sie abgeschlossen sind, steht nirgends im Repo. Ohne sie ist jede
+Uebermittlung an diese Dienste ohne Rechtsgrundlage.
+
+## 4. In welcher Region laeuft Supabase?
+
+Entscheidet, ob ueberhaupt ein Drittlandtransfer vorliegt. Bei einer
+EU-Region entfaellt fuer Supabase die Transferfrage weitgehend; bei einer
+US-Region braucht es eine Grundlage. Die Angabe steht in `supabase/.temp/`
+nicht und ist im Dashboard nachzusehen.
+
+## 5. Gilt bei Anthropic Zero Data Retention?
+
+Relevant fuer die Speicherdauer-Angabe in der Datenschutzerklaerung: wie
+lange liegt das uebermittelte Foto beim Auftragsverarbeiter? Ohne Zusage ist
+von der Standardaufbewahrung auszugehen, und die gehoert dann in Abschnitt 9.
+
+## 6. Wird CLAR kommerziell betrieben?
+
+Haengt an mehreren Stellen:
+
+* **Cyber Resilience Act:** greift nur bei Bereitstellung im Rahmen einer
+  Geschaeftstaetigkeit.
+* **DSA Art. 19:** die Ausnahme von Art. 20 bis 28 gilt fuer Kleinst- und
+  Kleinunternehmen. Ein nicht kommerzielles Projekt faellt ohnehin anders.
+* **BFSG:** Kleinstunternehmerausnahme, siehe `bfsg-einordnung.md`.
+* **§ 5 DDG:** die Anbieterkennzeichnung trifft geschaeftsmaessige Angebote.
+* **KI-Verordnung Art. 3 Nr. 4:** Betreiberpflichten gelten bei Nutzung im
+  Rahmen einer beruflichen Taetigkeit.
+
+## 7. Unter welcher Domain werden Datenschutz-URL und Web-Loeschroute gehostet?
+
+Beide Stores verlangen eine oeffentlich erreichbare Datenschutz-URL, Google
+Play zusaetzlich eine Web-Loeschroute ohne App. Die Inhalte sind fertig
+(`docs/legal/datenschutzerklaerung.md`, `hosting-checkliste.md`), die Domain
+und die Entscheidung zwischen Web-Self-Service und Loeschformular fehlen.
+
+## 8. Wer ist die zustaendige Stelle fuer den Behoerden-Digest?
+
+`system_settings.authority_digest_email` ist leer, solange nichts eingetragen
+ist; dann laeuft der Digest gar nicht. Wenn er laeuft, geht der exakte
+Fundort hinaus. Das ist gewollt, sollte aber mit der Stelle abgestimmt sein.
+
+## 9. Ist eine Datenschutzbeauftragte oder ein Datenschutzbeauftragter noetig?
+
+§ 38 BDSG knuepft an die Zahl der staendig mit Verarbeitung beschaeftigten
+Personen an; unabhaengig davon kann Art. 37 (1) b DSGVO greifen, wenn die
+Kerntaetigkeit in umfangreicher regelmaessiger Beobachtung besteht. Fuer CLAR
+ist das diskutabel, weil Standortdaten systematisch verarbeitet werden.
+
+## 10. Wie soll die elterliche Einwilligung konkret ablaufen?
+
+Umgesetzt ist: Altersbestaetigung ab 16 mit Nachweis, Hinweistext mit
+Kontaktweg fuer Erziehungsberechtigte, keine Werbung, kein Profiling, sichere
+Voreinstellungen. NICHT umgesetzt ist ein verifizierbares Alters-Gate.
+
+Bewusste Entscheidung im Audit: ein Gate, das ein Ausweisdokument oder eine
+Zahlungskarte verlangt, wuerde deutlich mehr Daten von Minderjaehrigen
+erheben als der jetzige Zustand und waere damit die datenschutzUNfreundlichere
+Variante. Ob die Selbstauskunft genuegt, ist zu klaeren. Wenn nicht, ist die
+Ausgestaltung vorzugeben, bevor ein Gate gebaut wird.
+
+## 11. Anonymisierte Nachweiskopie der Einwilligungen?
+
+`consents` haengt per CASCADE am Konto: mit der Loeschung verschwindet auch
+der Nachweis, dass eingewilligt wurde. Das ist datenschutzfreundlich, koennte
+aber der Rechenschaftspflicht aus Art. 5 (2) DSGVO zuwiderlaufen. Bisher
+bewusst nicht geaendert, weil das Aufbewahren nach einer Loeschung die
+schwerer zu rechtfertigende Richtung ist.

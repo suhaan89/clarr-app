@@ -16,7 +16,8 @@ Login, ohne App). Google Play verlangt zusätzlich eine **Web-Löschroute**.
 | Impressum (öffentlich) | `docs/legal/impressum.md` | Ja (DE, § 5 DDG) |
 | Web-Löschroute | Option A/B unten | **Ja** (Google Play) |
 | Support-Seite/-E-Mail | [anlegen] | Ja (Store-Metadaten) |
-| ToS/EULA (optional öffentlich) | `docs/legal/tos-eula.md` | empfohlen |
+| Nutzungsbedingungen (öffentlich) | `src/app/legal/agb.tsx` | empfohlen (Art. 14 DSA) |
+| Inhalte melden und Kontaktstelle (öffentlich) | `src/app/legal/kontakt.tsx` | **Ja** (Art. 11, 12, 16 DSA: muss auch ohne App und ohne Konto erreichbar sein) |
 
 ## 2. Hosting-Optionen (eine wählen)
 
@@ -49,6 +50,12 @@ Login, ohne App). Google Play verlangt zusätzlich eine **Web-Löschroute**.
 - [ ] **In-App** `datenschutz.tsx`/`impressum.tsx` → geprüften Text übernehmen
       und ggf. auf die öffentliche URL verweisen.
 - [ ] **Store-Metadaten** → Support-URL + (optional) Marketing-URL.
+- [ ] **Alle `[BETREIBER EINTRAGEN]`-Felder** in `src/app/legal/*` und
+      `docs/legal/*` füllen. Sie sind absichtlich als Feld stehen geblieben,
+      nicht geraten. Liste der benötigten Angaben: `FRAGEN.md` Abschnitt 2.
+- [ ] **`POLICY_VERSION`** in `src/constants/legal.ts` erhöhen, sobald der
+      Text nach der juristischen Prüfung final ist, und den Default von
+      `consents.policy_version` in einer neuen Migration mitziehen.
 
 ## 5. Prüfen vor Einreichung
 
