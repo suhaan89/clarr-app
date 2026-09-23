@@ -37,6 +37,7 @@ import { Radius, Spacing, Type, useThemeColors } from '@/constants/theme';
 import { computeAchievements, earnedCount } from '@/lib/achievements';
 import { callFunction } from '@/lib/api';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
+import { clearLocalReportData } from '@/lib/offline-queue';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { TOUR_IDS, useResetAllTours, useTour } from '@/lib/tour';
@@ -503,6 +504,10 @@ export default function ProfilScreen() {
                     await callFunction('delete-account', {
                       confirm: 'KONTO ENDGUELTIG LOESCHEN',
                     });
+                    // Der Server ist abgeraeumt; jetzt auch das Geraet.
+                    // Ohne das blieben noch nicht gesendete Meldungen samt
+                    // Fotos und die Install-ID lokal liegen (Art. 17 DSGVO).
+                    await clearLocalReportData();
                     await supabase.auth.signOut();
                   } catch {
                     Alert.alert(t('profil.error_generic'), t('profil.delete_error'));

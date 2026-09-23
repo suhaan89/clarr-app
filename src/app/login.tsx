@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Input, LanguagePicker } from '@/components';
 import { DisplayFont, Radius, Spacing, useThemeColors } from '@/constants/theme';
+import { rememberAgeConfirmation } from '@/lib/consent';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -68,15 +69,19 @@ export default function LoginScreen() {
     // (Anti-Enumeration). Supabase sendet dann keine zweite Mail.
     setMessage({ text: t('login.signup_sent'), kind: 'info' });
 
-    // Altersbestaetigung nachweisbar speichern (Migration 021). Best effort:
-    // signUp() liefert bei neuer Adresse sofort eine Session (auth.uid()
-    // ist dann gesetzt); bei bereits registrierter Adresse (Anti-Enumeration-
-    // Zweig) gibt es keine neue Session – dann gibt es nichts zu speichern.
+    // Altersbestaetigung nachweisbar speichern (Migration 021). signUp()
+    // liefert nur dann sofort eine Session, wenn die E-Mail-Bestaetigung aus
+    // ist. Ist sie an – der sichere Normalfall – gibt es hier noch kein
+    // auth.uid(); dann wird die Bestaetigung lokal vorgemerkt und beim ersten
+    // Login nachgetragen (src/lib/consent.ts). Frueher ging der Nachweis in
+    // genau dieser Konstellation verloren.
     if (data?.session) {
       await supabase.rpc('record_consent', {
         p_consent_key: 'altersbestaetigung',
         p_granted: true,
       });
+    } else {
+      await rememberAgeConfirmation();
     }
   }
 

@@ -47,7 +47,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: corsHeaders });
     }
 
-    const [profile, reports, photos, ledger, consents, flags, signups, auditLog, visionUsage] = await Promise.all([
+    const [
+      profile,
+      reports,
+      photos,
+      ledger,
+      consents,
+      flags,
+      signups,
+      auditLog,
+      visionUsage,
+      ownEvents,
+      rateLimits,
+    ] = await Promise.all([
       admin.from("user_profiles").select("*").eq("id", uid).maybeSingle(),
       admin.from("reports").select("*").eq("user_id", uid),
       admin.from("report_photos").select("*").eq("user_id", uid),
@@ -63,6 +75,12 @@ Deno.serve(async (req) => {
       // KI-Kostenerfassung (Paket 4) — enthaelt keine Bildinhalte, nur
       // Modell/Kosten/Zeitpunkt je eigenem Report.
       admin.from("vision_usage").select("*").eq("user_id", uid),
+      // Selbst angelegte Cleanup-Aktionen: bisher fehlten sie im Export,
+      // obwohl sie ueber created_by personenbezogen sind (Art. 15 DSGVO).
+      admin.from("cleanup_events").select("*").eq("created_by", uid),
+      // Missbrauchsschutz-Zeilen. Sie enthalten nur Hashes, sind aber ueber
+      // user_id dem Konto zugeordnet und damit auskunftspflichtig.
+      admin.from("rate_limit_events").select("*").eq("user_id", uid),
     ]);
 
     // Original-Fotos: kurzlebige Signed URLs (1 h) auf den privaten Bucket.
@@ -81,7 +99,7 @@ Deno.serve(async (req) => {
       action: "data_export",
       entity_type: "user",
       // Keine Inhalte im Audit — nur DASS exportiert wurde.
-      details: { tables: 9 },
+      details: { tables: 11 },
     });
 
     return new Response(
@@ -98,10 +116,15 @@ Deno.serve(async (req) => {
         event_signups: signups.data,
         audit_log: auditLog.data,
         vision_usage: visionUsage.data,
+        cleanup_events_created: ownEvents.data,
+        rate_limit_events: rateLimits.data,
         hinweis:
           "Signed URLs sind 1 Stunde gueltig. Veroeffentlichte Fotos existieren zusaetzlich anonymisiert (geblurrt). " +
           "audit_log enthaelt nur Eintraege, in denen dieses Konto selbst gehandelt hat (actor_user_id) — " +
-          "nicht jede Zeile, in der die Konto-ID irgendwo als Referenz (z. B. entity_id) vorkommt.",
+          "nicht jede Zeile, in der die Konto-ID irgendwo als Referenz (z. B. entity_id) vorkommt. " +
+          "rate_limit_events enthaelt ausschliesslich Pruefsummen (SHA-256) von Geraet und IP, nie die Werte selbst. " +
+          "Die Anmeldedaten selbst (E-Mail, Zeitpunkt der Registrierung) stehen unter 'account'; " +
+          "das Passwort liegt nur als nicht umkehrbarer Hash bei Supabase und ist deshalb nicht exportierbar.",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

@@ -39,6 +39,28 @@ export async function getDeviceId(): Promise<string> {
   return id;
 }
 
+/**
+ * Loescht alle lokal gequeuten Meldungen samt kopierter Fotos und die
+ * zufaellige Install-ID.
+ *
+ * Gehoert zur Konto-Loeschung (Art. 17 DSGVO): `delete-account` raeumt den
+ * Server ab, aber noch nicht gesendete Meldungen mit Fotos und die Install-ID
+ * lagen danach weiter auf dem Geraet. Wer sein Konto loescht, erwartet, dass
+ * auch das weg ist.
+ */
+export async function clearLocalReportData(): Promise<void> {
+  try {
+    await AsyncStorage.multiRemove([QUEUE_KEY, DEVICE_ID_KEY]);
+  } catch {
+    // Speicherfehler duerfen die Loeschung nicht aufhalten.
+  }
+  try {
+    await FileSystem.deleteAsync(QUEUE_PHOTOS_DIR, { idempotent: true });
+  } catch {
+    // Verzeichnis existierte nicht oder ist bereits weg.
+  }
+}
+
 export async function readQueue(): Promise<PendingReport[]> {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);

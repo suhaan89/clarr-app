@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { flushPendingConsents } from '@/lib/consent';
 import { supabase } from '@/lib/supabase';
 
 type SessionState = {
@@ -16,9 +17,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setState({ session: data.session, loading: false });
+      // Bei E-Mail-Bestaetigung existiert direkt nach signUp() noch keine
+      // Session; die Altersbestaetigung wird deshalb hier nachgetragen,
+      // sobald es eine gibt (Nachweis nach Art. 7 (1) DSGVO).
+      if (data.session) flushPendingConsents();
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setState({ session, loading: false });
+      if (session) flushPendingConsents();
     });
     return () => sub.subscription.unsubscribe();
   }, []);

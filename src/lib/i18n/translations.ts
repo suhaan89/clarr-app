@@ -84,7 +84,7 @@ export const de = {
   'login.age_confirm': 'Ich bin 16 Jahre oder älter.',
   'login.age_confirm_a11y': 'Bestätigen: Ich bin 16 Jahre oder älter',
   'login.age_confirm_hint':
-    'Bist du jünger als 16? Dann brauchst du vorab die Einwilligung eines Erziehungsberechtigten.',
+    'Bist du jünger als 16? Dann brauchst du vorab die Einwilligung deiner Eltern oder Erziehungsberechtigten. Schreibt uns zusammen über die Kontaktstelle, bevor du ein Konto anlegst.',
   'login.wait': 'Bitte warten',
   'login.language_a11y': 'Sprache ändern',
   // Rechts-Links VOR der Registrierung (Art. 13 DSGVO: informieren, bevor
@@ -520,6 +520,10 @@ const en: Catalog = {
   'login.wait': 'Please wait',
   'login.language_a11y': 'Change language',
   'login.legal_intro': 'By signing up you agree to the terms of use. How we handle your data is explained in the privacy policy.',
+  'login.age_confirm': 'I am 16 years old or older.',
+  'login.age_confirm_a11y': 'Confirm: I am 16 years old or older',
+  'login.age_confirm_hint':
+    'Younger than 16? Then you need your parents or guardians to agree first. Write to us together through the contact point before you create an account.',
   'login.legal_privacy': 'Privacy',
   'login.legal_terms': 'Terms of use',
   'login.legal_imprint': 'Legal notice',
