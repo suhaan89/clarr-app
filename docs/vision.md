@@ -60,3 +60,46 @@ Metadaten aus dem API-Payload.
 Die alte Funktion `verify-waste` wird vom Client nicht mehr aufgerufen und
 kann nach der Umstellung des DEV-Projekts geloescht werden (nicht Teil der
 additiven Pakete).
+
+## Rechtlicher Kontext: DSGVO Art. 22 statt AI Act Art. 50 (Zukunfts-Checkliste)
+
+Der EU AI Act Art. 50 wird fuer diese Pipeline oft faelschlich als
+einschlaegig angenommen. Er passt hier NICHT:
+
+* Art. 50 (1) betrifft Chatbots (Offenlegung, dass man mit einer KI
+  interagiert) — `HelpChat` ist regelbasiert, keine KI, siehe
+  `src/components/HelpChat.tsx`.
+* Art. 50 (2)/(4) betreffen KI-generierte Inhalte (Deepfake-/synthetische-
+  Medien-Kennzeichnung) — CLAR generiert keine Inhalte, die Vision-Pipeline
+  klassifiziert nur.
+
+Tatsaechlich einschlaegig sind stattdessen:
+
+* **Art. 22 DSGVO** — automatisierte Einzelfallentscheidung: die Pipeline
+  entscheidet ohne menschliches Zutun ueber Sichtbarkeit (`veroeffentlicht`
+  vs. `abgelehnt`), sobald `apply_vision_result()` den Outcome `ok`,
+  `not_waste` oder `unsafe` verbucht.
+* **Art. 17 DSA** — Begruendungspflicht bei Plattform-Entscheidungen
+  (Ablehnung/Sichtbarkeitseinschraenkung) inkl. Hinweis auf den Einsatz
+  automatisierter Mittel.
+
+Das gilt nicht nur fuer diese Pipeline, sondern fuer JEDES kuenftige
+Feature, bei dem ein KI-Output automatisch ueber Sichtbarkeit, Sperrung,
+Punkte oder sonstige Vorteile entscheidet (nicht nur beraet). Vor dem Bau
+eines solchen Features:
+
+**Selbstpruef-Fragen**
+
+1. Entscheidet das Feature, oder beraet es nur (wie `src/lib/vision`, das
+   nie blockiert)? Nur Ersteres loest Art. 22/Art. 17 aus.
+2. Sind Minderjaehrige betroffen (CLARs Zielgruppe ist es teils)?
+3. Welche Daten verlassen das Geraet, an wen, in welches Land?
+4. Gibt es einen menschlichen Ueberpruefungs-/Widerspruchsweg (Art. 22 (3))?
+5. Ist die Entscheidung nachvollziehbar (Modell, Version, Konfidenz,
+   Zeitstempel gespeichert — siehe offene TODOs in
+   `docs/legal/datenschutzerklaerung.md`, Abschnitt 11)?
+6. Ist die KI-Beteiligung auf den ersten Blick erkennbar (kein verstecktes
+   Kleingedrucktes)?
+7. Wird eine Datenschutz-Folgenabschaetzung (DSFA, Art. 35 DSGVO) noetig
+   (automatisierte Entscheidung mit rechtlicher/aehnlich erheblicher
+   Wirkung + teils minderjaehrige Betroffene sprechen dafuer)?

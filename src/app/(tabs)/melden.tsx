@@ -211,6 +211,23 @@ export default function MeldenScreen() {
             {t('report.privacy_note')}
           </Text>
         </View>
+        {/* Staendig sichtbarer Hinweis zur automatisierten Foto-Pruefung
+            (Art. 13 (2) (f) / Art. 22 (3) DSGVO, Art. 17 DSA) – bewusst ohne
+            Klapp-Panel, Info-Icon oder Zustimm-Haekchen, da hier keine
+            Einwilligung eingeholt wird, sondern informiert wird. */}
+        <Card style={{ backgroundColor: colors.backgroundElement }}>
+          <View style={styles.visionRow}>
+            <Ionicons name="flash-outline" size={18} color={colors.textSecondary} />
+            <View style={styles.visionText}>
+              <Text style={[styles.visionTitle, { color: colors.text }]} allowFontScaling>
+                {t('report.ai_review_title')}
+              </Text>
+              <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
+                {t('report.ai_review_body')}
+              </Text>
+            </View>
+          </View>
+        </Card>
         {busy ? (
           <ActivityIndicator color={colors.primary} accessibilityLabel={t('report.sending')} />
         ) : (
@@ -252,9 +269,10 @@ export default function MeldenScreen() {
 }
 
 /**
- * Advisory-Hinweis der On-Device-Erkennung. Rein informativ: er zeigt „Müll
- * erkannt" / „kein Müll" / „unsicher" mit Confidence, blockiert die Meldung
- * aber nie. Fehlt das Modell, erscheint ein dezenter „nicht verfügbar"-Hinweis.
+ * Advisory-Hinweis der On-Device-Erkennung. Rein informativ: er zeigt „könnte
+ * Müll sein" / „wahrscheinlich kein Müll" / „unsicher" mit Confidence,
+ * blockiert die Meldung aber nie. Fehlt das Modell, erscheint ein dezenter
+ * „nicht verfügbar"-Hinweis.
  */
 function VisionAdvisory({ status, result }: { status: VisionStatus; result: VisionResult | null }) {
   const colors = useThemeColors();

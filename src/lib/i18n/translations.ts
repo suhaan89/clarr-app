@@ -139,12 +139,17 @@ export const de = {
   'report.new_a11y': 'Weitere Meldung erfassen',
   // On-Device-Bilderkennung (Advisory, blockiert nie)
   'report.vision_analyzing': 'Analysiere Foto …',
-  'report.vision_trash': 'Müll erkannt',
-  'report.vision_no_trash': 'Kein Müll erkannt',
+  'report.vision_trash': 'Könnte Müll sein',
+  'report.vision_no_trash': 'Wahrscheinlich kein Müll',
   'report.vision_uncertain': 'Unsicher',
   'report.vision_confidence': 'Sicherheit {percent} %',
   'report.vision_advisory_note': 'Nur ein Hinweis – du kannst trotzdem melden.',
   'report.vision_unavailable': 'Automatische Analyse gerade nicht verfügbar.',
+
+  // Hinweis zur automatisierten Foto-Pruefung (staendig sichtbar vor dem Absenden)
+  'report.ai_review_title': 'Automatische Foto-Prüfung',
+  'report.ai_review_body':
+    'Dieses Foto wird automatisch per KI geprüft. Ist sich die KI nicht sicher, schaut zusätzlich ein Mensch aus unserem Team drauf. Das Ergebnis kann eine automatische Veröffentlichung oder Ablehnung sein. Bei einer Ablehnung kannst du in der Fallansicht Widerspruch einlegen.',
 
   // Aktionen (Events)
   'events.empty_title': 'Noch nichts geplant',
@@ -281,6 +286,20 @@ export const de = {
   'case.flag_ok_title': 'Danke!',
   'case.flag_ok_body': 'Die Meldung ist jetzt unsichtbar, bis unser Team sie geprüft hat.',
   'case.flag_err_body': 'Das hat leider nicht geklappt. Bitte versuche es erneut.',
+
+  // Automatisierte Entscheidungen: Transparenz + Widerspruch (Art. 22 DSGVO, Art. 17 DSA)
+  'case.ai_badge': 'Automatisiert durch KI ermittelt',
+  'case.ai_badge_a11y': 'Diese Meldung wurde automatisiert durch eine KI ermittelt',
+  'case.rejected_title': 'Meldung abgelehnt',
+  'case.rejected_summary':
+    'Deine Meldung wurde nach der Foto-Prüfung abgelehnt. Einen Ein-Satz-Grund speichert das System dafür aktuell nicht.',
+  'case.rejected_automated': 'Die Entscheidung wurde automatisiert durch eine KI-Bildprüfung getroffen.',
+  'case.rejected_human': 'Diese Entscheidung hat ein Mensch aus unserem Team getroffen.',
+  'case.rejected_appeal_info':
+    'Du kannst eine erneute, menschliche Überprüfung anfordern – das ist kostenlos und hat keine Nachteile für dich.',
+  'case.rejected_appeal_button': 'Überprüfung anfordern',
+  'case.rejected_appeal_a11y': 'Menschliche Überprüfung der Ablehnung anfordern',
+  'case.rejected_appeal_ok_body': 'Wir haben deine Anfrage erhalten. Jemand aus unserem Team schaut sich das an.',
 
   // Sprachwahl
   'language.title': 'Sprache wählen',
@@ -506,12 +525,16 @@ const en: Catalog = {
   'report.new': 'New report',
   'report.new_a11y': 'Create another report',
   'report.vision_analyzing': 'Analysing photo …',
-  'report.vision_trash': 'Litter detected',
-  'report.vision_no_trash': 'No litter detected',
+  'report.vision_trash': 'Might be litter',
+  'report.vision_no_trash': 'Probably not litter',
   'report.vision_uncertain': 'Not sure',
   'report.vision_confidence': '{percent}% confidence',
   'report.vision_advisory_note': 'Just a hint – you can still report.',
   'report.vision_unavailable': 'Automatic analysis is currently unavailable.',
+
+  'report.ai_review_title': 'Automatic photo review',
+  'report.ai_review_body':
+    'This photo is automatically reviewed by AI. If the AI is unsure, someone from our team also takes a look. The result can be an automatic publication or rejection. If it is rejected, you can raise an objection in the case view.',
 
   'events.empty_title': 'Nothing planned yet',
   'events.empty_body': 'No cleanup events are planned right now. Check back soon!',
@@ -641,6 +664,19 @@ const en: Catalog = {
   'case.flag_ok_title': 'Thank you!',
   'case.flag_ok_body': 'The report is now hidden until our team has reviewed it.',
   'case.flag_err_body': 'That unfortunately did not work. Please try again.',
+
+  'case.ai_badge': 'Automatically determined by AI',
+  'case.ai_badge_a11y': 'This report was automatically determined by an AI',
+  'case.rejected_title': 'Report rejected',
+  'case.rejected_summary':
+    'Your report was rejected after the photo review. A one-line reason is not currently stored for this.',
+  'case.rejected_automated': 'The decision was made automatically through an AI photo review.',
+  'case.rejected_human': 'This decision was made by a person from our team.',
+  'case.rejected_appeal_info':
+    'You can request a new, human review – it is free and has no downsides for you.',
+  'case.rejected_appeal_button': 'Request review',
+  'case.rejected_appeal_a11y': 'Request a human review of the rejection',
+  'case.rejected_appeal_ok_body': 'We received your request. Someone from our team will take a look.',
 
   'language.title': 'Choose language',
   'language.close': 'Close',

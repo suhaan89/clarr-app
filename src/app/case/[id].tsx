@@ -29,6 +29,13 @@ type CaseRow = {
 
 type PhotoRow = { id: string; blurred_path: string | null; report_id: string };
 
+type ReportRow = {
+  id: string;
+  status: string;
+  verification: string;
+  ai_confidence: number | null;
+};
+
 export default function CaseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useThemeColors();
@@ -41,6 +48,10 @@ export default function CaseDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
   const [reportIds, setReportIds] = useState<string[]>([]);
+  // Der urspruengliche Report des Falls (aeltester) – traegt KI-Verdikt und
+  // Status fuer die Transparenz-/Widerspruchs-Anzeige (Automatisierte
+  // Entscheidungen, Art. 22 DSGVO / Art. 17 DSA).
+  const [primaryReport, setPrimaryReport] = useState<ReportRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   // Sanfter Fade/Scale-Uebergang, sobald der Fall geladen ist (statt eines
@@ -60,9 +71,14 @@ export default function CaseDetailScreen() {
       .maybeSingle();
     setCaseRow(c as CaseRow | null);
     if (c) {
-      const { data: reports } = await supabase.from('reports').select('id').eq('case_id', id);
-      const ids = (reports ?? []).map((r) => r.id);
+      const { data: reportRows } = await supabase
+        .from('reports')
+        .select('id, status, verification, ai_confidence, created_at')
+        .eq('case_id', id)
+        .order('created_at', { ascending: true });
+      const ids = (reportRows ?? []).map((r) => r.id);
       setReportIds(ids);
+      setPrimaryReport((reportRows as ReportRow[] | null)?.[0] ?? null);
       if (ids.length > 0) {
         // Anzeige NUR aus public-blurred (approved + blurred_path).
         const { data: ph } = await supabase
@@ -115,6 +131,26 @@ export default function CaseDetailScreen() {
     Alert.alert(
       error ? t('profil.error_generic') : t('case.flag_ok_title'),
       error ? t('case.flag_err_body') : t('case.flag_ok_body')
+    );
+    load();
+  }
+
+  // Widerspruch gegen eine automatisierte Ablehnung (Art. 22 (3) DSGVO,
+  // Art. 17 DSA): nutzt bewusst denselben Mechanismus wie das Flaggen
+  // (moderation_flags -> review_queue) statt eines neuen Kanals. `note`
+  // markiert den Grund fuer die Moderation, ohne den `reason`-Enum
+  // (flag_reason) zu erweitern.
+  async function requestAppeal() {
+    if (!session || reportIds.length === 0) return;
+    const { error } = await supabase.from('moderation_flags').insert({
+      user_id: session.user.id,
+      report_id: reportIds[0],
+      reason: 'sonstiges',
+      note: 'ki_ablehnung_widerspruch',
+    });
+    Alert.alert(
+      error ? t('profil.error_generic') : t('case.flag_ok_title'),
+      error ? t('case.flag_err_body') : t('case.rejected_appeal_ok_body')
     );
     load();
   }
@@ -173,6 +209,15 @@ export default function CaseDetailScreen() {
 
   const open = isOpenStatus(caseRow.status);
   const status = getCaseStatus(caseRow.status, t);
+  // Automatisierte Entscheidung erkennbar machen (Art. 13 (2) (f) DSGVO):
+  // verification 'ki_verifiziert' ist IMMER automatisiert (apply_vision_result).
+  // ai_confidence gesetzt heisst ebenfalls, dass die KI beteiligt war – auch
+  // wenn ein Mensch die Meldung danach noch abgelehnt hat. Im Zweifel wird
+  // hier eher zu oft als zu selten auf die KI-Beteiligung hingewiesen.
+  const aiInvolved =
+    primaryReport != null &&
+    (primaryReport.verification === 'ki_verifiziert' || primaryReport.ai_confidence != null);
+  const isRejected = primaryReport?.status === 'abgelehnt';
 
   return (
     <Animated.ScrollView
@@ -192,6 +237,44 @@ export default function CaseDetailScreen() {
           })}
         </Text>
       </View>
+
+      {aiInvolved && (
+        <View
+          style={styles.aiBadgeRow}
+          accessibilityLabel={t('case.ai_badge_a11y')}>
+          <Ionicons name="flash-outline" size={14} color={colors.textSecondary} />
+          <Text style={[styles.aiBadgeLabel, { color: colors.textSecondary }]} allowFontScaling>
+            {t('case.ai_badge')}
+          </Text>
+        </View>
+      )}
+
+      {isRejected && (
+        <Card style={{ backgroundColor: colors.dangerSoft, gap: Spacing.two }}>
+          <View style={styles.rejectedHead}>
+            <Ionicons name="close-circle-outline" size={20} color={colors.danger} />
+            <Text style={[styles.rejectedTitle, { color: colors.danger }]} allowFontScaling>
+              {t('case.rejected_title')}
+            </Text>
+          </View>
+          <Text style={[styles.rejectedText, { color: colors.text }]} allowFontScaling>
+            {t('case.rejected_summary')}
+          </Text>
+          <Text style={[styles.rejectedText, { color: colors.text }]} allowFontScaling>
+            {aiInvolved ? t('case.rejected_automated') : t('case.rejected_human')}
+          </Text>
+          <Text style={[styles.rejectedText, { color: colors.text }]} allowFontScaling>
+            {t('case.rejected_appeal_info')}
+          </Text>
+          <Button
+            label={t('case.rejected_appeal_button')}
+            accessibilityLabel={t('case.rejected_appeal_a11y')}
+            onPress={requestAppeal}
+            variant="ghost"
+            icon="people-outline"
+          />
+        </Card>
+      )}
 
       {photos.map((p) => (
         <Card key={p.id} padded={false}>
@@ -260,6 +343,11 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   closeAction: { marginTop: Spacing.two },
+  aiBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.oneHalf },
+  aiBadgeLabel: { fontSize: 12 },
+  rejectedHead: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  rejectedTitle: { ...Type.heading },
+  rejectedText: { fontSize: 14, lineHeight: 20 },
   flagButton: {
     minHeight: 44,
     flexDirection: 'row',

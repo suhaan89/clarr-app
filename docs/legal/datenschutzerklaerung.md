@@ -134,3 +134,44 @@ hosting-checkliste.md.]
 
 Wir passen diese Erklärung an, wenn sich die Verarbeitung ändert. Die jeweils
 aktuelle Version ist unter [DATENSCHUTZ-URL] abrufbar.
+
+<!-- Entwurf, juristisch nicht geprüft, Stand 2026-08-14 -->
+
+## 11. Automatisierte Entscheidungen bei der Foto-Prüfung
+
+Fotos zu gemeldetem Müll werden serverseitig automatisiert geprüft
+(Auftragsverarbeiter: **Anthropic**, siehe Abschnitt 4). Diese Prüfung
+entscheidet in vielen Fällen unmittelbar über die Sichtbarkeit deiner
+Meldung – das ist eine automatisierte Entscheidung im Sinne von Art. 22
+DSGVO.
+
+**Grundlogik:** Ein KI-Modell bewertet das Foto (Müll ja/nein, Sicherheit,
+Hinweise auf Privatgrund-/Wohnkontext) und gibt eine Konfidenz (Sicherheit
+der Einschätzung) aus. Bei niedriger Konfidenz oder Verdacht auf
+Privatgrund geht die Meldung automatisch in eine manuelle Prüfung durch
+unser Team, statt automatisch veröffentlicht oder abgelehnt zu werden.
+
+**Auswirkung:** Je nach Ergebnis wird deine Meldung automatisch
+veröffentlicht, automatisch abgelehnt oder zur menschlichen Prüfung
+vorgemerkt.
+
+**Menschliche Überprüfung & Widerspruch (Art. 22 (3) DSGVO):** Du kannst bei
+jeder automatisierten Entscheidung eine menschliche Überprüfung anfordern
+und Widerspruch einlegen – kostenlos und ohne Nachteile für dich. In der
+App: Fallansicht → „Überprüfung anfordern" (siehe auch Abschnitt 7, „Ihre
+Rechte").
+
+> ⚠️ **TODO(legal):** Rechtsgrundlage der automatisierten Entscheidung (Art.
+> 22 (2) DSGVO – welcher Buchstabe greift: Vertrag, ausdrückliche
+> Einwilligung oder gesetzliche Erlaubnis?); Drittlandübermittlung an
+> Anthropic (Serverstandort, Standardvertragsklauseln?); konkrete
+> Speicherdauer des Prüfergebnisses (Konfidenzwert, Modellname/-version,
+> Zeitstempel – aktuell nicht durchgehend gespeichert, siehe
+> docs/vision.md); Umgang mit erkennbaren Dritten im Bild (Gesichter,
+> Kennzeichen) – Blurring-Zeitpunkt und -Zuverlässigkeit; ob EXIF-/GPS-Daten
+> auch in der öffentlich sichtbaren (geblurrten) Foto-Kopie entfernt werden
+> (die an Anthropic gesendete Kopie wird laut docs/vision.md serverseitig
+> neu kodiert, was Metadaten bereits entfernt – für die öffentliche Kopie
+> ist das hier nicht verifiziert); ob aus der öffentlichen (gerundeten)
+> Kartenposition auf die meldende Person rückgeschlossen werden kann;
+> Kontaktweg für Rückfragen zu automatisierten Entscheidungen.
