@@ -66,3 +66,72 @@ supabase secrets set ANTHROPIC_API_KEY=... RESEND_API_KEY=... DIGEST_FROM_EMAIL=
 - service_role-Key im Repo, im Client oder in Logs.
 - Migration direkt gegen staging/prod aus einem automatischen Lauf.
 - Schema-Änderungen am Dashboard vorbei an den Migrationen.
+
+## Sicherheitsvorfaelle und Datenpannen
+
+Ergebnis des Legal-Audits 2026-09-23. Der Prozess ist bewusst so klein
+gehalten, dass eine einzelne Person ihn unter Stress durchhalten kann.
+
+### Rollen
+
+- **Meldestelle:** [BETREIBER EINTRAGEN: Sicherheits-E-Mail]. Die Adresse
+  steht in der Datenschutzerklaerung (Abschnitt 12) und im Impressum.
+- **Verantwortlich fuer die Entscheidung:** der im Impressum genannte
+  Anbieter. Bei minderjaehrigen Betreibern entscheidet die gesetzlich
+  vertretende Person mit.
+
+### Ablauf bei einem Verdacht
+
+1. **Stunde 0 bis 1 — Eindaemmen.** Betroffenen Zugang sperren, Schluessel
+   rotieren (Supabase service_role, ANTHROPIC_API_KEY, RESEND_API_KEY ueber
+   die jeweilige Konsole), bei Bedarf den Vision-Kill-Switch in
+   `system_settings` setzen. Nichts loeschen: Logs sind Beweismittel.
+2. **Stunde 1 bis 4 — Feststellen.** Was ist betroffen (Tabellen, Buckets,
+   Konten), seit wann, wie viele Personen, welche Datenkategorien. Quellen:
+   `audit_log`, `rate_limit_events`, Supabase-Logs.
+3. **Stunde 4 bis 24 — Bewerten.** Besteht ein Risiko fuer die Rechte und
+   Freiheiten der Betroffenen? Bei Standortdaten, Fotos mit Personen oder
+   Daten Minderjaehriger ist die Antwort im Zweifel ja.
+4. **Innerhalb von 72 Stunden — Melden (Art. 33 DSGVO).** Meldung an den
+   Landesbeauftragten fuer den Datenschutz und die Informationsfreiheit
+   Baden-Wuerttemberg, auch wenn noch nicht alles geklaert ist; Nachtrag ist
+   zulaessig. Eine Meldung unterbleibt nur, wenn ein Risiko unwahrscheinlich
+   ist — diese Begruendung wird schriftlich festgehalten.
+5. **Unverzueglich — Betroffene informieren (Art. 34 DSGVO)**, wenn ein hohes
+   Risiko besteht: in der App und per E-Mail an die betroffenen Konten, in
+   einfacher Sprache, mit dem, was die Person selbst tun kann.
+6. **Danach — Dokumentieren.** Jeder Vorfall wird in einer internen Liste
+   festgehalten (Zeitpunkt, Sachverhalt, Auswirkung, Massnahmen, Entscheidung
+   ueber die Meldung). Das ist nach Art. 33 (5) DSGVO Pflicht, auch wenn nicht
+   gemeldet wurde.
+
+### Gemeldete Schwachstellen von aussen
+
+Hinweise von Dritten werden bestaetigt, innerhalb von 14 Tagen bewertet und
+nach Behebung beantwortet. Wir gehen nicht gegen Personen vor, die eine
+Schwachstelle verantwortungsvoll melden und keine fremden Daten abgreifen.
+
+### Cyber Resilience Act
+
+[ANWALT PRUEFEN] Ob CLAR unter die Verordnung (EU) 2024/2847 faellt. Sie
+greift bei Produkten mit digitalen Elementen, die im Rahmen einer
+Geschaeftstaetigkeit auf dem Markt bereitgestellt werden; bei einem rein
+nicht kommerziellen Projekt greift sie nicht (siehe FRAGEN.md, Frage zur
+kommerziellen Natur). Falls sie greift, kommen zu dem Prozess oben die
+Meldepflichten an ENISA und das BSI hinzu: aktiv ausgenutzte Schwachstellen
+und schwerwiegende Vorfaelle sind binnen 24 Stunden als Fruehwarnung, binnen
+72 Stunden als Meldung und binnen 14 Tagen beziehungsweise einem Monat als
+Abschlussbericht zu melden. Der Ablauf oben ist so geschnitten, dass diese
+Fristen eingehalten werden koennen.
+
+## Abhaengigkeiten und Lizenzen
+
+- `npm audit` gehoert zu jedem Release-Check. Stand 2026-09-23: 34 Meldungen,
+  alle transitiv aus der Expo-Build-Toolchain (@expo/config,
+  @expo/config-plugins, expo-constants, expo-manifests, expo-dev-client,
+  expo-splash-screen). Keine Laufzeitabhaengigkeit der ausgelieferten App ist
+  direkt betroffen; eine Behebung erfordert ein Expo-SDK-Update und ist
+  deshalb an den naechsten SDK-Wechsel gekoppelt.
+- Der Lizenz-Screen `src/app/legal/lizenzen.tsx` listet die direkten
+  Abhaengigkeiten. Nach jedem Hinzufuegen oder Entfernen eines Pakets die
+  Liste nachziehen.
