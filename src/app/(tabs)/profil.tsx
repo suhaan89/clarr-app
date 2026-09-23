@@ -534,15 +534,34 @@ export default function ProfilScreen() {
         </PressableScale>
       )}
 
+      {/* Rechtliches vollstaendig und ohne Suchen erreichbar: Datenschutz
+          (Art. 13 DSGVO), Nutzungsbedingungen (Art. 14 DSA), Melde- und
+          Kontaktstelle (Art. 11, 12, 16, 20 DSA), Impressum (§ 5 DDG) und die
+          Open-Source-Lizenzhinweise. */}
       <View style={styles.legalLinks}>
         <Link href="/legal/datenschutz" accessibilityLabel={t('profil.datenschutz_a11y')}>
           <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
             {t('profil.datenschutz')}
           </Text>
         </Link>
+        <Link href="/legal/agb" accessibilityLabel={t('profil.agb_a11y')}>
+          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.agb')}
+          </Text>
+        </Link>
+        <Link href="/legal/kontakt" accessibilityLabel={t('profil.kontakt_a11y')}>
+          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.kontakt')}
+          </Text>
+        </Link>
         <Link href="/legal/impressum" accessibilityLabel={t('profil.impressum_a11y')}>
           <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
             {t('profil.impressum')}
+          </Text>
+        </Link>
+        <Link href="/legal/lizenzen" accessibilityLabel={t('profil.lizenzen_a11y')}>
+          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+            {t('profil.lizenzen')}
           </Text>
         </Link>
       </View>
@@ -629,10 +648,11 @@ const styles = StyleSheet.create({
   rightsLabel: { fontSize: 15, fontWeight: '600' },
   legalLinks: {
     flexDirection: 'row',
-    gap: Spacing.four,
+    flexWrap: 'wrap',
+    gap: Spacing.three,
+    rowGap: Spacing.two,
     justifyContent: 'center',
     marginTop: Spacing.three,
-    minHeight: 44,
     alignItems: 'center',
   },
   signOut: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },

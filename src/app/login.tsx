@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Redirect } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -181,6 +181,34 @@ export default function LoginScreen() {
               {t('login.hint')}
             </Text>
           </View>
+
+          {/* Art. 13 DSGVO: ueber die Verarbeitung ist zu informieren, BEVOR
+              Daten erhoben werden — die Registrierung erhebt bereits welche.
+              Art. 14 DSA verlangt zudem, dass die Nutzungsbedingungen vorab
+              zugaenglich sind. Beide Screens liegen ausserhalb des Auth-Gates
+              (src/app/legal/*), sind hier also ohne Konto erreichbar. */}
+          <View style={styles.legalBlock}>
+            <Text style={[styles.legalIntro, { color: colors.textSecondary }]} allowFontScaling>
+              {t('login.legal_intro')}
+            </Text>
+            <View style={styles.legalLinks}>
+              <Link href="/legal/datenschutz" style={styles.legalLink}>
+                <Text style={[styles.legalLinkText, { color: colors.primaryStrong }]} allowFontScaling>
+                  {t('login.legal_privacy')}
+                </Text>
+              </Link>
+              <Link href="/legal/agb" style={styles.legalLink}>
+                <Text style={[styles.legalLinkText, { color: colors.primaryStrong }]} allowFontScaling>
+                  {t('login.legal_terms')}
+                </Text>
+              </Link>
+              <Link href="/legal/impressum" style={styles.legalLink}>
+                <Text style={[styles.legalLinkText, { color: colors.primaryStrong }]} allowFontScaling>
+                  {t('login.legal_imprint')}
+                </Text>
+              </Link>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -232,4 +260,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   hint: { fontSize: 13, textAlign: 'center', flexShrink: 1 },
+  legalBlock: { gap: Spacing.two, paddingHorizontal: Spacing.three },
+  legalIntro: { fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  legalLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.three,
+  },
+  legalLink: { minHeight: 44, justifyContent: 'center' },
+  legalLinkText: { fontSize: 13, fontWeight: '600' },
 });

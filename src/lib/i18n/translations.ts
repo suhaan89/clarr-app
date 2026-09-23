@@ -64,6 +64,9 @@ export const de = {
   'stack.case': 'Fall',
   'stack.datenschutz': 'Datenschutz',
   'stack.impressum': 'Impressum',
+  'stack.agb': 'Nutzungsbedingungen',
+  'stack.kontakt': 'Melden und Kontakt',
+  'stack.lizenzen': 'Lizenzen',
 
   // Login
   'login.tagline': 'Müll melden. Stadt sauber machen.',
@@ -84,6 +87,18 @@ export const de = {
     'Bist du jünger als 16? Dann brauchst du vorab die Einwilligung eines Erziehungsberechtigten.',
   'login.wait': 'Bitte warten',
   'login.language_a11y': 'Sprache ändern',
+  // Rechts-Links VOR der Registrierung (Art. 13 DSGVO: informieren, bevor
+  // Daten erhoben werden; DSA Art. 14: Bedingungen vorab zugaenglich).
+  'login.legal_intro': 'Mit der Anmeldung stimmst du den Nutzungsbedingungen zu. Wie wir mit deinen Daten umgehen, steht in der Datenschutzerklärung.',
+  'login.legal_privacy': 'Datenschutz',
+  'login.legal_terms': 'Nutzungsbedingungen',
+  'login.legal_imprint': 'Impressum',
+
+  // Rechtstext-Screens (src/app/legal/*)
+  'legal.updated': 'Fassung vom {date}',
+  'legal.german_only': 'Rechtstexte übersetzen wir bewusst nicht maschinell. Maßgeblich ist die deutsche Fassung. Wenn du etwas nicht verstehst, frag uns über die Kontaktstelle.',
+  'legal.licenses_title': 'Open-Source-Lizenzen',
+  'legal.licenses_intro': 'CLAR baut auf freier Software auf. Hier stehen die direkt genutzten Pakete mit ihrer Lizenz.',
 
   // Karte
   'map.a11y': 'Karte mit geprüften Müll-Meldungen',
@@ -213,6 +228,12 @@ export const de = {
   'profil.datenschutz_a11y': 'Datenschutzerklärung öffnen',
   'profil.impressum': 'Impressum',
   'profil.impressum_a11y': 'Impressum öffnen',
+  'profil.agb': 'Nutzungsbedingungen',
+  'profil.agb_a11y': 'Nutzungsbedingungen öffnen',
+  'profil.kontakt': 'Inhalte melden und Kontaktstelle',
+  'profil.kontakt_a11y': 'Inhalte melden und Kontaktstelle öffnen',
+  'profil.lizenzen': 'Open-Source-Lizenzen',
+  'profil.lizenzen_a11y': 'Open-Source-Lizenzen öffnen',
   'profil.signout': 'Abmelden',
 
   // Gamification: Level & Fortschritt
@@ -425,6 +446,9 @@ const en: Catalog = {
   'stack.case': 'Case',
   'stack.datenschutz': 'Privacy',
   'stack.impressum': 'Legal notice',
+  'stack.agb': 'Terms of use',
+  'stack.kontakt': 'Report and contact',
+  'stack.lizenzen': 'Licences',
 
   'splash.tagline': 'Together for cleaner places',
 
@@ -476,6 +500,15 @@ const en: Catalog = {
   'login.hint': 'No real name needed – you report litter, not people.',
   'login.wait': 'Please wait',
   'login.language_a11y': 'Change language',
+  'login.legal_intro': 'By signing up you agree to the terms of use. How we handle your data is explained in the privacy policy.',
+  'login.legal_privacy': 'Privacy',
+  'login.legal_terms': 'Terms of use',
+  'login.legal_imprint': 'Legal notice',
+
+  'legal.updated': 'Version of {date}',
+  'legal.german_only': 'We deliberately do not machine translate legal texts. The German version is the binding one. If something is unclear, ask us through the contact point.',
+  'legal.licenses_title': 'Open source licences',
+  'legal.licenses_intro': 'CLAR is built on free software. These are the packages we use directly, with their licence.',
 
   'map.a11y': 'Map of verified litter reports',
   'map.loading': 'Loading map …',
@@ -595,6 +628,12 @@ const en: Catalog = {
   'profil.datenschutz_a11y': 'Open privacy policy',
   'profil.impressum': 'Legal notice',
   'profil.impressum_a11y': 'Open legal notice',
+  'profil.agb': 'Terms of use',
+  'profil.agb_a11y': 'Open terms of use',
+  'profil.kontakt': 'Report content and contact point',
+  'profil.kontakt_a11y': 'Open report content and contact point',
+  'profil.lizenzen': 'Open source licences',
+  'profil.lizenzen_a11y': 'Open open source licences',
   'profil.signout': 'Sign out',
 
   'level.badge': 'Level {level}',

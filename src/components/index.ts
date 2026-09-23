@@ -13,6 +13,7 @@ export { EmptyState } from './EmptyState';
 export { ErrorBoundary } from './ErrorBoundary';
 export { Input } from './Input';
 export { LanguagePicker } from './LanguagePicker';
+export { LegalDoc, type LegalSection } from './LegalDoc';
 export { LevelProgress } from './LevelProgress';
 export { LoadingState } from './LoadingState';
 export { PressableScale, type HapticKind } from './PressableScale';
