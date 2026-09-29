@@ -17,7 +17,10 @@
 
 # Datenschutzerklärung – CLAR
 
-**Fassung:** 2026-09-23-v1 · **Stand:** 23.09.2026
+**Fassung:** 2026-09-28-v1 · **Stand:** 28.09.2026
+
+Änderung gegenüber 2026-09-23-v1: eigenes On-Device-Modell (Abschnitt 8),
+freiwilliges KI-Training (neuer Abschnitt 8a), Tabellen in 3 und 9 ergänzt.
 
 ## 1. Wer ist verantwortlich
 
@@ -45,7 +48,9 @@ Verkauf von Daten. Es ist kein Analyse- oder Absturzberichts-SDK eingebaut.
 | Meldungen: Koordinaten, Zeitpunkt, Beschreibung, Abfallart, Status | Müllkarte, Weitergabe an die zuständige Stelle | Art. 6 (1) b DSGVO |
 | Fotos: Original privat, anonymisierte Kopie öffentlich | Beleg der Meldung, öffentliche Darstellung des Fundorts | Art. 6 (1) b und f DSGVO |
 | Punkte, Level, Abzeichen | kosmetisches Feedback | Art. 6 (1) b DSGVO |
-| Einwilligungen inkl. Altersbestätigung, mit Zeitpunkt und Fassung | Nachweisbarkeit | Art. 7 (1), Art. 5 (2) DSGVO |
+| Einwilligungen inkl. Altersbestätigung und KI-Training, mit Zeitpunkt und Fassung | Nachweisbarkeit | Art. 7 (1), Art. 5 (2) DSGVO |
+| Ergebnis der Vorab-Erkennung: Score 0 bis 1 und Modellversion, an der Meldung | Qualitätskontrolle, zusätzliches Prüfsignal | Art. 6 (1) f DSGVO |
+| Trainingsdaten (nur mit Einwilligung): Verweis auf die verpixelte Kopie, Prüfergebnis, Score | Training der eigenen Erkennung | Art. 6 (1) a DSGVO |
 | Geräte- und IP-Prüfsummen (SHA-256, nie Klartext) | Rate-Limit, Spam-Schutz | Art. 6 (1) f DSGVO |
 | Inhaltsmeldungen und Überprüfungsanfragen | Moderation | Art. 6 (1) c DSGVO iVm DSA |
 | Kosten- und Sicherheitsprotokolle | Kostendeckel, Sicherheit | Art. 6 (1) f DSGVO |
@@ -136,9 +141,17 @@ Hinweis, ob automatisch entschieden wurde (gespeichert in
 führt dazu, dass es für diese Meldung keine Punkte gibt. Punkte sind kosmetisch
 und haben keinen Geldwert.
 
-Auf deinem Gerät läuft zusätzlich eine kleine Vorab-Erkennung, die dir vor dem
-Absenden einen unverbindlichen Hinweis gibt. Sie entscheidet nichts, blockiert
-nichts und sendet nichts an uns.
+Vor dem Absenden läuft zusätzlich eine kleine, von uns trainierte
+Vorab-Erkennung direkt auf deinem Gerät. Sie gibt dir einen unverbindlichen
+Hinweis, etwa „Wir erkennen hier keinen Müll, trotzdem melden?". Du kannst
+immer trotzdem melden. Für diese Erkennung verlässt dein Foto das Gerät nicht.
+
+Mit der Meldung speichern wir das Ergebnis dieser Vorab-Erkennung (eine Zahl
+zwischen 0 und 1) und die Modellversion. Beides entscheidet nichts und bringt
+keine Punkte. Es kann höchstens dazu führen, dass zusätzlich ein Mensch auf
+deine Meldung schaut. Das Modell lädt die App von unseren Servern; dabei
+werden außer den technisch nötigen Verbindungsdaten keine Daten über dich
+gesendet.
 
 Der Hilfe-Chat in der App ist keine KI. Er besteht aus einer festen Liste von
 Fragen mit jeweils einer festen Antwort.
@@ -147,6 +160,40 @@ Fragen mit jeweils einer festen Antwort.
 ausdrückliche Einwilligung, gesetzliche Erlaubnis) und ob die Ablehnung einer
 Meldung überhaupt eine „rechtliche Wirkung oder ähnlich erhebliche
 Beeinträchtigung" ist, wenn die Punkte keinen Geldwert haben.
+
+## 8a. Training unserer eigenen Erkennung (freiwillig)
+
+Wir verbessern die Vorab-Erkennung mit echten Meldungen. Dafür nutzen wir
+Fotos nur, wenn du das im Profil unter „Datenschutz" ausdrücklich einschaltest
+(„KI-Training"). Der Schalter ist von Anfang an aus. Ohne ihn funktioniert
+CLAR genauso, auch Punkte hängen nicht davon ab. Grundlage: deine
+Einwilligung, Art. 6 (1) a DSGVO.
+
+Genutzt wird nur die verpixelte Kopie deines Fotos, und nur wenn sie
+freigegeben ist, also keine Person erkannt wurde oder ein Mensch sie geprüft
+hat. Dazu das Prüfergebnis (Müll ja oder nein) und das Ergebnis der
+Vorab-Erkennung. Nicht genutzt werden das Originalfoto, der Standort, deine
+Beschreibung, dein Name, deine E-Mail-Adresse. Meldungen mit Verdacht auf
+Privatgrund oder unzulässigen Inhalten kommen nie in den Trainingsdatensatz.
+Es zählen nur Meldungen, die du nach dem Einschalten abschickst.
+
+Das Training findet nur bei uns statt, auf eigenen Rechnern. Wir laden die
+Fotos dafür bei keinem anderen Dienst hoch, geben sie nicht weiter und
+verkaufen sie nicht.
+
+Du kannst die Einwilligung jederzeit im Profil widerrufen. Dann werden deine
+Fotos sofort aus dem Trainingsdatensatz entfernt, ebenso wenn eine Meldung
+oder dein Konto gelöscht wird. Lokale Kopien auf unseren Trainingsrechnern
+werden vor jedem Training abgeglichen und gelöscht. Ein schon trainiertes
+Modell enthält keine Fotos, sondern daraus gelernte Zahlen. Wir trainieren
+regelmäßig neu, spätestens alle 12 Monate, damit auch diese Spuren
+verschwinden.
+
+[ANWALT PRÜFEN] Einwilligung als Grundlage (statt berechtigtem Interesse),
+Wirksamkeit der Einwilligung von 16- und 17-Jährigen für diesen Zweck,
+Umgang mit bereits trainierten Modellen nach Widerruf (Art. 17), und ob
+Personen im Hintergrund verpixelter Fotos als Dritte zusätzlich zu
+berücksichtigen sind.
 
 ## 9. Wie lange wir speichern
 
@@ -157,6 +204,8 @@ Beeinträchtigung" ist, wenn die Punkte keinen Geldwert haben.
 | Einmal-Links für die zuständige Stelle | 30 Tage ab Versand |
 | Kosten- und Sicherheitsprotokolle | bis zu 24 Monate, nach Kontolöschung ohne Personenbezug |
 | Anonymisierte öffentliche Fotos | bis zur Löschung des Kontos |
+| Ergebnis der Vorab-Erkennung | so lange wie die Meldung |
+| Trainingsdaten (nur mit Einwilligung) | bis Widerruf, Löschung der Meldung oder des Kontos, höchstens 24 Monate |
 
 [BETREIBER EINTRAGEN: abweichende Fristen, falls gesetzliche
 Aufbewahrungspflichten bestehen.]

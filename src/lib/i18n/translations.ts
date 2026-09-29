@@ -155,16 +155,22 @@ export const de = {
   // On-Device-Bilderkennung (Advisory, blockiert nie)
   'report.vision_analyzing': 'Analysiere Foto …',
   'report.vision_trash': 'Könnte Müll sein',
-  'report.vision_no_trash': 'Wahrscheinlich kein Müll',
-  'report.vision_uncertain': 'Unsicher',
-  'report.vision_confidence': 'Sicherheit {percent} %',
   'report.vision_advisory_note': 'Nur ein Hinweis – du kannst trotzdem melden.',
+  'report.vision_no_trash_title': 'Wir erkennen hier keinen Müll',
+  'report.vision_no_trash_body':
+    'Trotzdem melden? Das entscheidest du. Die eigentliche Prüfung passiert danach auf unserem Server.',
+  'report.vision_retake': 'Neues Foto',
+  'report.vision_retake_a11y': 'Dieses Foto verwerfen und ein neues aufnehmen',
+  'report.vision_report_anyway': 'Trotzdem melden',
+  'report.vision_report_anyway_a11y': 'Hinweis schließen und mit diesem Foto weitermachen',
   'report.vision_unavailable': 'Automatische Analyse gerade nicht verfügbar.',
 
   // Hinweis zur automatisierten Foto-Pruefung (staendig sichtbar vor dem Absenden)
   'report.ai_review_title': 'Automatische Foto-Prüfung',
   'report.ai_review_body':
     'Dieses Foto wird automatisch per KI geprüft. Ist sich die KI nicht sicher, schaut zusätzlich ein Mensch aus unserem Team drauf. Das Ergebnis kann eine automatische Veröffentlichung oder Ablehnung sein. Bei einer Ablehnung kannst du in der Fallansicht Widerspruch einlegen.',
+  'report.ai_ondevice_body':
+    'Vorher gibt dir eine kleine Erkennung auf deinem Handy einen unverbindlichen Hinweis. Ihr Ergebnis (eine Zahl und die Modellversion) wird mit der Meldung gespeichert, entscheidet aber nichts.',
 
   // Aktionen (Events)
   'events.empty_title': 'Noch nichts geplant',
@@ -210,6 +216,10 @@ export const de = {
   'consent.kamera': 'Kamera für Müll-Fotos',
   'consent.standort': 'Standort für Meldungen',
   'consent.behoerden_weitergabe': 'Weitergabe geprüfter Fälle an die Behörde (anonymisiert)',
+  'consent.ki_training':
+    'Meine künftigen Fotos (nur die verpixelte Kopie) dürfen helfen, CLARs eigene Müll-Erkennung zu verbessern',
+  'consent.ki_training_hint':
+    'Freiwillig und jederzeit widerrufbar. Training nur bei uns, nie bei Dritten. Beim Widerruf, beim Löschen einer Meldung oder deines Kontos fliegen die Fotos aus dem Trainingsdatensatz.',
   'consent.a11y': 'Einwilligung: {label}',
   'profil.export': 'Meine Daten exportieren',
   'profil.export_a11y': 'Meine Daten exportieren, Artikel 15 DSGVO',
@@ -586,15 +596,21 @@ const en: Catalog = {
   'report.new_a11y': 'Create another report',
   'report.vision_analyzing': 'Analysing photo …',
   'report.vision_trash': 'Might be litter',
-  'report.vision_no_trash': 'Probably not litter',
-  'report.vision_uncertain': 'Not sure',
-  'report.vision_confidence': '{percent}% confidence',
   'report.vision_advisory_note': 'Just a hint – you can still report.',
+  'report.vision_no_trash_title': "We can't spot any litter here",
+  'report.vision_no_trash_body':
+    "Report it anyway? That's up to you. The actual review happens afterwards on our server.",
+  'report.vision_retake': 'New photo',
+  'report.vision_retake_a11y': 'Discard this photo and take a new one',
+  'report.vision_report_anyway': 'Report anyway',
+  'report.vision_report_anyway_a11y': 'Dismiss the hint and continue with this photo',
   'report.vision_unavailable': 'Automatic analysis is currently unavailable.',
 
   'report.ai_review_title': 'Automatic photo review',
   'report.ai_review_body':
     'This photo is automatically reviewed by AI. If the AI is unsure, someone from our team also takes a look. The result can be an automatic publication or rejection. If it is rejected, you can raise an objection in the case view.',
+  'report.ai_ondevice_body':
+    'Before that, a small detector on your phone gives you a non-binding hint. Its result (a number and the model version) is saved with the report but decides nothing.',
 
   'events.empty_title': 'Nothing planned yet',
   'events.empty_body': 'No cleanup events are planned right now. Check back soon!',
@@ -637,6 +653,10 @@ const en: Catalog = {
   'consent.kamera': 'Camera for litter photos',
   'consent.standort': 'Location for reports',
   'consent.behoerden_weitergabe': 'Sharing verified cases with the authority (anonymised)',
+  'consent.ki_training':
+    "My future photos (only the pixelated copy) may help improve CLAR's own litter detection",
+  'consent.ki_training_hint':
+    'Voluntary and revocable at any time. Training only happens with us, never with third parties. If you revoke this, or a report or your account is deleted, the photos leave the training set.',
   'consent.a11y': 'Consent: {label}',
   'profil.export': 'Export my data',
   'profil.export_a11y': 'Export my data, Article 15 GDPR',

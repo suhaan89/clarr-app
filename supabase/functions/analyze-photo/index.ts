@@ -18,6 +18,8 @@
 // Ergebnis-Routing (apply_vision_result):
 //   Gewalt/Nacktheit -> sofort blockiert (abgelehnt), nie oeffentlich.
 //   Confidence < Schwelle -> Review-Queue. Sonst ki_verifiziert.
+//   On-Device-Score (optional, vom Client) darf nur verschaerfen: "ok" ->
+//   Review, wenn er unter ondevice_disagree_below liegt (Standard: aus).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
@@ -132,7 +134,7 @@ Deno.serve(async (req) => {
     // stammen ('gemeldet') und noch kein KI-Ergebnis haben (idempotent).
     const { data: report } = await admin
       .from("reports")
-      .select("id, user_id, status, ai_confidence, vision_skipped, photo_urls")
+      .select("id, user_id, status, ai_confidence, vision_skipped, photo_urls, ondevice_score")
       .eq("id", reportId)
       .single();
 
@@ -273,6 +275,29 @@ Deno.serve(async (req) => {
         outcome = "low_confidence";
       } else {
         outcome = "ok";
+      }
+
+      // On-Device-Score (Migration 023) als ZUSAETZLICHES Signal. Er kommt vom
+      // Client und ist damit manipulierbar, deshalb gilt nur eine Richtung:
+      // er darf ein "ok" in die menschliche Pruefung schieben, aber nie eine
+      // Ablehnung aufheben, Kosten sparen oder Punkte ausloesen. Aus, solange
+      // system_settings.ondevice_disagree_below = null ist.
+      if (outcome === "ok" && typeof report.ondevice_score === "number") {
+        const { data: setting } = await admin
+          .from("system_settings")
+          .select("value")
+          .eq("key", "ondevice_disagree_below")
+          .maybeSingle();
+        const disagreeBelow = typeof setting?.value === "number" ? setting.value : null;
+        if (disagreeBelow !== null && report.ondevice_score < disagreeBelow) {
+          outcome = "low_confidence";
+          await admin.from("audit_log").insert({
+            action: "ondevice_disagreement",
+            entity_type: "report",
+            entity_id: reportId,
+            details: { ondevice_score: report.ondevice_score, ai_confidence: result.confidence },
+          });
+        }
       }
 
       const { data: applied, error: applyError } = await admin.rpc("apply_vision_result", {

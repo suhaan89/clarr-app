@@ -12,6 +12,9 @@
 //         Meldung wird als location_suspect markiert (Review statt Strafe)
 //   5. Tagesquota (10/Tag) + Fall-Buendelung atomar in submit_report_tx()
 //
+// Optional kommt der On-Device-Score der App mit (Migration 023). Er wird
+// nur gespeichert, nie fuer Punkte oder Freigaben verwendet.
+//
 // Geo + Zeit werden serverseitig gesetzt/validiert: created_at ist Server-NOW,
 // Koordinaten werden validiert; das Vision-Budget wird hier nur vor-geprueft
 // (voller Kill-Switch in Paket 4 / analyze-photo).
@@ -98,6 +101,15 @@ Deno.serve(async (req) => {
     const photoPaths: string[] = Array.isArray(body.photoPaths)
       ? body.photoPaths.filter((p: unknown) => typeof p === "string").slice(0, MAX_PHOTOS)
       : [];
+    // On-Device-Hinweis (Migration 023): nur gespeichert, nie vertraut.
+    const ondeviceScore = typeof body.ondeviceScore === "number" &&
+        Number.isFinite(body.ondeviceScore) && body.ondeviceScore >= 0 && body.ondeviceScore <= 1
+      ? body.ondeviceScore
+      : null;
+    const ondeviceModelVersion = typeof body.ondeviceModelVersion === "string" &&
+        /^[A-Za-z0-9._-]{1,64}$/.test(body.ondeviceModelVersion)
+      ? body.ondeviceModelVersion
+      : null;
 
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
       return json(400, { error: "invalid_location" });
@@ -201,6 +213,25 @@ Deno.serve(async (req) => {
     if (!result?.ok) {
       const status = result?.error === "quota_exceeded" ? 429 : 400;
       return json(status, result ?? { error: "unknown" });
+    }
+
+    // 7. On-Device-Score nachtragen (best effort, nur bei neuer Meldung).
+    //    Nur Score + Version einer bekannten, veroeffentlichten Modellversion;
+    //    beides zusammen oder gar nichts. Ein Fehler hier bricht nichts ab.
+    if (!result.idempotent && result.report_id && ondeviceScore !== null && ondeviceModelVersion) {
+      const { data: model } = await admin
+        .from("vision_models")
+        .select("version")
+        .eq("version", ondeviceModelVersion)
+        .in("status", ["aktiv", "zurueckgezogen"])
+        .maybeSingle();
+      if (model) {
+        const { error: odError } = await admin
+          .from("reports")
+          .update({ ondevice_score: ondeviceScore, ondevice_model_version: ondeviceModelVersion })
+          .eq("id", result.report_id);
+        if (odError) console.error("submit-report ondevice:", odError.message);
+      }
     }
 
     return json(200, {

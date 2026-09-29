@@ -1,38 +1,26 @@
 /**
- * Feste Parameter der On-Device-Erkennung. Zentral, damit Modellwechsel und
- * Feintuning der Schwellen an EINER Stelle passieren.
+ * Feste Parameter der On-Device-Erkennung. Alles Modellspezifische
+ * (Eingabegröße, Normalisierung, Schwellenwert, Labels) kommt NICHT von hier,
+ * sondern aus den Modell-Metadaten in `public.vision_models`.
  */
 
-/** Kantenlänge, auf die Fotos vor der Inferenz verkleinert werden (px). */
-export const INPUT_SIZE = 224;
-
-/** Wie viele Top-Vorhersagen der Classifier zurückgibt. */
-export const TOP_K = 5;
+import { Platform } from 'react-native';
 
 /**
- * Normalisierung der Pixel für float32-Modelle: `(pixel - mean) / std`.
- * Standard passt zu Keras-MobileNet (Wertebereich [-1, 1]). Erwartet ein
- * müll-spezifisches Modell [0, 1], hier `mean = 0, std = 255` setzen.
- * Für uint8-quantisierte Modelle wird die Normalisierung übersprungen.
+ * Build-Schalter. `EXPO_PUBLIC_ONDEVICE_VISION=0` schaltet die Prüfung im
+ * Build komplett ab (kein Download, keine Analyse). Jeder andere Wert oder
+ * ein fehlender Wert lässt die Entscheidung beim Server: ohne aktives Modell
+ * in `vision_models` passiert ohnehin nichts. Im Web gibt es kein TFLite.
  */
-export const Preprocess = {
-  pixelMean: 127.5,
-  pixelStd: 127.5,
-} as const;
+export function isOnDeviceVisionEnabled(): boolean {
+  return Platform.OS !== 'web' && process.env.EXPO_PUBLIC_ONDEVICE_VISION !== '0';
+}
 
-/**
- * Entscheidungs-Schwellen für `deriveVerdict`. Bewusst konservativ:
- * MobileNet ist NICHT müll-spezifisch, deshalb lieber „unsicher" als ein
- * falsches Ja/Nein. Alle Werte sind Wahrscheinlichkeiten (0..1).
- */
-export const Thresholds = {
-  /** Ab hier gilt ein erkanntes Müll-Label als klarer Treffer. */
-  trashConfident: 0.3,
-  /** Schwaches Müll-Signal: reicht nur für „unsicher", nicht für „Müll". */
-  trashMaybe: 0.12,
-  /**
-   * Erkennt das Modell insgesamt nichts deutlich (Top-Wahrscheinlichkeit
-   * darunter), lautet das Urteil „unsicher" statt „kein Müll".
-   */
-  sceneMin: 0.2,
-} as const;
+/** Storage-Bucket mit den Modelldateien (öffentlich lesbar, siehe Migration 023). */
+export const MODEL_BUCKET = 'ml-models';
+
+/** Höchstens so oft wird beim App-Start nach einer neuen Modellversion gefragt. */
+export const MODEL_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/** Größere Dateien werden abgelehnt (Ziel: unter 5 MB, etwas Luft nach oben). */
+export const MAX_MODEL_BYTES = 8 * 1024 * 1024;

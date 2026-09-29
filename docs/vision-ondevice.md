@@ -1,137 +1,215 @@
 # On-Device-Bilderkennung (Advisory)
 
-Kostenlose Müll-Erkennung, die **vollständig auf dem Gerät** läuft: kein Cloud-
-Dienst, kein API-Key, kein Rechnungsrisiko, offline. Das Ergebnis ist ein
-**Hinweis** für die meldende Person („Müll erkannt" / „kein Müll" / „unsicher"
-mit Confidence) und **blockiert die Meldung nie**. Die serverseitige
-Verifikation (`analyze-photo`, Kill-Switch, Budget – siehe `docs/vision.md`)
-bleibt davon **unberührt**; dieses Feature sendet nichts an den Server.
+Ein kleines, **selbst trainiertes** Bildklassifikationsmodell („illegale
+Müllablagerung ja/nein“) läuft direkt auf dem Handy. Es gibt beim
+Fotografieren sofort Feedback und fängt offensichtliche Fehlfotos ab, bevor
+etwas hochgeladen wird.
 
-## Gewählte Lösung
+**Es berät nur.** Die verbindliche Entscheidung über Veröffentlichung und
+Punkte bleibt serverseitig (`analyze-photo` + Review-Queue, siehe
+`docs/vision.md`), weil man ein Ergebnis auf dem Gerät manipulieren kann.
+Der Nutzer kann **immer** trotzdem melden.
+
+## Überblick
+
+```
+App-Start ──► vision_models (aktive Version?) ──► ml-models/<version>.tflite
+              │ keine aktive → lokales Modell löschen      │ SHA-256 prüfen
+              ▼                                             ▼
+Foto ──► mittig quadratisch zuschneiden ──► 224×224 ──► TFLite (nativ) ──► Score 0..1
+                                                                              │
+          Score ≥ Schwelle: „Könnte Müll sein“                                │
+          Score < Schwelle: „Wir erkennen hier keinen Müll, trotzdem melden?“ ◄┘
+                                                                              │
+submit-report speichert Score + Modellversion ──► analyze-photo (verbindlich) ◄┘
+                                                    darf den Score nur zum Verschärfen nutzen
+Review-Queue entscheidet ──► vision_training_samples (nur mit Einwilligung) ──► training/
+```
 
 | | |
 |---|---|
-| **Bibliothek** | [`react-native-fast-tflite`](https://github.com/mrousavy/react-native-fast-tflite) v3 (JSI/Nitro, TensorFlow Lite nativ) |
-| **Basismodell** | MobileNet v1 (1.0, 224 px, **uint8-quantisiert**) + ImageNet-Labels, gebündelt in `assets/vision/` (~4 MB) |
-| **Vorverarbeitung** | `expo-image-manipulator` (Resize auf 224×224) + `jpeg-js` (JPEG→RGB) |
-| **Dev-Build nötig?** | **Ja** – native Module. `expo-dev-client` ist bereits im Projekt, die Hürde also schon bezahlt. In Expo Go läuft die Erkennung nicht. |
-
-### Warum nicht `@tensorflow/tfjs-react-native`?
-
-Das war der ursprünglich bevorzugte Weg, ist aber praktisch **nicht mehr
-wartbar**: `@tensorflow/tfjs-react-native` steht bei v1.0.0 und verlangt
-`@react-native-async-storage/async-storage@^1.13.0`. Das Projekt nutzt
-`2.2.0` → **harter Peer-Dependency-Konflikt** (npm bricht ab). Zudem ist die
-WebGL/`expo-gl`-Kette unter React Native 0.81 / New Architecture fragil.
-
-`react-native-fast-tflite` installiert dagegen konfliktfrei, ist aktiv
-gepflegt, JSI-basiert (schnell) und New-Architecture-kompatibel. Deshalb der
-Wechsel. `classify()` liefert bei TFLite zwar nur Klassen-Indizes – die
-zugehörigen Labels bündeln wir als `labels.json` neben dem Modell.
+| **Bibliothek** | [`react-native-fast-tflite`](https://github.com/mrousavy/react-native-fast-tflite) v3 (JSI/Nitro, nativ, New Architecture) |
+| **Modell** | eigenes YOLO11n-cls, TFLite int8, Ziel unter 5 MB, **nicht** gebündelt, sondern per Download |
+| **Vorverarbeitung** | `expo-image-manipulator` (Zuschnitt + Resize) + `jpeg-js` (JPEG → RGB), Normalisierung laut Metadaten |
+| **Dev-Build nötig?** | Ja. In Expo Go läuft die Erkennung nicht (die App funktioniert dort trotzdem, nur ohne Hinweis). |
 
 ## Architektur (`src/lib/vision/`)
 
-Sauber getrennt, damit das Modell später **ohne Änderung am restlichen Code**
-getauscht werden kann:
-
 ```
-src/lib/vision/
-  types.ts        Öffentliche Typen + VisionClassifier-Interface (rein)
-  config.ts       Eingabegröße, Top-k, Schwellen, Pixel-Normalisierung (rein)
-  labels.ts       Heuristik „Label → Müll?" per Schlüsselwort (rein, getestet)
-  verdict.ts      Rohvorhersagen → Urteil (trash/no-trash/uncertain) (rein, getestet)
-  classifier.ts   EINZIGE native/modell-spezifische Datei (fast-tflite, lazy)
-  index.ts        Öffentliche API: analyzePhoto(), warmUpVision(), Typen
-  useVision.ts    React-Hook: Zustandsmaschine idle→analyzing→done|unavailable
-assets/vision/
-  model.tflite    Das gebündelte Modell (offline)
-  labels.json     Labelliste passend zur Modell-Ausgabe
-  model.assets.ts Verweis (require) auf beide – der Umschaltpunkt
+types.ts       Typen (ModelManifest, VisionResult, Fehlerklassen)          rein
+config.ts      Feature Flag, Bucket, Prüfintervall, Größenlimit
+manifest.ts    Metadaten aus vision_models prüfen, Hex, Intervall           rein, getestet
+preprocess.ts  Zuschnitt, Eingabe-Tensor (float32/uint8/int8), Score       rein, getestet
+verdict.ts     Score + Schwelle → „trash“ / „no-trash“                     rein, getestet
+modelStore.ts  Download, SHA-256, Cache, Fernschalter
+classifier.ts  EINZIGE Datei mit TFLite; lazy, nativer Thread
+index.ts       Öffentliche API: analyzePhoto, warmUpVision, refreshVisionModel
+useVision.ts   Hook: idle → analyzing → done | skipped | unavailable       getestet
 ```
 
-**Reine Module** (`types`, `config`, `labels`, `verdict`) enthalten keine
-nativen Imports und sind per Jest getestet (`src/lib/vision/__tests__/`). Alles
-Native lädt `classifier.ts` **lazy** und in `try/catch`: Fehlt Dev-Build,
-Modul oder Modell, wirft es `VisionUnavailableError`, der Hook zeigt „Analyse
-nicht verfügbar" – die App und die Meldung bleiben voll funktionsfähig.
+### Feature Flag und Fallback
 
-### Entscheidungslogik (`verdict.ts`)
+Die Prüfung läuft nur, wenn **alle** Bedingungen erfüllt sind:
 
-Bewusst dreiwertig und konservativ (MobileNet ist **nicht** müll-spezifisch):
+1. `EXPO_PUBLIC_ONDEVICE_VISION` ist nicht `0` (Build-Schalter) und die App
+   läuft nicht im Web.
+2. In `public.vision_models` gibt es eine Zeile mit `status = 'aktiv'`
+   (Fernschalter, wirkt beim nächsten Check).
+3. Das Modell ist heruntergeladen und die Prüfsumme stimmt.
+4. Das native Modul ist vorhanden (Dev-/Production-Build).
 
-1. Stärkstes müll-relevantes Label ≥ `trashConfident` (0.30) → **Müll erkannt**.
-2. Schwaches Müll-Signal ≥ `trashMaybe` (0.12) → **unsicher**.
-3. Modell erkennt insgesamt nichts Deutliches (< `sceneMin` 0.20) → **unsicher**.
-4. Sonst → **kein Müll erkannt**.
+Fehlt 1 bis 3, liefert `analyzePhoto` einen `VisionDisabledError` → Status
+`skipped` → **die UI zeigt nichts**, die Meldung geht ganz normal an den
+Server, ohne Score. Fehlt 4 oder geht die Inferenz schief, heißt der Status
+`unavailable` und es erscheint ein dezenter Hinweis. Blockiert wird nie.
 
-Schwellen zentral in `config.ts`. Die „Label → Müll"-Zuordnung in `labels.ts`
-matcht Schlüsselwörter wie `bottle`, `plastic bag`, `tin can`, `carton` in den
-ImageNet-Labelnamen.
+Heute gibt es noch **kein** trainiertes Modell. Deshalb ist die Prüfung
+überall im Zustand `skipped`, bis die erste Version freigeschaltet ist.
 
-## Setup / Aktivierung
+### Modell-Updates ohne App-Update
 
-Das Modell ist bereits gebündelt (`assets/vision/`), `model.assets.ts` zeigt
-darauf. Nach `npm install` genügt ein **Dev-Build**:
+`refreshVisionModel()` läuft beim App-Start (`src/app/_layout.tsx`),
+höchstens einmal pro 24 h, im Hintergrund und wirft nie:
+
+| Lage | Verhalten |
+|---|---|
+| offline / Serverfehler | alten Stand behalten, beim nächsten Start neu fragen |
+| keine aktive Version | lokales Modell und Cache löschen (Fernschalter) |
+| gleiche Version, gleiche Prüfsumme | nur Metadaten übernehmen (z. B. neuer Schwellenwert) |
+| neue Version | nach `vision-models/<version>.tflite.download` laden, Größe + SHA-256 prüfen, erst dann umbenennen und umschalten, alte Dateien löschen |
+| Prüfsumme falsch / zu groß | verwerfen, alte Version bleibt aktiv |
+
+Grenze: Die Prüfsumme schützt vor beschädigten oder abgebrochenen Downloads,
+nicht vor einem absichtlich manipulierten Bucket (dafür bräuchte es eine
+Signatur mit einem öffentlichen Schlüssel in der App). Da das Ergebnis nur
+berät und der Server es nur zum Verschärfen nutzt, ist das vertretbar.
+
+### Metadaten (`public.vision_models`, Migration 023)
+
+| Spalte | Bedeutung |
+|---|---|
+| `version` | eindeutig, z. B. `2026-10-01-a`; die App cacht danach |
+| `storage_path`, `sha256`, `size_bytes` | Datei im Bucket `ml-models` |
+| `input_size` | Kantenlänge, z. B. 224 |
+| `labels`, `positive_index` | Klassenreihenfolge der Ausgabe, Index von „positiv“ |
+| `threshold` | ab hier „könnte Müll sein“ |
+| `norm_mean`, `norm_std` | je Kanal auf Pixel 0..255, Standard `[0,0,0]` / `[255,255,255]` = Werte 0..1 |
+| `input_quant`, `output_quant` | `{scale, zero_point}` bei int8/uint8-Tensoren, sonst `NULL` |
+| `output_activation` | `softmax` (Wahrscheinlichkeiten) oder `none` (Logits, App rechnet um) |
+| `status` | `entwurf` → `aktiv` (genau eine) → `zurueckgezogen` |
+| `metrics` | Auswertung aus `training/evaluate.py` |
+
+Alle Werte schreibt `training/export.py` automatisch aus der exportierten
+Datei. Nichts davon ist im App-Code fest verdrahtet.
+
+### Nicht blockierend
+
+`model.run()` rechnet nativ auf einem eigenen Thread. Auf dem JS-Thread
+laufen nur das Dekodieren eines 224×224-JPEGs und die Umrechnung von rund
+50 000 Pixeln, das sind wenige Millisekunden. Das Absenden ist nie an die
+Analyse gekoppelt; wer schneller absendet, schickt eben keinen Score mit.
+
+## UX
+
+- Score ≥ Schwelle: grüne Karte „Könnte Müll sein · Nur ein Hinweis“.
+- Score < Schwelle: gelbe Karte „Wir erkennen hier keinen Müll. Trotzdem
+  melden? Das entscheidest du.“ mit **Trotzdem melden** (klappt den Hinweis
+  zu) und **Neues Foto**. Der Absende-Knopf bleibt immer aktiv.
+- Transparenz: Die ständig sichtbare Karte „Automatische Foto-Prüfung“
+  erklärt zusätzlich, dass der Score mit der Meldung gespeichert wird und
+  nichts entscheidet (`report.ai_ondevice_body`).
+- Alle Texte in `src/lib/i18n/translations.ts` (de + en).
+
+## Server-Seite
+
+- `submit-report` nimmt `ondeviceScore` (0..1) und `ondeviceModelVersion`
+  an und speichert beide in `reports`, **nur** wenn die Version in
+  `vision_models` veröffentlicht ist. Sonst nichts.
+- `analyze-photo` nutzt den Score **nur in eine Richtung**: Sagt die
+  Server-KI „ok“, der Handy-Score liegt aber unter
+  `system_settings.ondevice_disagree_below`, geht die Meldung an einen
+  Menschen (`low_confidence`, Audit-Eintrag `ondevice_disagreement`). Der
+  Score kann nie veröffentlichen, ablehnen, Kosten sparen oder Punkte
+  auslösen. Standard ist `null` = aus, bis sich ein Modell bewährt hat.
+- Die App ruft `analyze-photo` jetzt nach `submit-report` auf (vorher fehlte
+  dieser Aufruf, Meldungen blieben auf `gemeldet`).
+
+Schwelle aktivieren (erst wenn ein Modell gute Zahlen hat):
+
+```sql
+UPDATE system_settings SET value = '0.15' WHERE key = 'ondevice_disagree_below';
+```
+
+## Trainingsdaten-Pipeline
+
+`vision_training_samples` (Migration 023) sammelt pro Meldung die späteren
+Labels:
+
+| Spalte | Quelle |
+|---|---|
+| `report_id` → Foto | verpixelte, freigegebene Kopie über `vision_training_export` |
+| `ondevice_score`, `ondevice_model_version` | aus `reports` |
+| `ai_outcome`, `ai_confidence` | `apply_vision_result` (Grund-Code) |
+| `human_decision` | `moderate_report` (freigeben/ablehnen) |
+| `human_label` | `set_training_label` (Moderator, ausdrücklich) |
+| `label`, `label_source` | berechnet: Mensch vor KI; Ablehnung ohne Label bleibt offen |
+| `split` | fest pro Fall (~20 % val), damit ein Ort nicht in train UND val landet |
+
+Befüllt per Trigger auf `reports.decision_reason/decided_at`, also ohne
+Änderung an `apply_vision_result` oder `moderate_report`. Aufgenommen wird
+nur, wer `ki_training` aktuell erlaubt **und** schon vor der Meldung erlaubt
+hat. Nie aufgenommen: Seed-Daten, `unsafe_content`, `private_context`,
+`moderator_private`.
+
+Löschung: Widerruf (Trigger, sofort), Meldung/Konto (Kaskade), 24 Monate
+(`purge_expired_training_samples` im `storage-cleanup`-Lauf), lokale Kopien
+per `training/sync_dataset.py` vor jedem Training. Der Datenexport enthält
+die eigenen Zeilen.
+
+## Neues Modell ausliefern
+
+Siehe `training/README.md`: trainieren, auswerten, exportieren, Datei in
+`ml-models/models/<version>.tflite` hochladen, `vision_models.sql` ausführen,
+auf `aktiv` schalten. Notbremse: Status `zurueckgezogen`.
+
+## Development Build (Android zuerst)
+
+Einmalig:
 
 ```bash
-npx expo run:android      # oder run:ios
+npm i -g eas-cli
+eas login
+eas init                    # trägt extra.eas.projectId in app.json ein
 ```
 
-Modell neu laden oder aktualisieren (lädt EINMAL online, danach offline):
+Build und Installation:
 
 ```bash
-node scripts/fetch-vision-model.js
+npm run build:android:dev   # = eas build --profile development --platform android
+# Link/QR aus der Ausgabe öffnen und die APK auf dem Handy installieren
+npx expo start              # Dev-Server; die installierte App verbindet sich damit
 ```
 
-## Ein müll-spezifisches Modell einspielen
+- `eas.json` → Profil `development`: `developmentClient: true`, interne
+  Verteilung, APK. Die `EXPO_PUBLIC_*`-Werte kommen im Dev-Build aus deiner
+  lokalen `.env`, weil Metro das JS bündelt. Für `preview`/`production`
+  werden sie als EAS-Umgebungsvariablen hinterlegt
+  (`eas env:create --environment preview ...`), nicht mehr als Platzhalter
+  in `eas.json`.
+- Config Plugin: `react-native-fast-tflite` steht bereits in `app.json` →
+  `plugins`. GPU-Delegates sind bewusst aus (CPU ist am kompatibelsten).
+- Lokal ohne EAS geht auch `npx expo run:android` (Android Studio + SDK nötig).
+- Nach Änderungen an nativen Paketen oder `app.json` muss neu gebaut werden;
+  reine JS-Änderungen kommen per Metro sofort.
 
-Genau dafür ist die Schnittstelle gebaut – **kein Code außerhalb von
-`assets/vision/` ändert sich**:
+## Bekannte Grenzen
 
-1. Ein auf Müll trainiertes Modell als **`.tflite`** exportieren (Bild-
-   klassifikation, Eingabe 224×224×3). Öffentliche Datensätze z. B.
-   [**TACO**](http://tacodataset.org/) (Trash Annotations in Context) oder
-   TrashNet; mit TensorFlow/Keras trainieren und via TFLite-Converter
-   exportieren (float32 **oder** uint8 – der Classifier erkennt den Typ über
-   `model.inputs[0].dataType`).
-2. Passende Labelliste als `labels.json` (ein String pro Klasse, Reihenfolge =
-   Modell-Ausgabe) bereitstellen.
-3. Beide Dateien einspielen – am einfachsten per Skript:
-   ```bash
-   MODEL_URL=https://…/muell-modell.tflite \
-   LABELS_URL=https://…/muell-labels.txt \
-     node scripts/fetch-vision-model.js
-   ```
-   oder manuell nach `assets/vision/` legen und `model.assets.ts` auf beide
-   `require(...)` zeigen lassen.
-4. **Normalisierung** in `config.ts` prüfen (`Preprocess.pixelMean/pixelStd`):
-   Standard ist `[-1, 1]` (Keras-MobileNet). Erwartet das Modell `[0, 1]`,
-   `mean = 0, std = 255` setzen. Bei uint8-Modellen wird sie übersprungen.
-5. Ggf. `labels.ts` anpassen: Hat das neue Modell eine echte „Müll"-Klasse,
-   kann die Schlüsselwort-Heuristik entfallen und direkt auf den Klassennamen
-   geprüft werden.
-
-## GPU-Beschleunigung (optional)
-
-Standard ist der CPU-Delegate (maximal kompatibel). Für GPU in
-`classifier.ts` beim `loadTensorflowModel(MODEL_ASSET, [...])` einen Delegate
-angeben (`'core-ml'`/`'metal'` auf iOS, `'android-gpu'`/`'nnapi'` auf Android)
-und im `react-native-fast-tflite`-Plugin (`app.json`) die passenden Optionen
-aktivieren. Nicht jedes Modell unterstützt jeden Delegate.
-
-## Bekannte Grenzen der Treffsicherheit
-
-- **Kein Müll-Modell.** MobileNet/ImageNet kennt Alltagsobjekte, keine
-  „Vermüllung". Eine Flasche im Bild wird erkannt – ob sie *Abfall* ist,
-  entscheidet der Kontext, den das Modell nicht sieht. Daher rein **Advisory**.
-- **Falsch-Positive/Negative** sind erwartbar: verstreute Kleinteile,
-  ungewöhnliche Blickwinkel, schlechtes Licht, Nässe. „unsicher" ist Absicht,
-  kein Fehler.
-- **uint8-Quantisierung** kostet etwas Genauigkeit gegenüber float32 – im
-  Gegenzug kleiner und schneller.
-- Die Schwellen in `config.ts` sind Startwerte und dürfen nach echten Tests
-  nachjustiert werden.
-- Läuft nur im Dev-/Production-Build, **nicht in Expo Go**.
-
-Fazit: gut genug als hilfreicher Hinweis beim Fotografieren, **nicht** als
-Verifikation. Die eigentliche Prüfung bleibt serverseitig.
+- Ohne trainiertes Modell passiert nichts. Qualität hängt ganz an den
+  Trainingsdaten, vor allem an guten Negativbeispielen (volle, legale
+  Mülleimer!).
+- Trainiert wird auf verpixelten Kopien, geprüft wird auf dem Handy das
+  unverpixelte Foto. Der Unterschied ist klein (Verpixelung betrifft nur
+  Gesichter/Kennzeichen), sollte aber bei der Auswertung im Blick bleiben.
+- int8 kostet etwas Genauigkeit; deshalb wertet `evaluate.py` auch das
+  exportierte `.tflite` aus.
+- Läuft nicht in Expo Go und nicht im Web.

@@ -87,6 +87,12 @@ export default function MeldenScreen() {
         source,
         photoUris: [photoUri],
         createdAt: new Date().toISOString(),
+        // On-Device-Score nur als Signal mitsenden; der Server vertraut ihm
+        // nicht blind und vergibt darauf nie Punkte.
+        ondevice:
+          vision.status === 'done' && vision.result
+            ? { score: vision.result.score, modelVersion: vision.result.modelVersion }
+            : null,
       };
       // Immer erst in die Queue, dann Sync-Versuch: App-Absturz oder
       // Funkloch verlieren nichts, und der clientKey entdoppelt Retries.
@@ -190,7 +196,7 @@ export default function MeldenScreen() {
             />
           </Card>
         )}
-        <VisionAdvisory status={vision.status} result={vision.result} />
+        <VisionAdvisory status={vision.status} result={vision.result} onRetake={reset} />
         {source === 'gallery' && (
           <Card style={{ backgroundColor: colors.warningSoft }}>
             <Text style={[styles.galleryHint, { color: colors.warning }]} allowFontScaling>
@@ -225,6 +231,11 @@ export default function MeldenScreen() {
               <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
                 {t('report.ai_review_body')}
               </Text>
+              {vision.status === 'done' && (
+                <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
+                  {t('report.ai_ondevice_body')}
+                </Text>
+              )}
             </View>
           </View>
         </Card>
@@ -269,16 +280,32 @@ export default function MeldenScreen() {
 }
 
 /**
- * Advisory-Hinweis der On-Device-Erkennung. Rein informativ: er zeigt „könnte
- * Müll sein" / „wahrscheinlich kein Müll" / „unsicher" mit Confidence,
- * blockiert die Meldung aber nie. Fehlt das Modell, erscheint ein dezenter
- * „nicht verfügbar"-Hinweis.
+ * Advisory-Hinweis der On-Device-Erkennung. Rein informativ: bei hohem Score
+ * „könnte Müll sein", bei niedrigem ein freundliches „Wir erkennen hier
+ * keinen Müll, trotzdem melden?" mit der Wahl zwischen neuem Foto und
+ * Weitermachen. Der Absende-Knopf bleibt IMMER aktiv. Ohne Modell (Flag aus,
+ * nichts geladen) zeigt die Komponente gar nichts.
  */
-function VisionAdvisory({ status, result }: { status: VisionStatus; result: VisionResult | null }) {
+function VisionAdvisory({
+  status,
+  result,
+  onRetake,
+}: {
+  status: VisionStatus;
+  result: VisionResult | null;
+  onRetake: () => void;
+}) {
   const colors = useThemeColors();
   const { t } = useI18n();
+  // „Trotzdem melden" klappt den Hinweis nur zu; gemeldet wird wie immer
+  // über den Absende-Knopf.
+  const [dismissed, setDismissed] = useState(false);
 
-  if (status === 'idle') return null;
+  useEffect(() => {
+    setDismissed(false);
+  }, [result]);
+
+  if (status === 'idle' || status === 'skipped') return null;
 
   if (status === 'analyzing') {
     return (
@@ -306,53 +333,63 @@ function VisionAdvisory({ status, result }: { status: VisionStatus; result: Visi
     );
   }
 
-  const percent = Math.round(result.confidence * 100);
-  const meta: Record<
-    VisionResult['verdict'],
-    { icon: IoniconName; bg: string; fg: string; title: string; showPct: boolean }
-  > = {
-    trash: {
-      icon: 'checkmark-circle',
-      bg: colors.successSoft,
-      fg: colors.primaryStrong,
-      title: t('report.vision_trash'),
-      showPct: true,
-    },
-    'no-trash': {
-      icon: 'information-circle',
-      bg: colors.warningSoft,
-      fg: colors.warning,
-      title: t('report.vision_no_trash'),
-      showPct: true,
-    },
-    uncertain: {
-      icon: 'help-circle',
-      bg: colors.backgroundSelected,
-      fg: colors.textSecondary,
-      title: t('report.vision_uncertain'),
-      showPct: false,
-    },
-  };
-  const m = meta[result.verdict];
-  const confidenceText = t('report.vision_confidence', { percent });
-  const a11yLabel = m.showPct ? `${m.title}. ${confidenceText}. ${t('report.vision_advisory_note')}` : m.title;
+  if (result.verdict === 'trash' || dismissed) {
+    const icon: IoniconName = result.verdict === 'trash' ? 'checkmark-circle' : 'information-circle';
+    const title = result.verdict === 'trash' ? t('report.vision_trash') : t('report.vision_no_trash_title');
+    return (
+      <Card style={{ backgroundColor: result.verdict === 'trash' ? colors.successSoft : colors.backgroundElement }}>
+        <View
+          style={styles.visionRow}
+          accessible
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={`${title}. ${t('report.vision_advisory_note')}`}>
+          <Ionicons name={icon} size={22} color={colors.textSecondary} />
+          <View style={styles.visionText}>
+            <Text style={[styles.visionTitle, { color: colors.text }]} allowFontScaling>
+              {title}
+            </Text>
+            <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
+              {t('report.vision_advisory_note')}
+            </Text>
+          </View>
+        </View>
+      </Card>
+    );
+  }
 
+  const title = t('report.vision_no_trash_title');
+  const body = t('report.vision_no_trash_body');
   return (
-    <Card style={{ backgroundColor: m.bg }}>
+    <Card style={{ backgroundColor: colors.warningSoft }}>
       <View
         style={styles.visionRow}
         accessible
         accessibilityLiveRegion="polite"
-        accessibilityLabel={a11yLabel}>
-        <Ionicons name={m.icon} size={22} color={m.fg} />
+        accessibilityLabel={`${title}. ${body}`}>
+        <Ionicons name="information-circle" size={22} color={colors.warning} />
         <View style={styles.visionText}>
-          <Text style={[styles.visionTitle, { color: m.fg }]} allowFontScaling>
-            {m.title}
+          <Text style={[styles.visionTitle, { color: colors.warning }]} allowFontScaling>
+            {title}
           </Text>
           <Text style={[styles.visionNote, { color: colors.textSecondary }]} allowFontScaling>
-            {m.showPct ? `${confidenceText} · ${t('report.vision_advisory_note')}` : t('report.vision_advisory_note')}
+            {body}
           </Text>
         </View>
+      </View>
+      <View style={styles.visionActions}>
+        <Button
+          label={t('report.vision_report_anyway')}
+          accessibilityLabel={t('report.vision_report_anyway_a11y')}
+          onPress={() => setDismissed(true)}
+          variant="ghost"
+        />
+        <Button
+          label={t('report.vision_retake')}
+          accessibilityLabel={t('report.vision_retake_a11y')}
+          onPress={onRetake}
+          icon="camera-outline"
+          variant="ghost"
+        />
       </View>
     </Card>
   );
@@ -409,6 +446,7 @@ const styles = StyleSheet.create({
   visionText: { flex: 1, gap: 2 },
   visionTitle: { ...Type.heading, flexShrink: 1 },
   visionNote: { ...Type.caption, flexShrink: 1 },
+  visionActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.two },
   galleryHint: { fontSize: 14, lineHeight: 20 },
   privacyRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   privacyNote: { fontSize: 13, lineHeight: 19, flexShrink: 1 },

@@ -61,6 +61,30 @@ Die alte Funktion `verify-waste` wird vom Client nicht mehr aufgerufen und
 kann nach der Umstellung des DEV-Projekts geloescht werden (nicht Teil der
 additiven Pakete).
 
+## On-Device-Schicht (vor dem Upload, nur Hinweis)
+
+Vor dieser Pipeline läuft seit Migration 023 ein eigenes, kleines Modell
+direkt auf dem Handy (Details: `docs/vision-ondevice.md`). Es zeigt beim
+Fotografieren einen Hinweis und fängt offensichtliche Fehlfotos ab, bevor sie
+hochgeladen werden. Nutzer können **immer** trotzdem melden.
+
+Für diese Pipeline heißt das:
+
+* Aufrufkette: App → `submit-report` (speichert `ondevice_score` +
+  `ondevice_model_version`, nur für veröffentlichte Modellversionen) → App →
+  `analyze-photo`.
+* `analyze-photo` bleibt die verbindliche Prüfung. Der Handy-Score ist
+  manipulierbar und wirkt deshalb **nur verschärfend**: bei „ok“ und einem
+  Score unter `system_settings.ondevice_disagree_below` geht die Meldung an
+  einen Menschen. Kein Einfluss auf Ablehnung, Kosten oder Punkte. Standard:
+  aus (`null`).
+* Selbstprüf-Fragen unten, beantwortet für die On-Device-Schicht:
+  (1) berät nur; (2) ja, teils Minderjährige, daher Training nur per
+  Opt-in; (3) Foto bleibt auf dem Gerät, nur Score + Version gehen an
+  Supabase; (4) nicht nötig, weil nichts entschieden wird; (5) Modell,
+  Version und Score werden gespeichert; (6) Hinweiskarte im Melde-Flow +
+  Datenschutzerklärung 8/8a; (7) DSFA ergänzt (R10, R11).
+
 ## Rechtlicher Kontext: DSGVO Art. 22 statt AI Act Art. 50 (Zukunfts-Checkliste)
 
 Der EU AI Act Art. 50 wird fuer diese Pipeline oft faelschlich als

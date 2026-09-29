@@ -12,6 +12,7 @@ import { Colors } from '@/constants/theme';
 import { I18nProvider, useI18n } from '@/lib/i18n';
 import { startAutoSync } from '@/lib/offline-queue';
 import { SessionProvider, useSession } from '@/lib/session';
+import { refreshVisionModel } from '@/lib/vision';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,6 +35,12 @@ function AppStack() {
       }
     });
   }, [t]);
+
+  useEffect(() => {
+    // On-Device-Modell im Hintergrund aktualisieren (hoechstens 1x pro Tag,
+    // wirft nie). Ohne aktives Modell auf dem Server passiert nichts.
+    refreshVisionModel();
+  }, []);
 
   // Navigation-Theme an die CLAR-Palette angleichen (Header, Hintergründe).
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;

@@ -1,17 +1,20 @@
 /**
  * React-Hook für die On-Device-Analyse im Melde-Flow.
  *
- * Kapselt die Zustandsmaschine (idle → analyzing → done | unavailable) und
- * verwirft veraltete Ergebnisse, wenn der Nutzer schnell ein neues Foto wählt.
- * Das Ergebnis ist ausschließlich ein HINWEIS und beeinflusst das Absenden nie.
+ * Zustandsmaschine: idle → analyzing → done | skipped | unavailable.
+ * `skipped` heißt: bewusst keine Prüfung (Flag aus oder kein Modell), die UI
+ * zeigt dann gar nichts. Veraltete Ergebnisse werden verworfen, wenn der
+ * Nutzer schnell ein neues Foto wählt. Das Ergebnis ist ausschließlich ein
+ * HINWEIS und beeinflusst das Absenden nie.
  */
 
 import { useCallback, useRef, useState } from 'react';
 
 import { analyzePhoto } from './index';
 import type { VisionResult } from './types';
+import { VisionDisabledError } from './types';
 
-export type VisionStatus = 'idle' | 'analyzing' | 'done' | 'unavailable';
+export type VisionStatus = 'idle' | 'analyzing' | 'done' | 'skipped' | 'unavailable';
 
 export type UseVision = {
   status: VisionStatus;
@@ -36,11 +39,11 @@ export function useVision(): UseVision {
         setResult(r);
         setStatus('done');
       })
-      .catch(() => {
+      .catch((e) => {
         if (id !== requestId.current) return;
-        // Jeder Fehler (kein Modell, Dekodierfehler …) → neutraler Aus-Zustand.
         setResult(null);
-        setStatus('unavailable');
+        // Kein Modell/Flag aus → still überspringen; echter Fehler → dezenter Hinweis.
+        setStatus(e instanceof VisionDisabledError ? 'skipped' : 'unavailable');
       });
   }, []);
 

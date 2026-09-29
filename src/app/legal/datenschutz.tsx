@@ -8,6 +8,8 @@
 // [ANWALT PRÜFEN] Drittlandtransfer Anthropic (SCC/DPF), Aufbewahrungsfristen,
 // [ANWALT PRÜFEN] Einordnung der automatisierten Entscheidung unter Art. 22 (2),
 // [ANWALT PRÜFEN] Altersgrenze und Ausgestaltung der elterlichen Einwilligung.
+// [ANWALT PRÜFEN] 8a: Einwilligung (Art. 6 (1) a) als Grundlage fuers Training,
+// [ANWALT PRÜFEN] Art. 6 (1) f fuer den gespeicherten On-Device-Score.
 // Die Punkte sind hier bewusst ausformuliert statt offen gelassen; die
 // Bestaetigung durch eine fachkundige Person steht aus (siehe FRAGEN.md).
 //
@@ -39,7 +41,9 @@ const SECTIONS: LegalSection[] = [
       'Meldungen: Standort der Fundstelle (Breiten- und Längengrad), Zeitpunkt, freiwillige Beschreibung, erkannte Abfallart, Status. Zweck: die Müllkarte und die Weitergabe an die zuständige Stelle. Grundlage: Art. 6 (1) b DSGVO.',
       'Fotos: das Original liegt in einem privaten Speicher, auf den nur du und die Server-Prozesse zugreifen können. Veröffentlicht wird ausschließlich eine anonymisierte Kopie. Grundlage: Art. 6 (1) b DSGVO für die Meldung, Art. 6 (1) f DSGVO für die öffentliche Darstellung des Fundorts.',
       'Punkte und Level: Buchungen mit Grund und Zeitpunkt. Sie sind rein kosmetisch und haben keinen Geldwert. Grundlage: Art. 6 (1) b DSGVO.',
-      'Einwilligungen: jede Änderung an den Schaltern „Kamera", „Standort", „Weitergabe an Behörden" und die Altersbestätigung werden mit Zeitpunkt und Fassung dieser Erklärung protokolliert. Zweck: Nachweisbarkeit. Grundlage: Art. 7 (1), Art. 5 (2) DSGVO.',
+      'Einwilligungen: jede Änderung an den Schaltern „Kamera", „Standort", „Weitergabe an Behörden", „KI-Training" und die Altersbestätigung werden mit Zeitpunkt und Fassung dieser Erklärung protokolliert. Zweck: Nachweisbarkeit. Grundlage: Art. 7 (1), Art. 5 (2) DSGVO.',
+      'Ergebnis der Vorab-Erkennung: eine Zahl zwischen 0 und 1 und die Version des Modells auf deinem Gerät, gespeichert mit der Meldung. Zweck: Qualitätskontrolle der Erkennung und ein zusätzliches Prüfsignal (siehe 8). Grundlage: Art. 6 (1) f DSGVO.',
+      'Trainingsdaten, nur wenn du es einschaltest: Verweis auf die verpixelte Kopie deines Fotos, das Prüfergebnis und das Ergebnis der Vorab-Erkennung (siehe 8a). Grundlage: Art. 6 (1) a DSGVO.',
       'Missbrauchsschutz: von deinem Gerät und deiner IP-Adresse speichern wir nur Prüfsummen (SHA-256), nie die Werte selbst, zusammen mit der ausgeführten Aktion. Zweck: Begrenzung von Spam und automatisierten Massenmeldungen. Grundlage: Art. 6 (1) f DSGVO.',
       'Moderation: wenn du einen Inhalt meldest oder eine Überprüfung anforderst, speichern wir deine Meldung mit Grund und Zeitpunkt. Grundlage: Art. 6 (1) c DSGVO in Verbindung mit dem Digital Services Act.',
       'Kosten- und Sicherheitsprotokolle: welches KI-Modell wann wie viel gekostet hat, und sicherheitsrelevante Vorgänge. Diese Zeilen überleben eine Kontolöschung, verlieren dabei aber jeden Personenbezug. Grundlage: Art. 6 (1) f DSGVO.',
@@ -89,8 +93,18 @@ const SECTIONS: LegalSection[] = [
       'Daraus ergibt sich unmittelbar, was mit deiner Meldung passiert: sie wird veröffentlicht, sie wird abgelehnt, oder sie geht an einen Menschen zur Prüfung. Bei geringer Sicherheit, bei Verdacht auf Privatgrund, bei erkannten Personen und in einer Stichprobe schaut immer ein Mensch drauf.',
       'Das ist eine automatisierte Entscheidung im Sinne von Art. 22 DSGVO. Du hast das Recht, dass ein Mensch sie überprüft, deinen Standpunkt darzulegen und die Entscheidung anzufechten. In der App findest du dafür in der Fallansicht den Knopf „Überprüfung anfordern". Das kostet nichts und hat keine Nachteile für dich.',
       'Wird deine Meldung abgelehnt, siehst du in der Fallansicht den Grund und den Hinweis, ob die Entscheidung automatisch getroffen wurde. Eine Ablehnung führt dazu, dass es für diese Meldung keine Punkte gibt. Punkte sind kosmetisch und haben keinen Geldwert.',
-      'Auf deinem Gerät läuft zusätzlich eine kleine Vorab-Erkennung, die dir vor dem Absenden einen unverbindlichen Hinweis gibt. Sie entscheidet nichts, blockiert nichts und sendet nichts an uns.',
+      'Vor dem Absenden läuft zusätzlich eine kleine, von uns trainierte Vorab-Erkennung direkt auf deinem Gerät. Sie gibt dir einen unverbindlichen Hinweis, etwa „Wir erkennen hier keinen Müll, trotzdem melden?". Du kannst immer trotzdem melden. Für diese Erkennung verlässt dein Foto das Gerät nicht.',
+      'Mit der Meldung speichern wir das Ergebnis dieser Vorab-Erkennung (eine Zahl zwischen 0 und 1) und die Modellversion. Beides entscheidet nichts und bringt keine Punkte. Es kann höchstens dazu führen, dass zusätzlich ein Mensch auf deine Meldung schaut. Das Modell lädt die App von unseren Servern; dabei werden außer den technisch nötigen Verbindungsdaten keine Daten über dich gesendet.',
       'Der Hilfe-Chat in der App ist keine KI. Er besteht aus einer festen Liste von Fragen mit jeweils einer festen Antwort.',
+    ],
+  },
+  {
+    heading: '8a. Training unserer eigenen Erkennung (freiwillig)',
+    paragraphs: [
+      'Wir verbessern die Vorab-Erkennung mit echten Meldungen. Dafür nutzen wir Fotos nur, wenn du das im Profil unter „Datenschutz" ausdrücklich einschaltest („KI-Training"). Der Schalter ist von Anfang an aus. Ohne ihn funktioniert CLAR genauso, auch Punkte hängen nicht davon ab. Grundlage: deine Einwilligung, Art. 6 (1) a DSGVO.',
+      'Genutzt wird nur die verpixelte Kopie deines Fotos, und nur wenn sie freigegeben ist, also keine Person erkannt wurde oder ein Mensch sie geprüft hat. Dazu das Prüfergebnis (Müll ja oder nein) und das Ergebnis der Vorab-Erkennung. Nicht genutzt werden das Originalfoto, der Standort, deine Beschreibung, dein Name, deine E-Mail-Adresse. Meldungen mit Verdacht auf Privatgrund oder unzulässigen Inhalten kommen nie in den Trainingsdatensatz. Es zählen nur Meldungen, die du nach dem Einschalten abschickst.',
+      'Das Training findet nur bei uns statt, auf eigenen Rechnern. Wir laden die Fotos dafür bei keinem anderen Dienst hoch, geben sie nicht weiter und verkaufen sie nicht.',
+      'Du kannst die Einwilligung jederzeit im Profil widerrufen. Dann werden deine Fotos sofort aus dem Trainingsdatensatz entfernt, ebenso wenn eine Meldung oder dein Konto gelöscht wird. Lokale Kopien auf unseren Trainingsrechnern werden vor jedem Training abgeglichen und gelöscht. Ein schon trainiertes Modell enthält keine Fotos, sondern daraus gelernte Zahlen. Wir trainieren regelmäßig neu, spätestens alle 12 Monate, damit auch diese Spuren verschwinden.',
     ],
   },
   {
@@ -101,6 +115,8 @@ const SECTIONS: LegalSection[] = [
       'Einmal-Links für die zuständige Stelle: 30 Tage ab Versand, danach ungültig.',
       'Kosten- und Sicherheitsprotokolle: bis zu 24 Monate, nach einer Kontolöschung ohne jeden Bezug zu dir.',
       'Öffentlich gezeigte, anonymisierte Fotos werden zusammen mit deinem Konto gelöscht.',
+      'Ergebnis der Vorab-Erkennung: so lange wie die Meldung.',
+      'Trainingsdaten (nur mit Einwilligung): bis zum Widerruf, bis zur Löschung der Meldung oder des Kontos, höchstens aber 24 Monate.',
       '[BETREIBER EINTRAGEN: abweichende Fristen, falls gesetzliche Aufbewahrungspflichten bestehen].',
     ],
   },

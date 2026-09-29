@@ -20,7 +20,7 @@ Datenverkauf.
 |---|---|---|---|---|
 | E-Mail-Adresse | Ja | Ja | Nein | App-Funktion (Konto/Login) |
 | Grober **Standort** (Meldung, gerundet öffentlich) | Ja | Ja | Nein | App-Funktion (Müllkarte) |
-| **Fotos** (Original privat; öffentlich nur anonymisiert) | Ja | Ja | Nein | App-Funktion |
+| **Fotos** (Original privat; öffentlich nur anonymisiert) | Ja | Ja | Nein | App-Funktion; mit Opt-in zusätzlich Produktverbesserung (Training der eigenen Erkennung) |
 | Nutzer-Inhalte (Beschreibungstext der Meldung) | Ja | Ja | Nein | App-Funktion |
 | Identifikatoren: **nur** zufällige Install-ID (serverseitig gehasht) | Ja | Nein (gehasht) | Nein | Missbrauchsschutz |
 | Nutzungsdaten (Punkte/Level, kosmetisch) | Ja | Ja | Nein | App-Funktion |
@@ -48,7 +48,7 @@ Datenverkauf.
 |---|---|---|---|---|
 | E-Mail-Adresse | Ja | [PRÜFEN: Auftragsverarbeiter] | Konto-Verwaltung | Pflicht |
 | Standort (ungefähr) | Ja | Nein* | App-Funktionalität | Pflicht für Meldung |
-| Fotos | Ja | Nein* (öffentlich nur anonymisiert) | App-Funktionalität | Ja (Galerie optional) |
+| Fotos | Ja | Nein* (öffentlich nur anonymisiert) | App-Funktionalität; mit Opt-in auch „Analysen“/Produktverbesserung (KI-Training, nur intern) [PRÜFEN: Zweck-Kategorie] | Ja (Galerie optional; Training optional) |
 | App-Aktivität (Punkte) | Ja | Nein | App-Funktionalität | — |
 | Geräte-/andere IDs (gehashte Install-ID) | Ja | Nein | Betrugs-/Missbrauchsschutz | — |
 

@@ -2,54 +2,83 @@
  * On-Device-Bilderkennung – öffentliche Typen.
  *
  * Diese Datei enthält KEINE nativen Imports und ist damit frei test- und
- * importierbar. Die konkrete Modell-Implementierung (TensorFlow.js, siehe
- * `classifier.ts`) wird über das `VisionClassifier`-Interface angebunden und
- * kann später gegen ein müll-spezifisches Modell getauscht werden, ohne dass
- * der restliche Code (Hook, Screen, Verdict-Logik) sich ändert.
+ * importierbar. Das Modell ist ein binärer Klassifikator („illegale
+ * Müllablagerung ja/nein"), dessen Datei und Metadaten zur Laufzeit aus
+ * Supabase geladen werden (siehe `modelStore.ts`, docs/vision-ondevice.md).
  */
 
-/** Eine einzelne Modell-Vorhersage: Label + Wahrscheinlichkeit (0..1). */
-export type Prediction = {
-  /** Roh-Label des Modells, z. B. „pop bottle, soda bottle". */
-  label: string;
-  /** Wahrscheinlichkeit dieser Klasse, 0..1. */
-  probability: number;
+/** Quantisierungsparameter eines int8/uint8-Tensors: `real = scale * (q - zeroPoint)`. */
+export type QuantParams = {
+  scale: number;
+  zeroPoint: number;
 };
 
 /**
- * Das für den Nutzer sichtbare Urteil. Bewusst dreiwertig – „unsicher" ist
- * ein eigener, ehrlicher Zustand und keine erzwungene Ja/Nein-Antwort.
+ * Metadaten eines Modells, wie sie in `public.vision_models` stehen.
+ * Alles, was die App zum Vorverarbeiten und Auswerten braucht, kommt von
+ * hier – nichts davon ist im App-Code fest verdrahtet.
  */
-export type VisionVerdict = 'trash' | 'no-trash' | 'uncertain';
+export type ModelManifest = {
+  /** Eindeutige Version, z. B. „2026-10-01-a". */
+  version: string;
+  /** Pfad der .tflite-Datei im Storage-Bucket `ml-models`. */
+  storagePath: string;
+  /** SHA-256 der Datei (hex, klein), wird nach dem Download geprüft. */
+  sha256: string;
+  sizeBytes: number;
+  /** Kantenlänge des quadratischen Eingabebilds in Pixeln. */
+  inputSize: number;
+  /** Klassennamen in Reihenfolge der Modell-Ausgabe. */
+  labels: string[];
+  /** Index der Klasse „illegale Müllablagerung" in `labels`. */
+  positiveIndex: number;
+  /** Ab diesem Score gilt ein Foto als „wahrscheinlich Müll". */
+  threshold: number;
+  /** Pro Farbkanal (R, G, B): `(pixel - mean) / std` auf Pixelwerte 0..255. */
+  normalization: { mean: [number, number, number]; std: [number, number, number] };
+  /** Quantisierung des Eingangs, falls das Modell int8/uint8 erwartet. */
+  inputQuant: QuantParams | null;
+  /** Quantisierung des Ausgangs, falls das Modell int8/uint8 liefert. */
+  outputQuant: QuantParams | null;
+  /** Ob die Ausgabe schon Wahrscheinlichkeiten sind (`softmax`) oder Rohwerte (`none`). */
+  outputActivation: 'softmax' | 'none';
+};
+
+/**
+ * Das für den Nutzer sichtbare Urteil. Bewusst nur zweiwertig: das Modell
+ * beantwortet genau eine Frage. Die Formulierung in der UI bleibt vorsichtig
+ * („könnte Müll sein"), weil ein Modell keine Gewissheit hat.
+ */
+export type VisionVerdict = 'trash' | 'no-trash';
 
 /** Ergebnis einer Analyse – reiner Datencontainer, UI-unabhängig. */
 export type VisionResult = {
   verdict: VisionVerdict;
-  /** Konfidenz in das gezeigte Urteil, 0..1. */
-  confidence: number;
-  /** Bestes müll-relevantes Label (für Debug/Telemetrie), falls vorhanden. */
-  trashLabel: string | null;
-  /** Top-k-Rohvorhersagen, absteigend sortiert (für Debug/Doku). */
-  predictions: Prediction[];
+  /** Wahrscheinlichkeit für „Müll", 0..1. Wird mit der Meldung gespeichert. */
+  score: number;
+  /** Schwellenwert, mit dem das Urteil gebildet wurde. */
+  threshold: number;
+  /** Version des Modells, das den Score geliefert hat. */
+  modelVersion: string;
+};
+
+/** Ein Modell, das lokal auf dem Gerät liegt und geprüft wurde. */
+export type LocalModel = {
+  manifest: ModelManifest;
+  /** file://-URI der geprüften .tflite-Datei. */
+  fileUri: string;
 };
 
 /**
- * Austauschbare Modell-Schnittstelle. Eine Implementierung lädt EINMAL ihr
- * Modell (`load`) und liefert dann für Bilddaten Top-k-Vorhersagen
- * (`classify`). Die Zuordnung „Label → Müll" und die Schwellen liegen bewusst
- * NICHT hier, sondern in `labels.ts`/`verdict.ts` – so bleibt der Modelltausch
- * unabhängig von der Produktlogik.
+ * Die Prüfung ist bewusst aus: Feature Flag aus, kein aktives Modell auf dem
+ * Server oder noch nichts heruntergeladen. Kein Fehler – die Meldung läuft
+ * ganz normal weiter.
  */
-export interface VisionClassifier {
-  /** Lädt das Modell (idempotent, cachet intern). Wirft bei Fehler. */
-  load(): Promise<void>;
-  /** Ob das Modell einsatzbereit ist. */
-  readonly isLoaded: boolean;
-  /**
-   * Klassifiziert eine lokale Bilddatei (file://-URI) und gibt die Top-k
-   * Vorhersagen zurück (absteigend nach Wahrscheinlichkeit).
-   */
-  classify(photoUri: string): Promise<Prediction[]>;
+export class VisionDisabledError extends Error {
+  constructor(message = 'vision_disabled') {
+    super(message);
+    this.name = 'VisionDisabledError';
+  }
 }
 
 /** Fehler, wenn das Modell/die native Umgebung nicht verfügbar ist. */

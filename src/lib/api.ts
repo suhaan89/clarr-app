@@ -18,6 +18,9 @@ export type PendingReport = {
   source: PhotoSource;
   photoUris: string[]; // lokale Datei-URIs bis zum Sync
   createdAt: string;
+  // Ergebnis der On-Device-Pruefung (nur Hinweis). Fehlt bei aelteren
+  // Queue-Eintraegen und wenn nicht geprueft wurde.
+  ondevice?: { score: number; modelVersion: string } | null;
 };
 
 export function newClientKey(): string {
@@ -97,6 +100,8 @@ export async function submitReport(item: PendingReport, deviceId: string | null)
       deviceId,
       clientKey: item.clientKey,
       source: item.source,
+      ondeviceScore: item.ondevice?.score ?? null,
+      ondeviceModelVersion: item.ondevice?.modelVersion ?? null,
     }
   );
 
@@ -109,6 +114,17 @@ export async function submitReport(item: PendingReport, deviceId: string | null)
       } catch {
         // Review/Pipeline holt das nach; kein Abbruch fuer den Nutzer.
       }
+    }
+  }
+
+  // Verbindliche KI-Pruefung (docs/vision.md). Auch bei idempotenter Antwort
+  // aufrufen: war ein frueherer Versuch vor diesem Schritt abgebrochen, holt
+  // das die Pruefung nach; ist sie schon gelaufen, antwortet der Server 409.
+  if (result?.report_id) {
+    try {
+      await callFunction('analyze-photo', { report_id: result.report_id });
+    } catch {
+      // Die Meldung ist gespeichert; ohne Pruefung bleibt sie unveroeffentlicht.
     }
   }
   return result;

@@ -1,44 +1,43 @@
 /**
  * Öffentliche API der On-Device-Bilderkennung.
  *
- * Der Rest der App importiert NUR aus dieser Datei (`analyzePhoto`,
- * `warmUpVision`, der `useVision`-Hook und die Typen). Welche Modell-
- * Implementierung dahintersteht, ist hier an EINER Stelle austauschbar:
- * `classifier`. Ein müll-spezifisches Modell wird über dieselbe
- * `VisionClassifier`-Schnittstelle eingehängt, ohne Screen/Hook zu ändern.
+ * Der Rest der App importiert NUR aus dieser Datei. Das Modell kommt aus
+ * Supabase (`modelStore.ts`); ist keins da oder ist die Prüfung per Flag aus,
+ * wirft `analyzePhoto` einen `VisionDisabledError` und der Melde-Flow läuft
+ * ohne Hinweis ganz normal weiter.
+ *
+ * WICHTIG: Das Ergebnis berät nur. Es entscheidet nichts, blockiert nichts
+ * und vergibt keine Punkte. Score und Modellversion gehen mit der Meldung an
+ * den Server, der sie höchstens als zusätzliches, nur verschärfendes Signal
+ * nutzt (siehe docs/vision-ondevice.md).
  */
 
-import { tfliteClassifier } from './classifier';
-import type { VisionClassifier, VisionResult } from './types';
+import { classify, preload } from './classifier';
+import { getLocalModel } from './modelStore';
+import type { VisionResult } from './types';
+import { VisionDisabledError } from './types';
 import { deriveVerdict } from './verdict';
 
-export type { Prediction, VisionResult, VisionVerdict } from './types';
-export { VisionUnavailableError } from './types';
+export type { VisionResult, VisionVerdict } from './types';
+export { VisionDisabledError, VisionUnavailableError } from './types';
 export { useVision } from './useVision';
 export type { UseVision, VisionStatus } from './useVision';
+export { clearModelCache, refreshModel as refreshVisionModel } from './modelStore';
 
-/** Aktive Modell-Implementierung – hier tauschbar. */
-const classifier: VisionClassifier = tfliteClassifier;
-
-/**
- * Lädt das Modell vorab (idempotent). Optional beim Betreten des Melde-Flows,
- * damit die erste Analyse schneller ist. Wirft `VisionUnavailableError`, wenn
- * das Modell nicht verfügbar ist – Aufrufer behandeln das als „Analyse aus".
- */
+/** Lädt das aktuelle Modell vorab (idempotent). Ohne Modell passiert nichts. */
 export async function warmUpVision(): Promise<void> {
-  await classifier.load();
-}
-
-/** Ob das Modell bereits geladen ist. */
-export function isVisionReady(): boolean {
-  return classifier.isLoaded;
+  const local = await getLocalModel();
+  if (local) await preload(local);
 }
 
 /**
  * Analysiert ein Foto (lokale file://-URI) und liefert ein Advisory-Urteil.
- * Wirft `VisionUnavailableError`, wenn keine Analyse möglich ist.
+ * Wirft `VisionDisabledError`, wenn nicht geprüft werden soll, und
+ * `VisionUnavailableError`, wenn die Prüfung technisch nicht klappt.
  */
 export async function analyzePhoto(photoUri: string): Promise<VisionResult> {
-  const predictions = await classifier.classify(photoUri);
-  return deriveVerdict(predictions);
+  const local = await getLocalModel();
+  if (!local) throw new VisionDisabledError();
+  const score = await classify(photoUri, local);
+  return deriveVerdict(score, local.manifest);
 }

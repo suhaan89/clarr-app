@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
       visionUsage,
       ownEvents,
       rateLimits,
+      trainingSamples,
     ] = await Promise.all([
       admin.from("user_profiles").select("*").eq("id", uid).maybeSingle(),
       admin.from("reports").select("*").eq("user_id", uid),
@@ -81,6 +82,8 @@ Deno.serve(async (req) => {
       // Missbrauchsschutz-Zeilen. Sie enthalten nur Hashes, sind aber ueber
       // user_id dem Konto zugeordnet und damit auskunftspflichtig.
       admin.from("rate_limit_events").select("*").eq("user_id", uid),
+      // Trainingsdaten-Zeilen (Migration 023) — nur mit Einwilligung vorhanden.
+      admin.from("vision_training_samples").select("*").eq("user_id", uid),
     ]);
 
     // Original-Fotos: kurzlebige Signed URLs (1 h) auf den privaten Bucket.
@@ -99,7 +102,7 @@ Deno.serve(async (req) => {
       action: "data_export",
       entity_type: "user",
       // Keine Inhalte im Audit — nur DASS exportiert wurde.
-      details: { tables: 11 },
+      details: { tables: 12 },
     });
 
     return new Response(
@@ -118,6 +121,7 @@ Deno.serve(async (req) => {
         vision_usage: visionUsage.data,
         cleanup_events_created: ownEvents.data,
         rate_limit_events: rateLimits.data,
+        vision_training_samples: trainingSamples.data,
         hinweis:
           "Signed URLs sind 1 Stunde gueltig. Veroeffentlichte Fotos existieren zusaetzlich anonymisiert (geblurrt). " +
           "audit_log enthaelt nur Eintraege, in denen dieses Konto selbst gehandelt hat (actor_user_id) — " +

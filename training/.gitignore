@@ -1,0 +1,10 @@
+# Fotos, Laeufe und Exporte bleiben lokal (Datenschutz + Groesse)
+data/
+runs/
+exports/
+*.pt
+*.tflite
+.env
+.venv/
+__pycache__/
+.ipynb_checkpoints/

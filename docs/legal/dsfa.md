@@ -65,6 +65,8 @@ an die zuständige Stelle.
 | R7 | Kontoübernahme über ein entwendetes Refresh-Token | Meldende | gering | hoch | mittel |
 | R8 | Übermittlung des Bildes in die USA ohne tragfähige Grundlage | alle | offen | mittel | offen |
 | R9 | Missbrauch der App zur gezielten Beobachtung einer Person | Dritte | gering | hoch | mittel |
+| R10 | Fotos (auch von Minderjährigen gemeldet, mit Dritten im Bild) werden für das Training weiterverwendet oder gelangen dabei zu Dritten | Meldende, Dritte | mittel | mittel | mittel |
+| R11 | Ein manipulierter On-Device-Score beeinflusst Veröffentlichung oder Punkte | alle | mittel | gering | gering |
 
 ## 5. Abhilfemaßnahmen und Restrisiko
 
@@ -79,6 +81,8 @@ an die zuständige Stelle.
 | R7 | Sitzung nativ AES-verschlüsselt, Schlüssel in SecureStore; offener Punkt: vollständige Ablage in SecureStore, siehe `FRAGEN.md` Abschnitt 1 | gering bis mittel |
 | R8 | Standardvertragsklauseln beziehungsweise Data Privacy Framework, keine Nutzerkennung im Prompt; Vertragslage nicht im Repo belegt | offen, `FRAGEN.md` |
 | R9 | kein Verursacherfeld, keine Personensuche, keine Historie je Ort, Meldeweg für Betroffene, Sperrmöglichkeit bei Missbrauch | gering |
+| R10 | Opt-in `ki_training` (Standard aus), nur Meldungen nach Einwilligung, nur verpixelte UND freigegebene Kopien, Privatgrund und unzulässige Inhalte ausgeschlossen, kein Client-Zugriff, Training nur lokal (kein Colab/Cloud mit Nutzerfotos), Widerruf löscht sofort, Frist 24 Monate, Löschabgleich vor jedem Training, Neutraining spätestens alle 12 Monate | gering, [ANWALT PRÜFEN] Einwilligung 16/17-Jährige |
+| R11 | Score wird nur gespeichert; serverseitig darf er ausschließlich eine Vorlage bei einem Menschen auslösen (standardmäßig aus), nie Veröffentlichung, Ablehnung oder Punkte | gering |
 
 ## 6. Ergebnis
 
@@ -87,6 +91,10 @@ eine vorherige Konsultation der Aufsichtsbehörde nach Art. 36 DSGVO auslöst.
 Zwei Punkte sind dafür jedoch vorher zu klären: die Wirksamkeit der
 Einwilligung Minderjähriger (R6) und die Transfergrundlage für die
 Bildübermittlung (R8). [ANWALT PRÜFEN]
+
+**Nachtrag 28.09.2026:** Überprüfung wegen des eigenen On-Device-Modells und
+des freiwilligen KI-Trainings (R10, R11). Die Gesamtbewertung ändert sich
+nach hiesiger Einschätzung nicht. [ANWALT PRÜFEN]
 
 ## 7. Überprüfung
 

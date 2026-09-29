@@ -134,3 +134,39 @@ der Nachweis, dass eingewilligt wurde. Das ist datenschutzfreundlich, koennte
 aber der Rechenschaftspflicht aus Art. 5 (2) DSGVO zuwiderlaufen. Bisher
 bewusst nicht geaendert, weil das Aufbewahren nach einer Loeschung die
 schwerer zu rechtfertigende Richtung ist.
+
+---
+
+# Offene Fragen: eigenes On-Device-Modell (2026-09-28)
+
+Umgesetzt ist alles, was sich ohne diese Entscheidungen bauen laesst
+(Branch `ondevice-model`, `docs/vision-ondevice.md`).
+
+## 12. Ultralytics YOLO steht unter AGPL-3.0
+
+Das Training in `training/` nutzt, wie gewuenscht, Ultralytics YOLO11n-cls.
+Ultralytics vertritt, dass auch damit trainierte und in einer App
+ausgelieferte Modelle unter die AGPL fallen, sofern keine Enterprise-Lizenz
+besteht. Fuer eine nicht quelloffene App ist das ein Risiko.
+
+Optionen: (a) CLAR quelloffen unter AGPL, (b) Lizenz kaufen, (c) Training auf
+ein Apache-2.0-Modell umstellen (MobileNetV3/EfficientNet-Lite mit Keras).
+Fuer (c) aendert sich in der App nichts: sie liest nur `.tflite` plus
+Metadaten aus `vision_models`. VOR dem ersten Release mit ausgeliefertem
+Modell entscheiden.
+
+## 13. KI-Training mit Nutzerfotos: Einwilligung ausreichend?
+
+Umgesetzt ist ein Opt-in (`consents.ki_training`, Standard aus), nur fuer
+Meldungen nach der Einwilligung, nur verpixelte und freigegebene Kopien,
+Widerruf loescht sofort, Frist 24 Monate, Training nur lokal. Zu pruefen:
+Einwilligung von 16- und 17-Jaehrigen fuer diesen Zweck, Umgang mit bereits
+trainierten Modellen nach Widerruf (derzeit: Neutraining spaetestens alle
+12 Monate), ob abgebildete Dritte trotz Verpixelung zu beruecksichtigen sind.
+
+## 14. Rechtsgrundlage fuer den gespeicherten On-Device-Score
+
+Gewaehlt: Art. 6 (1) f DSGVO (Qualitaetskontrolle, zusaetzliches Pruefsignal).
+Der Score darf serverseitig nur eine Vorlage bei einem Menschen ausloesen
+und das auch nur, wenn `system_settings.ondevice_disagree_below` gesetzt ist
+(Standard: aus).

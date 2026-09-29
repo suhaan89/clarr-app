@@ -60,6 +60,12 @@
   [ANWALT PRÜFEN: welcher Buchstabe].
 - **TOM:** kein Nutzerbezug im Prompt, Budget- und Kostendeckel,
   Kill-Switch, Fail-safe (ohne Ergebnis keine Veröffentlichung).
+- **Zusatz On-Device-Score (seit 2026-09-28):** Score 0 bis 1 und
+  Modellversion der Vorab-Erkennung an der Meldung
+  (`reports.ondevice_score`). Die Inferenz läuft auf dem Gerät, das Foto
+  verlässt es dafür nicht. Rechtsgrundlage Art. 6 (1) f DSGVO (Qualität der
+  Erkennung, zusätzliches Prüfsignal). Löschfrist: mit der Meldung. Darf nur
+  verschärfen (Vorlage bei einem Menschen), nie entscheiden.
 
 ## V4 Moderation und Inhaltsmeldungen
 
@@ -106,3 +112,25 @@
 - **Löschfrist:** Einmal-Link 30 Tage; Versandprotokoll dauerhaft ohne
   Personenbezug.
 - **Rechtsgrundlage:** Art. 6 (1) f DSGVO.
+
+## V9 Training der eigenen Müll-Erkennung
+
+- **Zweck:** Training und Auswertung des On-Device-Modells (`training/`).
+- **Betroffene:** meldende Personen mit Einwilligung; abgebildete Dritte
+  (nur verpixelt).
+- **Datenkategorien:** Verweis auf die verpixelte, freigegebene Fotokopie,
+  Label (Müll ja/nein) aus KI- oder menschlicher Prüfung, On-Device-Score,
+  Modellversion, Train/Val-Zuordnung, Fassung der Einwilligung. **Nicht:**
+  Original, Standort, Beschreibung, Konto-Daten.
+- **Empfänger:** keine. Supabase als Auftragsverarbeiter für die Speicherung;
+  Training ausschließlich auf eigenen Rechnern der Betreiber. Kein Upload zu
+  Trainings- oder Cloud-Diensten Dritter (auch nicht Colab).
+- **Drittland:** keines über die Supabase-Region hinaus.
+- **Löschfrist:** bis Widerruf (sofort per Trigger), Löschung der Meldung oder
+  des Kontos (Kaskade), spätestens 24 Monate
+  (`purge_expired_training_samples`). Lokale Kopien: Abgleich vor jedem
+  Training (`sync_dataset.py`). Neutraining spätestens alle 12 Monate.
+- **Rechtsgrundlage:** Art. 6 (1) a DSGVO (Opt-in, Standard aus).
+- **TOM:** keine Client-Rechte auf `vision_training_samples`, Export nur per
+  Service-Role, Privatgrund und unzulässige Inhalte ausgeschlossen, nur
+  Meldungen nach Einwilligung, Service-Role-Key nur lokal in `training/.env`.

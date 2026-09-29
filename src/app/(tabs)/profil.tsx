@@ -44,7 +44,8 @@ import { TOUR_IDS, useResetAllTours, useTour } from '@/lib/tour';
 import { isValidDisplayName } from '@/lib/validation';
 import { startOfIsoWeek } from '@/lib/week';
 
-const CONSENT_KEYS = ['kamera', 'standort', 'behoerden_weitergabe'] as const;
+// `ki_training` ist ein echtes Opt-in (Standard: aus), siehe Migration 023.
+const CONSENT_KEYS = ['kamera', 'standort', 'behoerden_weitergabe', 'ki_training'] as const;
 
 type LevelRow = { balance: number; level: number; level_name: string } | null;
 type LedgerRow = { id: number; delta: number; reason: string; created_at: string };
@@ -467,6 +468,9 @@ export default function ProfilScreen() {
             </View>
           );
         })}
+        <Text style={[styles.resetNote, { color: colors.textSecondary }]} allowFontScaling>
+          {t('consent.ki_training_hint')}
+        </Text>
 
         <PressableScale
           accessibilityRole="button"

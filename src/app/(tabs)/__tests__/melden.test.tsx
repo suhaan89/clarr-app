@@ -40,8 +40,9 @@ jest.mock('expo-location', () => ({
 
 const mockVisionAnalyze = jest.fn();
 const mockVisionReset = jest.fn();
+let mockVisionState: { status: string; result: unknown } = { status: 'idle', result: null };
 jest.mock('@/lib/vision', () => ({
-  useVision: () => ({ status: 'idle', result: null, analyze: mockVisionAnalyze, reset: mockVisionReset }),
+  useVision: () => ({ ...mockVisionState, analyze: mockVisionAnalyze, reset: mockVisionReset }),
 }));
 
 const mockEnqueueReport = jest.fn();
@@ -79,6 +80,7 @@ async function renderScreen() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockVisionState = { status: 'idle', result: null };
   mockReadQueue.mockResolvedValue([]);
   mockTakePictureAsync.mockResolvedValue({ uri: 'file://mock-photo.jpg' });
   mockGetCurrentPositionAsync.mockResolvedValue({
@@ -137,6 +139,48 @@ describe('melden.tsx: Schrittzustand foto -> details -> fertig', () => {
     // "Gespeichert!" steht sowohl im Titel als auch (als Praefix) im
     // Fliesstext -- exact:true trifft nur den eigenstaendigen Titel-Text.
     expect(await screen.findByText('Gespeichert!', { exact: true })).toBeTruthy();
+  });
+
+  it('ohne Modell (skipped) erscheint kein Hinweis, Meldung geht ohne Score raus', async () => {
+    mockVisionState = { status: 'skipped', result: null };
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+    await screen.findByLabelText(DESC_A11Y);
+    expect(screen.queryByText('Wir erkennen hier keinen Müll')).toBeNull();
+    expect(screen.queryByText(/nicht verfügbar/)).toBeNull();
+
+    fireEvent.press(await screen.findByText('Meldung absenden'));
+    await waitFor(() => expect(mockEnqueueReport).toHaveBeenCalledTimes(1));
+    expect(mockEnqueueReport.mock.calls[0][0].ondevice).toBeNull();
+  });
+
+  it('niedriger Score: freundlicher Hinweis, Melden bleibt moeglich und Score geht mit', async () => {
+    mockVisionState = {
+      status: 'done',
+      result: { verdict: 'no-trash', score: 0.12, threshold: 0.5, modelVersion: 'v1' },
+    };
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+
+    expect(await screen.findByText('Wir erkennen hier keinen Müll')).toBeTruthy();
+    fireEvent.press(screen.getByText('Trotzdem melden'));
+    fireEvent.press(await screen.findByText('Meldung absenden'));
+
+    await waitFor(() => expect(mockEnqueueReport).toHaveBeenCalledTimes(1));
+    expect(mockEnqueueReport.mock.calls[0][0].ondevice).toEqual({ score: 0.12, modelVersion: 'v1' });
+  });
+
+  it('niedriger Score: "Neues Foto" fuehrt zurueck zur Kamera', async () => {
+    mockVisionState = {
+      status: 'done',
+      result: { verdict: 'no-trash', score: 0.12, threshold: 0.5, modelVersion: 'v1' },
+    };
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+    fireEvent.press(await screen.findByText('Neues Foto'));
+
+    expect(mockVisionReset).toHaveBeenCalled();
+    expect(await screen.findByLabelText(SHUTTER_A11Y)).toBeTruthy();
   });
 
   it('"Abbrechen" im Details-Schritt fuehrt zurueck zum Kamera-Schritt', async () => {

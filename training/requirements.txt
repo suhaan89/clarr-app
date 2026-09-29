@@ -1,0 +1,9 @@
+# Python 3.11 oder 3.12 empfohlen (siehe README).
+# Ultralytics installiert beim ersten TFLite-Export selbst noch TensorFlow
+# und onnx2tf nach; das dauert einmalig ein paar Minuten.
+ultralytics>=8.3.0,<9
+supabase>=2.0.0,<3
+python-dotenv>=1.0.0
+pillow>=10.0.0
+numpy>=1.26.0
+matplotlib>=3.8.0

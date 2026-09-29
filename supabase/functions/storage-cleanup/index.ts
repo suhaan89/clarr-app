@@ -15,6 +15,9 @@
 // dessen report_photos-Zeile noch nicht geschrieben ist (submit-report
 // laeuft noch), darf nicht versehentlich als "verwaist" gelten.
 //
+// Nebenbei: Trainingsdaten nach Ablauf der Loeschfrist entfernen
+// (purge_expired_training_samples, Migration 023).
+//
 // Aufruf NUR durch den Scheduler (analog authority-digest): Bearer =
 // Service-Role-Key, konstante-Zeit-Vergleich. Kein Client-Aufruf.
 
@@ -112,14 +115,17 @@ Deno.serve(async (req) => {
   const originals = await cleanupBucket("originals", "storage_path");
   const blurred = await cleanupBucket("public-blurred", "blurred_path");
 
+  // Loeschfrist Trainingsdaten (24 Monate, Migration 023) im selben Lauf.
+  const { data: trainingPurged } = await admin.rpc("purge_expired_training_samples");
+
   await admin.from("audit_log").insert({
     action: "storage_cleanup",
     entity_type: "storage_bucket",
-    details: { originals, blurred },
+    details: { originals, blurred, training_samples_purged: trainingPurged ?? 0 },
   });
 
   return new Response(
-    JSON.stringify({ ok: true, originals, blurred }),
+    JSON.stringify({ ok: true, originals, blurred, training_samples_purged: trainingPurged ?? 0 }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 });

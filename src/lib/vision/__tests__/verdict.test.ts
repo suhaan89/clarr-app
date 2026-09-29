@@ -1,56 +1,17 @@
 import { deriveVerdict } from '../verdict';
+import { makeManifest } from '../__fixtures__/manifest';
 
 describe('deriveVerdict', () => {
-  it('erkennt Müll bei starkem Müll-Label', () => {
-    const r = deriveVerdict([
-      { label: 'water bottle', probability: 0.72 },
-      { label: 'pop bottle, soda bottle', probability: 0.1 },
-    ]);
-    expect(r.verdict).toBe('trash');
-    expect(r.confidence).toBeCloseTo(0.72);
-    expect(r.trashLabel).toBe('water bottle');
+  it('Score über dem Schwellenwert → „könnte Müll sein"', () => {
+    const r = deriveVerdict(0.8, makeManifest({ threshold: 0.6 }));
+    expect(r).toEqual({ verdict: 'trash', score: 0.8, threshold: 0.6, modelVersion: 'test-1' });
   });
 
-  it('urteilt „unsicher" bei schwachem Müll-Signal', () => {
-    const r = deriveVerdict([
-      { label: 'park bench', probability: 0.25 },
-      { label: 'plastic bag', probability: 0.18 }, // > trashMaybe (0.12), < trashConfident (0.3)
-    ]);
-    expect(r.verdict).toBe('uncertain');
-    expect(r.trashLabel).toBe('plastic bag');
+  it('Score genau auf dem Schwellenwert zählt als Müll', () => {
+    expect(deriveVerdict(0.6, makeManifest({ threshold: 0.6 })).verdict).toBe('trash');
   });
 
-  it('urteilt „unsicher", wenn das Modell nichts Deutliches erkennt', () => {
-    const r = deriveVerdict([
-      { label: 'park bench', probability: 0.11 },
-      { label: 'lakeside', probability: 0.09 },
-    ]);
-    expect(r.verdict).toBe('uncertain');
-  });
-
-  it('erkennt „kein Müll" bei klarem Nicht-Müll-Objekt', () => {
-    const r = deriveVerdict([
-      { label: 'golden retriever', probability: 0.88 },
-      { label: 'Labrador retriever', probability: 0.05 },
-    ]);
-    expect(r.verdict).toBe('no-trash');
-    expect(r.trashLabel).toBeNull();
-    expect(r.confidence).toBeCloseTo(0.88);
-  });
-
-  it('nimmt das stärkste Müll-Label, auch wenn es nicht Top-1 ist', () => {
-    const r = deriveVerdict([
-      { label: 'sandbar', probability: 0.35 },
-      { label: 'pop bottle, soda bottle', probability: 0.44 },
-    ]);
-    expect(r.verdict).toBe('trash');
-    expect(r.trashLabel).toBe('pop bottle, soda bottle');
-    expect(r.confidence).toBeCloseTo(0.44);
-  });
-
-  it('ist bei leerer Eingabe robust', () => {
-    const r = deriveVerdict([]);
-    expect(r.verdict).toBe('uncertain');
-    expect(r.confidence).toBe(0);
+  it('Score darunter → freundlicher Hinweis „kein Müll erkannt"', () => {
+    expect(deriveVerdict(0.2, makeManifest({ threshold: 0.6 })).verdict).toBe('no-trash');
   });
 });

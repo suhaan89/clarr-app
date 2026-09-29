@@ -14,6 +14,12 @@ App (Expo)
  │                       close-case, close-event-cases, export-my-data,
  │                       delete-account, authority-digest, confirm-case-done
  ├─ Anthropic API        Foto (verkleinert) zur Müll-/PII-Erkennung
+ ├─ On-Device (TFLite)   Foto bleibt auf dem Gerät; nur Score + Modellversion
+ │                       gehen mit der Meldung an submit-report. Modell wird
+ │                       aus vision_models / Bucket ml-models geladen.
+ ├─ training/ (lokal)    NICHT Teil der App: Betreiber-Rechner zieht per
+ │                       Service-Role verpixelte Fotos MIT Einwilligung
+ │                       (vision_training_export), kein Upload an Dritte
  ├─ Kartenanbieter       Google Maps (Android) / Apple Maps (iOS):
  │                       Kartenkacheln, implizit der angesehene Ausschnitt
  └─ E-Mail (Resend)      Behörden-Digest: anonymisierte Fallinfos
@@ -56,8 +62,9 @@ sind beide Dokumente und `store-angaben.md` zuerst zu ergänzen.
   JWT, kein Fremdzugriff möglich).
 - **Consents**: append-only-Journal (`consents`), jede Änderung neue Zeile
   mit Zeitstempel + Policy-Version → nachweisbar. Granular:
-  `kamera`, `standort`, `behoerden_weitergabe` und `altersbestaetigung`
-  (Migration 021). Die Policy-Version ist seit Migration 022 die echte
+  `kamera`, `standort`, `behoerden_weitergabe`, `altersbestaetigung`
+  (Migration 021) und `ki_training` (Migration 023, Opt-in, Widerruf löscht
+  Trainingszeilen sofort). Die Policy-Version ist seit Migration 022 die echte
   Fassung aus `src/constants/legal.ts`, nicht mehr ein Platzhalter.
   Liefert `signUp()` wegen E-Mail-Bestätigung noch keine Session, wird die
   Altersbestätigung lokal vorgemerkt und beim ersten Login nachgetragen
@@ -66,6 +73,16 @@ sind beide Dokumente und `store-angaben.md` zuerst zu ergänzen.
 - **Entscheidungs-Metadaten**: `reports.decision_reason` (stabiler Code),
   `decision_automated` und `decided_at` halten fest, warum und wie über eine
   Meldung entschieden wurde (Art. 17 DSA, Art. 22 DSGVO).
+
+- **On-Device-Score** (Migration 023): `reports.ondevice_score` +
+  `ondevice_model_version`, von `submit-report` nur übernommen, wenn die
+  Version in `vision_models` veröffentlicht ist. Löschung mit der Meldung.
+- **Trainingsdaten** (Migration 023): `vision_training_samples`, nur mit
+  aktueller Einwilligung `ki_training` und nur für Meldungen nach der
+  Einwilligung. Kein Client-Zugriff. Löschung: Widerruf (Trigger, sofort),
+  Meldung/Konto (Kaskade), 24 Monate (`purge_expired_training_samples` via
+  `storage-cleanup`), lokale Kopien per `training/sync_dataset.py` vor jedem
+  Training. Im Datenexport enthalten.
 
 ## Was CLAR bewusst NICHT erhebt
 
@@ -89,3 +106,6 @@ Stand nach dem Legal-Audit 2026-09-23. Erledigte Punkte sind gestrichen.
 4. Anonymisierte Nachweiskopie der Consents nach Konto-Löschung.
 5. Web-Löschroute und öffentliche Datenschutz-URL hosten (Betreiberaufgabe,
    `hosting-checkliste.md`, `FRAGEN.md`).
+6. KI-Training mit Nutzerfotos (Datenschutzerklärung 8a): Einwilligung als
+   Grundlage, Umgang mit trainierten Modellen nach Widerruf, AGPL-Lizenz von
+   Ultralytics (`FRAGEN.md`).

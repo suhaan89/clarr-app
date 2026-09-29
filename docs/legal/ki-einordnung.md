@@ -7,16 +7,27 @@
 
 # KI-Einordnung und KI-Kompetenz
 
-**Stand:** 23.09.2026
+**Stand:** 28.09.2026
 
 ## 1. Rolle von CLAR
 
-CLAR entwickelt kein KI-Modell, sondern **betreibt** ein zugekauftes Modell in
-eigener Verantwortung. Damit ist CLAR **Betreiber** im Sinne von Art. 3 Nr. 4
-der Verordnung (EU) 2024/1689, nicht Anbieter. Anbieter des Modells ist
-Anthropic. [ANWALT PRÜFEN] Ob der Betrieb im Zusammenhang mit einer
-beruflichen Tätigkeit erfolgt; bei einer rein privaten Nutzung greift die
-Verordnung insoweit nicht.
+Für `analyze-photo` und `process-photo` **betreibt** CLAR ein zugekauftes
+Modell in eigener Verantwortung. Damit ist CLAR insoweit **Betreiber** im
+Sinne von Art. 3 Nr. 4 der Verordnung (EU) 2024/1689. Anbieter dieses Modells
+ist Anthropic.
+
+Seit 28.09.2026 trainiert CLAR zusätzlich ein **eigenes** kleines Modell für
+die Vorab-Erkennung auf dem Gerät (`training/`, `src/lib/vision`) und bringt
+es unter eigenem Namen in Verkehr. Für dieses System ist CLAR **Anbieter**
+nach Art. 3 Nr. 3. Da es kein Hochrisiko-System ist (siehe 2.3), folgen
+daraus keine Konformitätsbewertung und keine Registrierung, wohl aber die
+allgemeinen Pflichten (Art. 4, Transparenz) und eine saubere Dokumentation
+von Daten, Training und Auswertung (`training/README.md`,
+`vision_models.metrics`).
+
+[ANWALT PRÜFEN] Ob der Betrieb im Zusammenhang mit einer beruflichen
+Tätigkeit erfolgt; bei einer rein privaten Nutzung greift die Verordnung
+insoweit nicht.
 
 ## 2. Die drei KI-nahen Komponenten
 
@@ -50,10 +61,21 @@ Verordnung insoweit nicht.
 
 ### 2.3 `src/lib/vision` (On-Device, TFLite)
 
-- **Was:** unverbindlicher Hinweis vor dem Absenden.
+- **Was:** eigenes Bildklassifikationsmodell (YOLO11n-cls, TFLite int8),
+  „illegale Müllablagerung ja/nein“. Unverbindlicher Hinweis vor dem
+  Absenden. Modellupdates kommen aus `public.vision_models` und dem Bucket
+  `ml-models`, ohne App-Update.
 - **Einstufung:** KI-System, **kein Hochrisiko**, keine Entscheidung. Das
-  Ergebnis blockiert nichts, verlässt das Gerät nicht und wird nicht
-  gespeichert.
+  Ergebnis blockiert nichts. Das Foto verlässt dafür das Gerät nicht; der
+  Score und die Modellversion werden mit der Meldung gespeichert
+  (`reports.ondevice_score`). Serverseitig darf der Score eine Meldung nur
+  zusätzlich einem Menschen vorlegen, nie veröffentlichen, ablehnen oder
+  Punkte auslösen. Standardmäßig ist auch das aus
+  (`system_settings.ondevice_disagree_below = null`).
+- **Trainingsdaten:** nur mit Einwilligung (`consents.ki_training`), nur
+  verpixelte und freigegebene Kopien, lokal trainiert. Details und
+  Löschlogik: `docs/vision-ondevice.md`, Datenschutzerklärung 8a.
+- **Lizenz:** Ultralytics steht unter AGPL-3.0, siehe `FRAGEN.md`.
 
 ### 2.4 `src/components/HelpChat.tsx`
 

@@ -35,7 +35,7 @@ additive Aenderung; seit Chunk 01 als offener Punkt dokumentiert.)
 | Grund | Quelle |
 |---|---|
 | `geflaggt` | Flag-Button (Trigger) |
-| `confidence` | KI-Confidence < 0.6 (analyze-photo) |
+| `confidence` | KI-Confidence < 0.6 (analyze-photo), optional auch Widerspruch On-Device-Score vs. KI |
 | `stichprobe` | ~5 % Zufalls-QA veroeffentlichter Meldungen (bleiben oeffentlich) |
 | `privatgrund` | Privatgrund-/Wohnkontext-Verdacht (KI oder Flag) |
 | `unklassifiziert` | Vision uebersprungen (Budget/Kill-Switch) |
@@ -44,6 +44,35 @@ additive Aenderung; seit Chunk 01 als offener Punkt dokumentiert.)
 
 Doppelte offene Eintraege pro Meldung+Grund verhindert ein partieller
 Unique-Index.
+
+## On-Device-Vorpruefung (Migration 023)
+
+* Ein eigenes Modell auf dem Handy gibt vor dem Absenden einen Hinweis
+  („Wir erkennen hier keinen Muell, trotzdem melden?“). Es **blockiert nie**
+  und vergibt **nie** Punkte. Details: `docs/vision-ondevice.md`.
+* **Nicht vertrauen:** Der Score kommt vom Client. Serverseitig darf er eine
+  Meldung nur zusaetzlich in die Review-Queue schieben (Grund `confidence`,
+  Audit `ondevice_disagreement`), und das nur, wenn
+  `system_settings.ondevice_disagree_below` gesetzt ist. Ein gefaelschter
+  hoher Score bewirkt nichts; ein gefaelschter niedriger schadet nur dem
+  Absender (Review statt Sofort-Veroeffentlichung).
+* **Transparenz fuer Nutzer:** Die staendig sichtbare Karte „Automatische
+  Foto-Pruefung“ im Melde-Flow erklaert KI-Pruefung auf dem Server UND die
+  Vorab-Erkennung auf dem Handy samt gespeichertem Score; Datenschutz-
+  erklaerung Abschnitt 8 und 8a.
+* **Fernschalter:** `vision_models.status = 'zurueckgezogen'` schaltet die
+  Vorpruefung auf allen Geraeten beim naechsten Check ab.
+
+## Trainingsdaten aus der Review-Queue
+
+* Die Entscheidungen der Review-Queue sind die Labels fuer das naechste
+  Modell (`vision_training_samples`). Menschliche Entscheidung schlaegt KI;
+  eine Ablehnung ohne ausdrueckliches Label bleibt ungelabelt, weil
+  „abgelehnt“ auch Duplikat o. Ae. heissen kann.
+* Moderatoren koennen per `set_training_label(report_id, 'positiv'|'negativ'|NULL)`
+  ein Label ausdruecklich setzen (auditiert).
+* Nur mit Opt-in `ki_training`; Privatgrund, `privat` und unzulaessige
+  Inhalte landen **nie** im Trainingsdatensatz.
 
 ## Moderation (rollen-geschuetzt + auditiert)
 
