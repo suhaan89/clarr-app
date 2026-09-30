@@ -19,6 +19,7 @@ jest.mock('@react-native-community/netinfo', () => ({
 const mockSubmitReport = jest.fn();
 jest.mock('@/lib/api', () => ({
   submitReport: (...args: unknown[]) => mockSubmitReport(...args),
+  newClientKey: () => 'install-id-test',
 }));
 
 // Einfache In-Memory-Simulation des Dateisystems: alles "existiert", bis es
@@ -108,6 +109,23 @@ describe('Offline-Queue: kein Doppel-Sync', () => {
     const result = await syncQueue();
     expect(result).toEqual({ sent: 0, failed: 0, lost: 0, remaining: 1 });
     expect(mockSubmitReport).not.toHaveBeenCalled();
+  });
+});
+
+describe('Offline-Queue: parallele Erfassung', () => {
+  test('ein waehrend des Syncs angelegter Eintrag geht nicht verloren', async () => {
+    await enqueueReport(makeReport('key-alt'));
+    // Waehrend der erste Eintrag hochlaedt, legt der Melde-Screen einen
+    // zweiten an.
+    mockSubmitReport.mockImplementationOnce(async () => {
+      await enqueueReport(makeReport('key-neu'));
+      return { ok: true, report_id: 'r1' };
+    });
+
+    const result = await syncQueue();
+    expect(result).toEqual({ sent: 1, failed: 0, lost: 0, remaining: 1 });
+    const queue = await readQueue();
+    expect(queue.map((q) => q.clientKey)).toEqual(['key-neu']);
   });
 });
 

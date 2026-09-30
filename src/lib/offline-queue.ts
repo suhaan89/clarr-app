@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import * as FileSystem from 'expo-file-system/legacy';
 
-import { submitReport, type PendingReport } from '@/lib/api';
+import { newClientKey, submitReport, type PendingReport } from '@/lib/api';
 
 const QUEUE_KEY = 'clar.report_queue.v1';
 const DEVICE_ID_KEY = 'clar.install_id.v1';
@@ -32,8 +32,7 @@ export async function getDeviceId(): Promise<string> {
   // dem serverseitigen Rate-Limit; der Server speichert davon nur den Hash.
   let id = await AsyncStorage.getItem(DEVICE_ID_KEY);
   if (!id) {
-    id = (globalThis.crypto?.randomUUID?.() ??
-      `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    id = newClientKey();
     await AsyncStorage.setItem(DEVICE_ID_KEY, id);
   }
   return id;
@@ -124,7 +123,8 @@ export async function syncQueue(): Promise<SyncResult> {
     }
 
     const deviceId = await getDeviceId();
-    const remaining: PendingReport[] = [];
+    // clientKeys, die in diesem Lauf erledigt sind (gesendet oder verloren).
+    const done = new Set<string>();
     let sent = 0;
     let failed = 0;
     let lost = 0;
@@ -135,18 +135,24 @@ export async function syncQueue(): Promise<SyncResult> {
       );
       if (missing.some(Boolean)) {
         lost += 1;
-        continue; // nicht erneut versuchen, nicht in remaining aufnehmen
+        done.add(item.clientKey); // nicht erneut versuchen
+        continue;
       }
 
       try {
         await submitReport(item, deviceId);
         sent += 1; // idempotente Antworten zaehlen als erledigt
+        done.add(item.clientKey);
         await cleanupQueuedPhotos(item);
       } catch {
         failed += 1;
-        remaining.push(item);
       }
     }
+    // Queue NEU lesen statt den Stand vom Anfang zurueckzuschreiben: waehrend
+    // der Uploads kann der Melde-Screen einen weiteren Eintrag angelegt haben
+    // (syncQueue kehrt dort wegen `syncing` sofort zurueck). Der alte Stand
+    // haette diesen Eintrag still ueberschrieben.
+    const remaining = (await readQueue()).filter((q) => !done.has(q.clientKey));
     await writeQueue(remaining);
     return { sent, failed, lost, remaining: remaining.length };
   } finally {

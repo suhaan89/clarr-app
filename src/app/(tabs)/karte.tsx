@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useIsFocused } from '@react-navigation/native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
@@ -7,10 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, LoadingState, PressableScale } from '@/components';
 import { MapMarker as Marker, MapView } from '@/components/AppMap';
+import { isDoneStatus } from '@/constants/status';
 import { Radius, Shadow, Spacing, useThemeColors } from '@/constants/theme';
 import { useI18n } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
-import { TOUR_IDS, useTour } from '@/lib/tour';
+import { TOUR_IDS, useFocusTour } from '@/lib/tour';
 
 type MapReport = {
   id: string;
@@ -22,7 +22,8 @@ type MapReport = {
   case_status: string | null;
 };
 
-// Startausschnitt: Deutschland-Mitte; die Karte springt auf echte Marker.
+// Startausschnitt: Deutschland-Mitte. Die Karte zoomt NICHT automatisch auf
+// die Marker; dafuer waere z. B. `fitToCoordinates` noetig.
 const INITIAL_REGION = {
   latitude: 51.16,
   longitude: 10.45,
@@ -57,13 +58,16 @@ export default function KarteScreen() {
 
   // Onboarding-Tour (Coachmarks): einmaliger Hinweis auf die Kartenlegende.
   const legendRef = useRef<View>(null);
-  const startTour = useTour(TOUR_IDS.karte);
-  const isFocused = useIsFocused();
-  // Ueber Refs, damit der Tour-Effekt eine stabile Abhaengigkeitsliste behaelt.
-  const startTourRef = useRef(startTour);
-  startTourRef.current = startTour;
-  const tRef = useRef(t);
-  tRef.current = t;
+  // Die Legende (und damit ihr Ref) existiert erst, sobald die Karte geladen ist.
+  useFocusTour(TOUR_IDS.karte, loaded, (tr) => [
+    {
+      id: 'legend',
+      targetRef: legendRef,
+      title: tr('tour.karte.step_legend_title'),
+      description: tr('tour.karte.step_legend_desc'),
+      tooltipPosition: 'auto',
+    },
+  ]);
 
   const load = useCallback(async () => {
     // RLS liefert nur veroeffentlichte/eigene Meldungen (Paket 8);
@@ -103,27 +107,7 @@ export default function KarteScreen() {
     return () => clearTimeout(timer);
   }, [reports]);
 
-  useEffect(() => {
-    // Legende (und damit ihr Ref) existiert erst, sobald die Karte geladen ist.
-    // Bei jedem Fokus anstossen (idempotent per AsyncStorage) – so kommt die Tour
-    // auch nach dem "erneut anzeigen"-Reset wieder, obwohl der Screen gemountet
-    // bleibt.
-    if (!isFocused || !loaded) return;
-    const t = tRef.current;
-    startTourRef.current([
-      {
-        id: 'legend',
-        targetRef: legendRef,
-        title: t('tour.karte.step_legend_title'),
-        description: t('tour.karte.step_legend_desc'),
-        tooltipPosition: 'auto',
-      },
-    ]);
-  }, [isFocused, loaded]);
-
-  const closedCount = reports.filter(
-    (r) => r.case_status === 'erledigt' || r.case_status === 'geschlossen'
-  ).length;
+  const closedCount = reports.filter((r) => isDoneStatus(r.case_status)).length;
 
   if (!loaded) return <LoadingState label={t('map.loading')} />;
 
@@ -134,7 +118,7 @@ export default function KarteScreen() {
         initialRegion={INITIAL_REGION}
         accessibilityLabel={t('map.a11y')}>
         {reports.map((r) => {
-          const closed = r.case_status === 'erledigt' || r.case_status === 'geschlossen';
+          const closed = isDoneStatus(r.case_status);
           return (
             <Marker
               key={r.id}

@@ -75,14 +75,16 @@ export default function LoginScreen() {
     // auth.uid(); dann wird die Bestaetigung lokal vorgemerkt und beim ersten
     // Login nachgetragen (src/lib/consent.ts). Frueher ging der Nachweis in
     // genau dieser Konstellation verloren.
-    if (data?.session) {
-      await supabase.rpc('record_consent', {
-        p_consent_key: 'altersbestaetigung',
-        p_granted: true,
-      });
-    } else {
-      await rememberAgeConfirmation();
-    }
+    // Schlaegt der direkte Aufruf fehl, wird ebenfalls vorgemerkt.
+    const recorded = data?.session
+      ? !(
+          await supabase.rpc('record_consent', {
+            p_consent_key: 'altersbestaetigung',
+            p_granted: true,
+          })
+        ).error
+      : false;
+    if (!recorded) await rememberAgeConfirmation();
   }
 
   return (

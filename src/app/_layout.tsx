@@ -75,9 +75,9 @@ function AppStack() {
           <Stack.Screen name="case/[id]" options={{ title: t('stack.case') }} />
           <Stack.Screen name="legal/datenschutz" options={{ title: t('stack.datenschutz') }} />
           <Stack.Screen name="legal/impressum" options={{ title: t('stack.impressum') }} />
-        <Stack.Screen name="legal/agb" options={{ title: t('stack.agb') }} />
-        <Stack.Screen name="legal/kontakt" options={{ title: t('stack.kontakt') }} />
-        <Stack.Screen name="legal/lizenzen" options={{ title: t('stack.lizenzen') }} />
+          <Stack.Screen name="legal/agb" options={{ title: t('stack.agb') }} />
+          <Stack.Screen name="legal/kontakt" options={{ title: t('stack.kontakt') }} />
+          <Stack.Screen name="legal/lizenzen" options={{ title: t('stack.lizenzen') }} />
           <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
         </Stack>
         {session && !showSplash && <HelpChat />}

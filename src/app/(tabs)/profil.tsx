@@ -5,9 +5,8 @@
 // Wochen-Reset.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useIsFocused } from '@react-navigation/native';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   RefreshControl,
@@ -40,7 +39,7 @@ import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { clearLocalReportData } from '@/lib/offline-queue';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { TOUR_IDS, useResetAllTours, useTour } from '@/lib/tour';
+import { TOUR_IDS, useFocusTour, useResetAllTours } from '@/lib/tour';
 import { isValidDisplayName } from '@/lib/validation';
 import { startOfIsoWeek } from '@/lib/week';
 
@@ -59,6 +58,18 @@ const REASON_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 // Unbekannte Server-Reasons werden roh angezeigt statt uebersetzt.
 const KNOWN_REASONS = new Set(['report_verified', 'case_confirmed', 'case_closed_after']);
+
+// Rechtliches vollstaendig und ohne Suchen erreichbar: Datenschutz
+// (Art. 13 DSGVO), Nutzungsbedingungen (Art. 14 DSA), Melde- und
+// Kontaktstelle (Art. 11, 12, 16, 20 DSA), Impressum (§ 5 DDG) und die
+// Open-Source-Lizenzhinweise.
+const LEGAL_LINKS = [
+  { href: '/legal/datenschutz', key: 'datenschutz' },
+  { href: '/legal/agb', key: 'agb' },
+  { href: '/legal/kontakt', key: 'kontakt' },
+  { href: '/legal/impressum', key: 'impressum' },
+  { href: '/legal/lizenzen', key: 'lizenzen' },
+] as const;
 
 export default function ProfilScreen() {
   const colors = useThemeColors();
@@ -85,14 +96,31 @@ export default function ProfilScreen() {
   const impactRef = useRef<View>(null);
   const progressRef = useRef<View>(null);
   const badgesRef = useRef<View>(null);
-  const startTour = useTour(TOUR_IDS.profil);
-  const isFocused = useIsFocused();
   const resetAllTours = useResetAllTours();
-  // Ueber Refs, damit der Tour-Effekt eine stabile Abhaengigkeitsliste behaelt.
-  const startTourRef = useRef(startTour);
-  startTourRef.current = startTour;
-  const tRef = useRef(t);
-  tRef.current = t;
+  // Impact-Karte und Fortschritt existieren erst, sobald `loaded` steht.
+  useFocusTour(TOUR_IDS.profil, loaded, (tr) => [
+    {
+      id: 'impact',
+      targetRef: impactRef,
+      title: tr('tour.profil.step_impact_title'),
+      description: tr('tour.profil.step_impact_desc'),
+      tooltipPosition: 'auto',
+    },
+    {
+      id: 'progress',
+      targetRef: progressRef,
+      title: tr('tour.profil.step_progress_title'),
+      description: tr('tour.profil.step_progress_desc'),
+      tooltipPosition: 'auto',
+    },
+    {
+      id: 'badges',
+      targetRef: badgesRef,
+      title: tr('tour.profil.step_badges_title'),
+      description: tr('tour.profil.step_badges_desc'),
+      tooltipPosition: 'auto',
+    },
+  ]);
 
   // Async + Promise.all, damit RefreshControl weiss, wann der Refresh fertig ist
   // (statt der vorherigen Fire-and-forget-.then()-Ketten ohne Rueckgabewert).
@@ -186,38 +214,6 @@ export default function ProfilScreen() {
       load();
     }, [load])
   );
-
-  useEffect(() => {
-    // Impact-Karte und Fortschritt existieren erst, sobald `loaded` steht.
-    // Bei jedem Fokus anstossen (idempotent per AsyncStorage) – so kommt die Tour
-    // auch nach dem "erneut anzeigen"-Reset wieder, obwohl der Screen gemountet
-    // bleibt.
-    if (!isFocused || !loaded) return;
-    const t = tRef.current;
-    startTourRef.current([
-      {
-        id: 'impact',
-        targetRef: impactRef,
-        title: t('tour.profil.step_impact_title'),
-        description: t('tour.profil.step_impact_desc'),
-        tooltipPosition: 'auto',
-      },
-      {
-        id: 'progress',
-        targetRef: progressRef,
-        title: t('tour.profil.step_progress_title'),
-        description: t('tour.profil.step_progress_desc'),
-        tooltipPosition: 'auto',
-      },
-      {
-        id: 'badges',
-        targetRef: badgesRef,
-        title: t('tour.profil.step_badges_title'),
-        description: t('tour.profil.step_badges_desc'),
-        tooltipPosition: 'auto',
-      },
-    ]);
-  }, [isFocused, loaded]);
 
   async function restartTour() {
     await resetAllTours();
@@ -459,10 +455,17 @@ export default function ProfilScreen() {
                   setConsents((c) => ({ ...c, [key]: granted }));
                   // Nachweisbar: jede Aenderung wird serverseitig als neue
                   // Journal-Zeile gespeichert (append-only, Migration 013).
-                  await supabase.rpc('record_consent', {
+                  const { error } = await supabase.rpc('record_consent', {
                     p_consent_key: key,
                     p_granted: granted,
                   });
+                  // Schalter nie anders zeigen als der Server speichert –
+                  // sonst saehe z. B. ein Widerruf von `ki_training` erledigt
+                  // aus, obwohl er nicht angekommen ist.
+                  if (error) {
+                    setConsents((c) => ({ ...c, [key]: !granted }));
+                    Alert.alert(t('profil.error_title'), t('profil.error_body'));
+                  }
                 }}
               />
             </View>
@@ -543,36 +546,14 @@ export default function ProfilScreen() {
         </PressableScale>
       )}
 
-      {/* Rechtliches vollstaendig und ohne Suchen erreichbar: Datenschutz
-          (Art. 13 DSGVO), Nutzungsbedingungen (Art. 14 DSA), Melde- und
-          Kontaktstelle (Art. 11, 12, 16, 20 DSA), Impressum (§ 5 DDG) und die
-          Open-Source-Lizenzhinweise. */}
       <View style={styles.legalLinks}>
-        <Link href="/legal/datenschutz" accessibilityLabel={t('profil.datenschutz_a11y')}>
-          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
-            {t('profil.datenschutz')}
-          </Text>
-        </Link>
-        <Link href="/legal/agb" accessibilityLabel={t('profil.agb_a11y')}>
-          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
-            {t('profil.agb')}
-          </Text>
-        </Link>
-        <Link href="/legal/kontakt" accessibilityLabel={t('profil.kontakt_a11y')}>
-          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
-            {t('profil.kontakt')}
-          </Text>
-        </Link>
-        <Link href="/legal/impressum" accessibilityLabel={t('profil.impressum_a11y')}>
-          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
-            {t('profil.impressum')}
-          </Text>
-        </Link>
-        <Link href="/legal/lizenzen" accessibilityLabel={t('profil.lizenzen_a11y')}>
-          <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
-            {t('profil.lizenzen')}
-          </Text>
-        </Link>
+        {LEGAL_LINKS.map(({ href, key }) => (
+          <Link key={key} href={href} accessibilityLabel={t(`profil.${key}_a11y`)}>
+            <Text style={[styles.footerLabel, { color: colors.textSecondary }]} allowFontScaling>
+              {t(`profil.${key}`)}
+            </Text>
+          </Link>
+        ))}
       </View>
 
       <PressableScale

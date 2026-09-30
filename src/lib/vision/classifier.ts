@@ -96,8 +96,3 @@ export async function classify(photoUri: string, local: LocalModel): Promise<num
   const values = readOutputValues(outputs[0], model.outputs[0]?.dataType ?? 'float32', manifest);
   return scoreFromOutput(values, manifest);
 }
-
-/** Lädt das Modell vorab in den Speicher (optional, macht die erste Analyse schneller). */
-export async function preload(local: LocalModel): Promise<void> {
-  await ensureModel(local);
-}

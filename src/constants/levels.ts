@@ -14,15 +14,13 @@
 /** Punkte pro Stufe (jede volle 100er-Marke ist eine neue Stufe). */
 export const POINTS_PER_LEVEL = 100;
 
-/** Rang-Schwellen (Name-Wechsel), aufsteigend. Spiegel der CASE-Logik oben. */
+/** Rang-Schwellen (Name-Wechsel), aufsteigend. Spiegel der View-Logik oben. */
 export const RANKS = [
   { key: 'starter', threshold: 0, name: 'Starter' },
   { key: 'bronze', threshold: 100, name: 'Bronze' },
   { key: 'silber', threshold: 250, name: 'Silber' },
   { key: 'gold', threshold: 500, name: 'Gold' },
 ] as const;
-
-export type RankKey = (typeof RANKS)[number]['key'];
 
 export type LevelProgress = {
   /** Aktuelle Stufe (1-basiert), wie in der View. */

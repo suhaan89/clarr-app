@@ -4,7 +4,6 @@
 // die zentrale Aktion (Muell melden). Keine ueberladenen Listen.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useIsFocused } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -25,11 +24,12 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Counter, GlassSurface, Mascot, PressableScale } from '@/components';
+import { OPEN_CASE_STATUSES } from '@/constants/status';
 import { Radius, Spacing, Type, useGlass, useHomeGradient, useThemeColors } from '@/constants/theme';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { TOUR_IDS, useTour } from '@/lib/tour';
+import { TOUR_IDS, useFocusTour } from '@/lib/tour';
 
 type EventRow = { id: string; title: string; event_date: string };
 
@@ -78,15 +78,32 @@ export default function HomeScreen() {
   const heroRef = useRef<View>(null);
   const ctaRef = useRef<View>(null);
   const chipsRef = useRef<View>(null);
-  const startTour = useTour(TOUR_IDS.home);
-  const isFocused = useIsFocused();
-  // startTour/t werden pro Render neu gebildet – ueber Refs greifen, damit der
-  // Fokus-Effekt eine stabile Abhaengigkeitsliste behaelt und pro Fokus genau
-  // einmal laeuft (nicht bei jedem Render).
-  const startTourRef = useRef(startTour);
-  startTourRef.current = startTour;
-  const tRef = useRef(t);
-  tRef.current = t;
+  // Die Ziel-Views (Held/CTA/Chips) sind immer gerendert.
+  useFocusTour(TOUR_IDS.home, true, (tr) => [
+    {
+      id: 'impact',
+      targetRef: heroRef,
+      title: tr('tour.home.step_impact_title'),
+      description: tr('tour.home.step_impact_desc'),
+      tooltipPosition: 'auto',
+      // Wartet, bis die Eintritts-Animation (Fade/Aufsteigen) fertig ist.
+      delayBefore: 1000,
+    },
+    {
+      id: 'cta',
+      targetRef: ctaRef,
+      title: tr('tour.home.step_cta_title'),
+      description: tr('tour.home.step_cta_desc'),
+      tooltipPosition: 'auto',
+    },
+    {
+      id: 'chips',
+      targetRef: chipsRef,
+      title: tr('tour.home.step_chips_title'),
+      description: tr('tour.home.step_chips_desc'),
+      tooltipPosition: 'auto',
+    },
+  ]);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -96,7 +113,7 @@ export default function HomeScreen() {
       supabase
         .from('cases')
         .select('id', { count: 'exact', head: true })
-        .in('status', ['gemeldet', 'geprueft', 'weitergeleitet']),
+        .in('status', [...OPEN_CASE_STATUSES]),
       supabase
         .from('cleanup_events')
         .select('id, title, event_date')
@@ -122,39 +139,6 @@ export default function HomeScreen() {
       load();
     }, [load])
   );
-
-  useEffect(() => {
-    // Bei jedem Fokus anstossen (idempotent per AsyncStorage) – so erscheint die
-    // Tour auch nach dem "erneut anzeigen"-Reset wieder, obwohl der Tab-Screen
-    // gemountet bleibt. Die Ziel-Views (Held/CTA/Chips) sind immer gerendert.
-    if (!isFocused) return;
-    const t = tRef.current;
-    startTourRef.current([
-      {
-        id: 'impact',
-        targetRef: heroRef,
-        title: t('tour.home.step_impact_title'),
-        description: t('tour.home.step_impact_desc'),
-        tooltipPosition: 'auto',
-        // Wartet, bis die Eintritts-Animation (Fade/Aufsteigen) fertig ist.
-        delayBefore: 1000,
-      },
-      {
-        id: 'cta',
-        targetRef: ctaRef,
-        title: t('tour.home.step_cta_title'),
-        description: t('tour.home.step_cta_desc'),
-        tooltipPosition: 'auto',
-      },
-      {
-        id: 'chips',
-        targetRef: chipsRef,
-        title: t('tour.home.step_chips_title'),
-        description: t('tour.home.step_chips_desc'),
-        tooltipPosition: 'auto',
-      },
-    ]);
-  }, [isFocused]);
 
   // Animationen (UI-Thread). Respektiert „Bewegung reduzieren".
   const enter = useSharedValue(0);

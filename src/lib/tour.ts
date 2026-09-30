@@ -3,16 +3,18 @@
 // bestehenden Design-System (theme.ts/i18n), damit die Tooltips wie der Rest
 // der App aussehen – keine eigene Styling-Bibliothek dafür.
 //
-// Jeder Screen hat eine eigene kurze "nur einmal"-Tour (siehe useTour).
+// Jeder Screen hat eine eigene kurze "nur einmal"-Tour (siehe useFocusTour).
 // `useTourPersistence` merkt sich pro `tourId` in AsyncStorage, ob sie schon
 // gezeigt wurde; wiederholte Aufrufe (z. B. bei jedem Fokus) sind dadurch
 // gefahrlos und starten nichts doppelt.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 import { useTourPersistence, type TourGuideConfig, type TourStep } from '@wrack/react-native-tour-guide';
+import { useEffect, useRef } from 'react';
 
 import { BottomTabInset, Radius, useThemeColors } from '@/constants/theme';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, type TranslationKey } from '@/lib/i18n';
 
 /** Eine ID pro Screen-Tour – auch für den manuellen Neustart (Profil) gebraucht. */
 export const TOUR_IDS = {
@@ -52,16 +54,10 @@ function useTourConfig(): TourGuideConfig {
   };
 }
 
-/**
- * Liefert eine `start(steps)`-Funktion für die "nur einmal"-Tour `tourId`.
- * Ruf sie im jeweiligen Screen auf, sobald die Ziel-Elemente gemountet sind
- * (z. B. per Fokus-Effekt) – ist die Tour schon abgeschlossen, passiert nichts
- * (Persistenz-Check in AsyncStorage), also ist wiederholtes Aufrufen bei jedem
- * Fokus gefahrlos und der einzig verlaessliche Trigger: Tab-Screens bleiben
- * gemountet, ein reiner `useEffect(..., [])` liefe nach dem "erneut anzeigen"-
- * Reset nie wieder an.
- */
-export function useTour(tourId: (typeof TOUR_IDS)[keyof typeof TOUR_IDS]) {
+type TourId = (typeof TOUR_IDS)[keyof typeof TOUR_IDS];
+
+/** Liefert eine `start(steps)`-Funktion für die "nur einmal"-Tour `tourId`. */
+function useTour(tourId: TourId) {
   const config = useTourConfig();
   const { startTour, markCompleted } = useTourPersistence(AsyncStorage);
   return (steps: TourStep[]) =>
@@ -73,6 +69,34 @@ export function useTour(tourId: (typeof TOUR_IDS)[keyof typeof TOUR_IDS]) {
       // (die Bibliothek markiert von sich aus nur ein *vollstaendiges* Ende).
       onTourEnd: () => markCompleted(tourId),
     });
+}
+
+/**
+ * Startet die "nur einmal"-Tour `tourId`, sobald der Screen fokussiert ist und
+ * `ready` gilt (die Ziel-Views also gemountet sind).
+ *
+ * Bewusst bei JEDEM Fokus: Tab-Screens bleiben gemountet, ein reiner
+ * `useEffect(..., [])` liefe nach dem "erneut anzeigen"-Reset nie wieder an.
+ * Ist die Tour schon abgeschlossen, passiert nichts (Persistenz-Check in
+ * AsyncStorage). `buildSteps` und `t` werden über Refs gelesen, damit der
+ * Effekt pro Fokus genau einmal läuft und nicht bei jedem Render.
+ */
+export function useFocusTour(
+  tourId: TourId,
+  ready: boolean,
+  buildSteps: (t: (key: TranslationKey) => string) => TourStep[]
+) {
+  const start = useTour(tourId);
+  const { t } = useI18n();
+  const isFocused = useIsFocused();
+  const latest = useRef({ start, t, buildSteps });
+  latest.current = { start, t, buildSteps };
+
+  useEffect(() => {
+    if (!isFocused || !ready) return;
+    const { start: run, t: tr, buildSteps: build } = latest.current;
+    run(build(tr));
+  }, [isFocused, ready]);
 }
 
 /** Setzt alle Onboarding-Touren zurück – für den manuellen "?"-Neustart in Profil. */

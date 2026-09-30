@@ -29,7 +29,7 @@ const REASON_KEYS = new Set([
 
 export default function ModerationScreen() {
   const colors = useThemeColors();
-  const { t } = useI18n();
+  const { t, dateLocale } = useI18n();
   const { session } = useSession();
   const [checking, setChecking] = useState(true);
   const [allowed, setAllowed] = useState(false);
@@ -158,7 +158,7 @@ export default function ModerationScreen() {
               <View style={styles.headRow}>
                 <Badge label={reasonLabel} tone="warning" icon="flag-outline" />
                 <Text style={[styles.meta, { color: colors.textSecondary }]} allowFontScaling>
-                  {new Date(row.created_at).toLocaleString()}
+                  {new Date(row.created_at).toLocaleString(dateLocale)}
                 </Text>
               </View>
 

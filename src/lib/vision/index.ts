@@ -12,7 +12,7 @@
  * nutzt (siehe docs/vision-ondevice.md).
  */
 
-import { classify, preload } from './classifier';
+import { classify } from './classifier';
 import { getLocalModel } from './modelStore';
 import type { VisionResult } from './types';
 import { VisionDisabledError } from './types';
@@ -23,12 +23,6 @@ export { VisionDisabledError, VisionUnavailableError } from './types';
 export { useVision } from './useVision';
 export type { UseVision, VisionStatus } from './useVision';
 export { clearModelCache, refreshModel as refreshVisionModel } from './modelStore';
-
-/** Lädt das aktuelle Modell vorab (idempotent). Ohne Modell passiert nichts. */
-export async function warmUpVision(): Promise<void> {
-  const local = await getLocalModel();
-  if (local) await preload(local);
-}
 
 /**
  * Analysiert ein Foto (lokale file://-URI) und liefert ein Advisory-Urteil.

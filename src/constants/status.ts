@@ -30,9 +30,17 @@ export const CASE_STATUS_META: Record<string, StatusMeta> = {
   geschlossen: { icon: 'archive', tone: 'neutral', labelKey: 'case.status.geschlossen' },
 };
 
+/** Fall-Status, die als „offen" (noch nicht aufgeräumt) gelten. */
+export const OPEN_CASE_STATUSES = ['gemeldet', 'geprueft', 'weitergeleitet'] as const;
+
 /** Gilt ein Fall als „offen" (noch nicht aufgeräumt)? */
 export function isOpenStatus(status: string): boolean {
-  return status === 'gemeldet' || status === 'geprueft' || status === 'weitergeleitet';
+  return (OPEN_CASE_STATUSES as readonly string[]).includes(status);
+}
+
+/** Gilt ein Fall als aufgeräumt (erledigt oder geschlossen)? */
+export function isDoneStatus(status: string | null): boolean {
+  return status === 'erledigt' || status === 'geschlossen';
 }
 
 /**
