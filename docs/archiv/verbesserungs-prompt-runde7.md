@@ -1,7 +1,7 @@
 # Auftrags-Prompt: CLAR Runde 7 — Design-Feinschliff
 
 > Zusammengestellt am 2026-07-14, direkt im Anschluss an Runde 6
-> (docs/verbesserungs-prompt.md, siehe docs/fortschritt.md für den
+> (docs/archiv/verbesserungs-prompt-runde6.md, siehe docs/fortschritt.md für den
 > vollständigen Abschluss-Stand). Diese Runde ist bewusst NUR Design/UX —
 > keine neue Backend-, Sicherheits- oder Rechtslogik. Grundlage: ein
 > code-gestützter Konsistenz-Audit über alle Screens/Komponenten plus die

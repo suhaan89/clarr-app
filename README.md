@@ -1,56 +1,41 @@
-# Welcome to your Expo app 👋
+# CLAR
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App zum Melden illegaler Müllablagerungen: Foto aufnehmen, Fall auf der
+Karte verfolgen, gemeinsam aufräumen. Expo SDK 54 (React Native 0.81,
+expo-router) mit Supabase als Backend.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Loslegen
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env      # EXPO_PUBLIC_SUPABASE_URL + ANON_KEY eintragen
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Karte, Kamera und die On-Device-Foto-Prüfung brauchen einen **Dev-Build**
+(`npm run build:android:dev`), nicht Expo Go. Im Web läuft die App mit
+Karten-Platzhalter.
 
-### Other setup steps
+## Prüfen
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm test              # Jest
+npm run typecheck     # tsc --noEmit
+npm run lint          # ESLint
+```
 
-## Learn more
+## Wo steht was
 
-To learn more about developing your project with Expo, look at the following resources:
+| Pfad | Inhalt |
+| --- | --- |
+| `src/app` | Screens (dateibasiertes Routing) |
+| `src/components` | wiederverwendbare UI-Bausteine |
+| `src/lib` | Supabase, Offline-Queue, i18n, On-Device-Erkennung (`vision/`) |
+| `supabase/migrations` | Datenbankschema, fortlaufend nummeriert |
+| `supabase/functions` | Edge Functions (Meldung, Foto-Pipeline, Konto) |
+| `training/` | Python-Skripte für das On-Device-Modell |
+| `docs/` | Architektur- und Betriebsnotizen, `docs/legal/` für Rechtstexte |
+| `FRAGEN.md` | offene Entscheidungen, die nicht im Code lösbar sind |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Deployment von Migrationen und Functions: `docs/ops.md`.
+Hinweise für KI-Agenten: `AGENTS.md`.

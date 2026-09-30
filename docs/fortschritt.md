@@ -138,7 +138,7 @@ Details und Annahmen in `NOTIZEN.md`.
 
 ---
 
-# Runde 6 (Pakete A–I, docs/verbesserungs-prompt.md) — Stand 2026-07-14
+# Runde 6 (Pakete A–I, docs/archiv/verbesserungs-prompt-runde6.md) — Stand 2026-07-14
 
 Auftrag: langer, eigenständiger Lauf über Verifikation → Sicherheit →
 Recht (nur technisch) → Funktionen/Politur → Robustheit/i18n/Tests.
@@ -454,7 +454,7 @@ wie ursprünglich vorgeschlagen) und als `clari-celebrate.png`,
 
 # Runde 6 — Abschluss (Stand 2026-07-14)
 
-Alle Pakete A–I aus `docs/verbesserungs-prompt.md` durchlaufen. Nicht
+Alle Pakete A–I aus `docs/archiv/verbesserungs-prompt-runde6.md` durchlaufen. Nicht
 abschließbar in dieser Session (Infrastruktur-/Werkzeug-Limits, nicht
 inhaltlich blockiert):
 

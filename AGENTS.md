@@ -1,62 +1,93 @@
-# CLAR – Projektleitfaden für Agenten
+# CLAR – Leitfaden für Agenten
 
-CLAR ist eine Expo-/React-Native-App (Meldung & Karte von Müllfunden am
-Bodensee) mit Supabase-Backend. Nutzeroberfläche und Kommentare sind auf
-Deutsch.
+CLAR ist eine Expo-/React-Native-App zum Melden illegaler Müllablagerungen
+(Foto, Karte, gemeinsames Aufräumen) mit Supabase-Backend. Oberfläche,
+Kommentare und Commit-Nachrichten sind auf Deutsch.
 
-## Expo-Version – WICHTIG
+## Versionen
 
-Dieses Projekt läuft auf **Expo SDK 54** (`expo@54.0.35`, React Native 0.81,
-expo-router 6, React 19.1). Vor Code-Änderungen die passenden versionierten
-Docs lesen: https://docs.expo.dev/versions/v54.0.0/ – **nicht** v57 (die
-frühere Notiz hier war falsch).
+**Expo SDK 54** (React Native 0.81, expo-router 6, React 19.1). Bei Fragen zu
+Expo-APIs die versionierten Docs lesen: https://docs.expo.dev/versions/v54.0.0/
 
 ## Befehle
 
 ```bash
-npx expo start        # Dev-Server (Metro). --web / --android / --ios für Ziel
-npm test              # Jest (jest-expo), Tests unter src/**/__tests__
-npx tsc --noEmit      # Typecheck (muss sauber sein)
-npx expo lint         # ESLint (eslint-config-expo)
+npx expo start        # Dev-Server; Karte/Kamera/TFLite brauchen einen Dev-Build
+npm test              # Jest (jest-expo), Tests in __tests__-Ordnern unter src/
+npm run typecheck     # tsc --noEmit, muss sauber sein
+npm run lint          # ESLint, muss ohne Fehler sein
 ```
 
-`.env` (nicht im Repo) muss `EXPO_PUBLIC_SUPABASE_URL` und
-`EXPO_PUBLIC_SUPABASE_ANON_KEY` setzen – Vorlage in `.env.example`. Nur der
-anon-Key gehört in den Client, niemals der service_role-Key.
+Vor jedem Commit alle drei laufen lassen. Auf diesem Rechner gibt es weder
+Deno noch Supabase-CLI noch Docker: Edge Functions und pgTAP-Tests
+(`supabase/tests`) lassen sich lokal nicht ausführen. Änderungen dort
+sorgfältig lesen und im Bericht sagen, dass sie ungetestet sind.
 
-## Architektur (Kurzüberblick)
+## Arbeitsregel: nichts Funktionierendes blind umbauen
 
-- **Routing:** expo-router (dateibasiert) unter `src/app`. Tabs in
-  `src/app/(tabs)`, Auth-Gate in `(tabs)/_layout.tsx` (`useSession`).
-- **Backend/Auth:** `src/lib/supabase.ts`. Alles Schreibende läuft über RLS bzw.
-  Edge Functions. Session wird nativ AES-verschlüsselt in AsyncStorage
-  gehalten (Schlüssel in SecureStore); auf **Web** übernimmt AsyncStorage
-  direkt (SecureStore existiert dort nicht).
-- **i18n:** `src/lib/i18n`. `de` ist die vollständige Referenz; andere Sprachen
-  dürfen Lücken haben und fallen auf Deutsch zurück. Neue UI-Strings **immer**
-  mindestens in `de` und `en` in `translations.ts` ergänzen (Test prüft das).
-- **Design-System:** `src/constants/theme.ts` (Farben, `Spacing`, `Type`,
-  `Radius`). UI baut auf wiederverwendbaren Komponenten in `src/components`
-  (Barrel-Export `index.ts`). Druckbare Flächen: **`PressableScale`** (nicht
-  rohes `Pressable`) – liefert Skalierung + Haptik.
-- **Onboarding-Tour:** `src/lib/tour.ts` (Coachmarks via
-  `@wrack/react-native-tour-guide`). Provider/Overlay in `src/app/_layout.tsx`.
-  Pro Screen wird die Tour **bei Fokus** angestoßen (idempotent per
-  AsyncStorage); Neustart über den Button in Profil (`useResetAllTours`).
-- **Karte:** `react-native-maps` funktioniert **nur nativ**. Import läuft über
-  `src/components/AppMap` mit `AppMap.web.tsx` als Web-Platzhalter, damit das
-  Web-Bundle nicht bricht.
+Änderungen, die eine laufende Funktion brechen könnten und einen Gerätetest
+oder eine Entscheidung brauchen (Auth-Speicher, Rechtstexte, Einwilligungen,
+Datenmodell), nicht einfach umsetzen. Stattdessen in `FRAGEN.md` festhalten:
+Fund, warum gestoppt, Vorschlag.
 
-## Konventionen
+## Architektur
 
-- Kommentare/Strings auf Deutsch, im Ton der bestehenden Dateien.
-- Keine Reward-/Punkte-Logik im Client – Punktestände kommen serverseitig.
-- Zielgruppe teils minderjährig: keine Grind-/Dark-Patterns, Datenminimierung
-  (siehe `docs/auth.md`, `docs/trust-safety.md`).
-- Migrationen unter `supabase/migrations`; synthetischer Seed in
-  `supabase/seed.sql` (nur dev/staging, `example.com`-Nutzer).
+- **Routing:** `src/app` (expo-router). Tabs in `src/app/(tabs)`, Auth-Gate in
+  `(tabs)/_layout.tsx`. Rechtstexte unter `src/app/legal` liegen bewusst
+  außerhalb des Gates.
+- **Backend:** Client nur mit anon-Key (`src/lib/supabase.ts`). Alles
+  Schreibende geht über RLS, RPCs oder Edge Functions (`src/lib/api.ts`);
+  der Client schreibt nie direkt in `reports` oder `points_ledger`.
+- **Meldungen:** immer erst in die Offline-Queue (`src/lib/offline-queue.ts`),
+  dann Sync. Der `clientKey` entdoppelt Retries serverseitig. Fotos werden vor
+  dem Upload neu kodiert (EXIF/GPS weg).
+- **On-Device-Erkennung:** `src/lib/vision` (Modell kommt zur Laufzeit aus
+  `vision_models`). Das Ergebnis berät nur: es blockiert nie das Absenden und
+  vergibt keine Punkte. Die verbindliche Prüfung macht `analyze-photo`.
+  Training in `training/` (Python), siehe `docs/vision-ondevice.md`.
+- **i18n:** `src/lib/i18n/translations.ts`. `de` ist vollständig, andere
+  Sprachen fallen auf Deutsch zurück. Neue Strings immer mindestens in `de`
+  und `en` (ein Test prüft das).
+- **UI:** Tokens aus `src/constants/theme.ts` (`Spacing`, `Type`, `Radius`,
+  `useThemeColors`), Bausteine aus `src/components` (Barrel `index.ts`).
+  Drückbares immer mit `PressableScale`, nie rohes `Pressable`. Status nie nur
+  über Farbe (Icon + Text, siehe `src/constants/status.ts`).
+- **NativeWind / `src/components/ui`:** eingerichtet (Tailwind, Babel, Metro,
+  `global.css`), aber bisher von keinem Screen benutzt. Neue UI weiter mit
+  `StyleSheet` + Theme-Tokens bauen, bis entschieden ist, ob migriert oder
+  entfernt wird.
+- **Karte:** `react-native-maps` nur nativ; Import immer über
+  `src/components/AppMap` (Web-Platzhalter `AppMap.web.tsx`).
+- **Onboarding-Tour:** `useFocusTour` aus `src/lib/tour.ts`; startet bei jedem
+  Fokus und ist per AsyncStorage idempotent.
 
-## Weiterführende Docs
+## Datenbank
 
-`docs/` enthält Detailnotizen: `fundament.md`, `frontend.md`, `auth.md`,
-`schema-ist.md`, `ops.md`, `design-notes.md` u. a.
+- Migrationen in `supabase/migrations`, fortlaufend `NNN_name.sql`, nur
+  additiv (kein DROP/RENAME von Bestand). Details: `docs/ops.md`.
+- `supabase/seed.sql` ist synthetisch (nur dev/staging, `example.com`).
+- Rechtstexte in `src/app/legal/*` inhaltlich geändert? Dann
+  `POLICY_VERSION` in `src/constants/legal.ts` erhöhen und per Migration den
+  Default von `consents.policy_version` nachziehen.
+
+## Produktregeln
+
+- Zielgruppe teils minderjährig: keine Streaks, kein Zeitdruck, keine
+  Zufallsbelohnungen, Datenminimierung. Punkte berechnet nur der Server.
+- Automatisierte Entscheidungen immer erkennbar machen und Widerspruch
+  ermöglichen (Art. 22 DSGVO, Art. 17 DSA), siehe `case/[id].tsx`.
+
+## Doku
+
+| Datei | Inhalt |
+| --- | --- |
+| `FRAGEN.md` | offene Entscheidungen und bewusst gestoppte Fixes |
+| `NOTIZEN.md` | Annahmen und Entscheidungen der Backend-Pakete (Juli 2026) |
+| `docs/fortschritt.md` | was gebaut ist, was deployed werden muss |
+| `docs/ops.md` | Migrationen und Functions ausrollen |
+| `docs/schema-ist.md`, `docs/fundament.md` | Datenmodell |
+| `docs/auth.md`, `docs/trust-safety.md`, `docs/security-review.md` | Auth, Moderation, Sicherheit |
+| `docs/vision.md`, `docs/vision-ondevice.md`, `docs/foto-pipeline.md` | Foto-Prüfung und Anonymisierung |
+| `docs/design-notes.md` | Designentscheidungen |
+| `docs/legal/` | Datenschutz, AGB, DSFA, Audit-Bericht |
+| `docs/archiv/` | erledigte Arbeitsaufträge früherer Runden |

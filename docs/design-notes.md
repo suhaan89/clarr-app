@@ -508,7 +508,7 @@ einen anderen Wert umstellen (z. B. Gemeinschaftssumme oder Impact-Punkte).
 
 # Redesign-Runde 8 (Juli 2026): Runde-7-Backlog abgearbeitet + eigener Durchgang
 
-**Auftrag:** Den in `docs/verbesserungs-prompt-runde7.md` hinterlassenen,
+**Auftrag:** Den in `docs/archiv/verbesserungs-prompt-runde7.md` hinterlassenen,
 ungenutzten Auftrag abarbeiten (Paket A/B/C), danach eigenständig
 weitersuchen und beheben, solange sinnvoll — keine Rückfrage pro Fund. Nur
 Frontend/UX, keine Backend-/Sicherheitslogik. Reihenfolge wie im Auftrag
