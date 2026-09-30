@@ -46,3 +46,6 @@ yarn-error.*
 
 # Supabase CLI: lokaler, maschinengebundener Verknuepfungs-Cache
 supabase/.temp/
+
+# Von `npx deno check` erzeugt
+deno.lock

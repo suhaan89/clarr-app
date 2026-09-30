@@ -18,10 +18,15 @@ npm run typecheck     # tsc --noEmit, muss sauber sein
 npm run lint          # ESLint, muss ohne Fehler sein
 ```
 
-Vor jedem Commit alle drei laufen lassen. Auf diesem Rechner gibt es weder
-Deno noch Supabase-CLI noch Docker: Edge Functions und pgTAP-Tests
-(`supabase/tests`) lassen sich lokal nicht ausführen. Änderungen dort
-sorgfältig lesen und im Bericht sagen, dass sie ungetestet sind.
+Vor jedem Commit alle drei laufen lassen. Edge Functions typprüfen mit
+
+```bash
+cd supabase/functions && npx deno check --node-modules-dir=none */index.ts
+```
+
+Supabase-CLI und Docker fehlen auf diesem Rechner: Functions lassen sich
+nicht ausführen, pgTAP-Tests (`supabase/tests`) nicht laufen lassen. Im
+Bericht sagen, dass solche Änderungen nur typgeprüft sind.
 
 ## Arbeitsregel: nichts Funktionierendes blind umbauen
 
@@ -38,6 +43,12 @@ Fund, warum gestoppt, Vorschlag.
 - **Backend:** Client nur mit anon-Key (`src/lib/supabase.ts`). Alles
   Schreibende geht über RLS, RPCs oder Edge Functions (`src/lib/api.ts`);
   der Client schreibt nie direkt in `reports` oder `points_ledger`.
+- **Edge Functions:** Functions, die die App mit Nutzer-JWT aufruft, starten
+  mit `serveUserFunction` aus `supabase/functions/_shared/http.ts` (CORS,
+  JWT-Prüfung, Service-Client, 500-Behandlung). Nicht erneut kopieren.
+- **Große Screens:** Daten in einen Hook unter `src/lib` (z. B.
+  `useProfilData.ts`), Abschnitte als Komponenten unter
+  `src/components/<screen>/` (z. B. `src/components/profil`).
 - **Meldungen:** immer erst in die Offline-Queue (`src/lib/offline-queue.ts`),
   dann Sync. Der `clientKey` entdoppelt Retries serverseitig. Fotos werden vor
   dem Upload neu kodiert (EXIF/GPS weg).
