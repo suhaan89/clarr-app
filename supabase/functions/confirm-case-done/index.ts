@@ -10,8 +10,8 @@
 //   * Ungueltig/abgelaufen/benutzt -> neutrale Fehlerseite (kein Orakel,
 //     welche Tokens existieren).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sha256Hex, ipHashFromRequest, checkRateLimit } from "../_shared/security.ts";
+import { serviceClient } from "../_shared/http.ts";
 
 function page(status: number, title: string, text: string): Response {
   return new Response(
@@ -32,10 +32,7 @@ Deno.serve(async (req) => {
     return page(400, "Ungültiger Link", "Dieser Link ist unvollständig oder beschädigt.");
   }
 
-  const admin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const admin = serviceClient();
 
   // Oeffentlicher, unauthentifizierter Endpunkt (Klick aus der Behoerden-Mail)
   // — bisher ohne jedes Limit. IP-Hash-basiert begrenzen, damit ein

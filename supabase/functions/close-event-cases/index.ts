@@ -7,75 +7,39 @@
 //   * Punkte: idempotent pro Fall (booking_key case_closed_after:<case_id>
 //     via close_case_tx) — doppelter Aufruf bucht nichts doppelt.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeadersFor } from "../_shared/security.ts";
+import { serveUserFunction, stringList } from "../_shared/http.ts";
 
-Deno.serve(async (req) => {
-  const corsHeaders = corsHeadersFor(req);
-  function json(status: number, body: unknown): Response {
-    return new Response(JSON.stringify(body), {
-      status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+serveUserFunction("close-event-cases", async ({ req, user, admin, json }) => {
+  // Nur Team/Partner darf Events abschliessen.
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (!profile || !["partner", "moderator"].includes(profile.role)) {
+    return json(403, { error: "role_required" });
   }
 
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const body = await req.json().catch(() => null);
+  if (!body) return json(400, { error: "invalid_body" });
 
-  try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json(401, { error: "unauthorized" });
+  const eventId = typeof body.event_id === "string" ? body.event_id : null;
+  const caseIds = stringList(body.case_ids, 25);
+  const latitude = Number(body.latitude);
+  const longitude = Number(body.longitude);
+  const photoPaths = stringList(body.photoPaths, 5);
 
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
-    if (authError || !user) return json(401, { error: "unauthorized" });
+  if (!eventId || caseIds.length === 0) return json(400, { error: "event_and_cases_required" });
 
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+  const { data: result, error: txError } = await admin.rpc("close_event_cases_tx", {
+    p_event_id: eventId,
+    p_user_id: user.id,
+    p_case_ids: caseIds,
+    p_lat: Number.isFinite(latitude) ? latitude : null,
+    p_lng: Number.isFinite(longitude) ? longitude : null,
+    p_photo_paths: photoPaths,
+  });
+  if (txError) throw txError;
 
-    // Nur Team/Partner darf Events abschliessen.
-    const { data: profile } = await admin
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (!profile || !["partner", "moderator"].includes(profile.role)) {
-      return json(403, { error: "role_required" });
-    }
-
-    const body = await req.json().catch(() => null);
-    if (!body) return json(400, { error: "invalid_body" });
-
-    const eventId = typeof body.event_id === "string" ? body.event_id : null;
-    const caseIds: string[] = Array.isArray(body.case_ids)
-      ? body.case_ids.filter((c: unknown) => typeof c === "string").slice(0, 25)
-      : [];
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
-    const photoPaths: string[] = Array.isArray(body.photoPaths)
-      ? body.photoPaths.filter((p: unknown) => typeof p === "string").slice(0, 5)
-      : [];
-
-    if (!eventId || caseIds.length === 0) return json(400, { error: "event_and_cases_required" });
-
-    const { data: result, error: txError } = await admin.rpc("close_event_cases_tx", {
-      p_event_id: eventId,
-      p_user_id: user.id,
-      p_case_ids: caseIds,
-      p_lat: Number.isFinite(latitude) ? latitude : null,
-      p_lng: Number.isFinite(longitude) ? longitude : null,
-      p_photo_paths: photoPaths,
-    });
-    if (txError) throw txError;
-
-    return json(200, result);
-  } catch (error) {
-    console.error("close-event-cases error:", error instanceof Error ? error.message : "unknown");
-    return json(500, { error: "internal_error" });
-  }
+  return json(200, result);
 });

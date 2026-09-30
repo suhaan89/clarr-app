@@ -21,8 +21,7 @@
 // Aufruf NUR durch den Scheduler (analog authority-digest): Bearer =
 // Service-Role-Key, konstante-Zeit-Vergleich. Kein Client-Aufruf.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { timingSafeEqual } from "../_shared/security.ts";
+import { isServiceRoleRequest, serviceClient } from "../_shared/http.ts";
 
 const GRACE_PERIOD_MS = 24 * 60 * 60 * 1000; // 24h
 const PAGE_SIZE = 100;
@@ -31,13 +30,11 @@ const MAX_TOP_LEVEL_FOLDERS = 2000; // Sicherheitsdeckel pro Lauf
 type StorageEntry = { id: string | null; name: string; created_at?: string };
 
 Deno.serve(async (req) => {
-  const auth = req.headers.get("Authorization") ?? "";
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  if (!(await timingSafeEqual(auth, `Bearer ${serviceKey}`))) {
+  if (!(await isServiceRoleRequest(req))) {
     return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
   }
 
-  const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+  const admin = serviceClient();
   const cutoff = Date.now() - GRACE_PERIOD_MS;
 
   async function listTopLevelFolders(bucket: string): Promise<string[]> {
