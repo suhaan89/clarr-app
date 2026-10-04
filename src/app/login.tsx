@@ -172,6 +172,11 @@ export default function LoginScreen() {
             ) : (
               <View style={styles.buttons}>
                 <Button label={t('login.signin')} onPress={signIn} disabled={!canSubmit} />
+                <Link href="/passwort" style={styles.forgotLink}>
+                  <Text style={[styles.forgot, { color: colors.primaryStrong }]} allowFontScaling>
+                    {t('login.forgot')}
+                  </Text>
+                </Link>
                 <Button
                   label={t('login.signup')}
                   onPress={signUp}
@@ -277,4 +282,6 @@ const styles = StyleSheet.create({
   },
   legalLink: { minHeight: 44, justifyContent: 'center' },
   legalLinkText: { fontSize: 13, fontWeight: '600' },
+  forgotLink: { alignSelf: 'center', paddingVertical: Spacing.twoHalf },
+  forgot: { fontSize: 15, fontWeight: '600' },
 });

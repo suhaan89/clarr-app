@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import * as FileSystem from 'expo-file-system/legacy';
 
-import { newClientKey, submitReport, type PendingReport } from '@/lib/api';
+import { newClientKey, ReportError, submitReport, type PendingReport } from '@/lib/api';
 
 const QUEUE_KEY = 'clar.report_queue.v1';
 const DEVICE_ID_KEY = 'clar.install_id.v1';
@@ -103,7 +103,18 @@ async function cleanupQueuedPhotos(item: PendingReport): Promise<void> {
   );
 }
 
-export type SyncResult = { sent: number; failed: number; lost: number; remaining: number };
+export type SyncResult = {
+  sent: number;
+  failed: number;
+  lost: number;
+  /** Vom Server endgueltig abgelehnt und aus der Queue entfernt. */
+  rejected: number;
+  remaining: number;
+  /** Warum der Lauf vorzeitig endete; die Eintraege bleiben in der Queue. */
+  blocked: 'not_active' | 'limit' | null;
+};
+
+const NOTHING_DONE = { sent: 0, failed: 0, lost: 0, rejected: 0, blocked: null } as const;
 
 /** Queue abarbeiten. Erfolgreiche (auch idempotent beantwortete) Eintraege
  *  werden entfernt; fehlgeschlagene bleiben fuer den naechsten Versuch.
@@ -113,13 +124,13 @@ export type SyncResult = { sent: number; failed: number; lost: number; remaining
  *  daraufhin einen klaren "Foto verloren, bitte erneut aufnehmen"-Hinweis
  *  zeigen. */
 export async function syncQueue(): Promise<SyncResult> {
-  if (syncing) return { sent: 0, failed: 0, lost: 0, remaining: (await readQueue()).length };
+  if (syncing) return { ...NOTHING_DONE, remaining: (await readQueue()).length };
   syncing = true;
   try {
     const net = await NetInfo.fetch();
     const queue = await readQueue();
     if (!net.isConnected || queue.length === 0) {
-      return { sent: 0, failed: 0, lost: 0, remaining: queue.length };
+      return { ...NOTHING_DONE, remaining: queue.length };
     }
 
     const deviceId = await getDeviceId();
@@ -128,6 +139,8 @@ export async function syncQueue(): Promise<SyncResult> {
     let sent = 0;
     let failed = 0;
     let lost = 0;
+    let rejected = 0;
+    let blocked: SyncResult['blocked'] = null;
 
     for (const item of queue) {
       const missing = await Promise.all(
@@ -144,8 +157,21 @@ export async function syncQueue(): Promise<SyncResult> {
         sent += 1; // idempotente Antworten zaehlen als erledigt
         done.add(item.clientKey);
         await cleanupQueuedPhotos(item);
-      } catch {
-        failed += 1;
+      } catch (error) {
+        if (!(error instanceof ReportError)) {
+          failed += 1;
+        } else if (error.kind === 'rejected') {
+          // Der Server nimmt genau diese Meldung nie an: nicht endlos erneut
+          // senden, sondern entfernen und dem Aufrufer melden.
+          rejected += 1;
+          done.add(item.clientKey);
+          await cleanupQueuedPhotos(item);
+        } else {
+          // Konto noch nicht freigeschaltet oder Limit erreicht: das gilt fuer
+          // alle weiteren Eintraege genauso, also hier aufhoeren.
+          blocked = error.kind;
+          break;
+        }
       }
     }
     // Queue NEU lesen statt den Stand vom Anfang zurueckzuschreiben: waehrend
@@ -154,7 +180,7 @@ export async function syncQueue(): Promise<SyncResult> {
     // haette diesen Eintrag still ueberschrieben.
     const remaining = (await readQueue()).filter((q) => !done.has(q.clientKey));
     await writeQueue(remaining);
-    return { sent, failed, lost, remaining: remaining.length };
+    return { sent, failed, lost, rejected, remaining: remaining.length, blocked };
   } finally {
     syncing = false;
   }
@@ -165,7 +191,7 @@ export function startAutoSync(onResult?: (r: SyncResult) => void): () => void {
   const unsubscribe = NetInfo.addEventListener((state) => {
     if (state.isConnected) {
       syncQueue().then((r) => {
-        if (r.sent > 0 || r.failed > 0) onResult?.(r);
+        if (r.sent > 0 || r.failed > 0 || r.lost > 0 || r.rejected > 0) onResult?.(r);
       });
     }
   });

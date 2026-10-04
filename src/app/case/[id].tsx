@@ -15,7 +15,7 @@ import Animated, {
 import { Badge, Button, Card, Celebration, EmptyState, LoadingState, PressableScale } from '@/components';
 import { getCaseStatus, isOpenStatus } from '@/constants/status';
 import { Spacing, Type, useThemeColors } from '@/constants/theme';
-import { blurredPhotoUrl, callFunction, uploadOriginal } from '@/lib/api';
+import { blurredPhotoUrl, callFunction, newClientKey, uploadOriginal } from '@/lib/api';
 import { useI18n, type TranslationKey } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -186,7 +186,7 @@ export default function CaseDetailScreen() {
       const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      const path = await uploadOriginal(photo.assets[0].uri);
+      const path = await uploadOriginal(photo.assets[0].uri, `nachher-${newClientKey()}`);
       const result = await callFunction<{ ok?: boolean; error?: string }>('close-case', {
         case_id: id,
         latitude: loc.coords.latitude,

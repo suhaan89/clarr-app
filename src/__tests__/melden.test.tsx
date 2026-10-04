@@ -41,6 +41,11 @@ jest.mock('expo-location', () => ({
   Accuracy: { Balanced: 3 },
 }));
 
+const mockRouterPush = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+}));
+
 const mockVisionAnalyze = jest.fn();
 const mockVisionReset = jest.fn();
 let mockVisionState: { status: string; result: unknown } = { status: 'idle', result: null };
@@ -63,7 +68,7 @@ jest.mock('@/lib/api', () => ({
   newClientKey: () => 'test-client-key',
 }));
 
-import MeldenScreen from '../melden';
+import MeldenScreen from '@/app/(tabs)/melden';
 
 const SHUTTER_A11Y = 'Foto aufnehmen – Meldungen mit der Kamera zählen für Punkte';
 const GALLERY_A11Y = 'Foto aus der Galerie wählen, ohne Punkte';
@@ -90,7 +95,7 @@ beforeEach(() => {
     coords: { latitude: 47.6, longitude: 9.5 },
     mocked: false,
   });
-  mockSyncQueue.mockResolvedValue({ sent: 1, failed: 0, lost: 0, remaining: 0 });
+  mockSyncQueue.mockResolvedValue({ sent: 1, failed: 0, lost: 0, rejected: 0, remaining: 0, blocked: null });
 });
 
 describe('melden.tsx: Schrittzustand foto -> details -> fertig', () => {
@@ -133,7 +138,7 @@ describe('melden.tsx: Schrittzustand foto -> details -> fertig', () => {
   });
 
   it('zeigt den Offline-Hinweis, wenn die Meldung nur gequeued werden konnte', async () => {
-    mockSyncQueue.mockResolvedValue({ sent: 0, failed: 1, lost: 0, remaining: 1 });
+    mockSyncQueue.mockResolvedValue({ sent: 0, failed: 1, lost: 0, rejected: 0, remaining: 1, blocked: null });
     await renderScreen();
     fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
     fireEvent.press(await screen.findByText('Meldung absenden'));
@@ -195,5 +200,81 @@ describe('melden.tsx: Schrittzustand foto -> details -> fertig', () => {
 
     expect(mockVisionReset).toHaveBeenCalled();
     expect(await screen.findByLabelText(SHUTTER_A11Y)).toBeTruthy();
+  });
+
+  it('ein Doppel-Tipp auf den Ausloeser nimmt nur ein Foto auf', async () => {
+    // Die erste Aufnahme laeuft noch, waehrend der zweite Tipp kommt.
+    let finishCapture: (photo: { uri: string }) => void = () => {};
+    mockTakePictureAsync.mockReturnValue(
+      new Promise((resolve) => {
+        finishCapture = resolve;
+      })
+    );
+    await renderScreen();
+    const shutter = await screen.findByLabelText(SHUTTER_A11Y);
+    await fireEvent.press(shutter);
+    await fireEvent.press(shutter);
+    finishCapture({ uri: 'file://mock-photo.jpg' });
+
+    await screen.findByLabelText(DESC_A11Y);
+    expect(mockTakePictureAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('nimmt den Standort schon bei der Aufnahme, nicht erst beim Absenden', async () => {
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+    await screen.findByLabelText(DESC_A11Y);
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(await screen.findByText('Meldung absenden'));
+    await waitFor(() => expect(mockEnqueueReport).toHaveBeenCalledTimes(1));
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockEnqueueReport.mock.calls[0][0]).toMatchObject({ latitude: 47.6, longitude: 9.5 });
+  });
+
+  it('ohne Standort: nichts wird gequeued, das Foto bleibt fuer einen neuen Versuch', async () => {
+    mockGetCurrentPositionAsync.mockRejectedValue(new Error('denied'));
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+    fireEvent.press(await screen.findByText('Meldung absenden'));
+
+    expect(await screen.findByText('Standort fehlt')).toBeTruthy();
+    expect(mockEnqueueReport).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByText('Erneut versuchen'));
+    expect(await screen.findByLabelText(DESC_A11Y)).toBeTruthy();
+  });
+
+  it('nicht freigeschaltetes Konto: Hinweis mit Weg zu den Community-Regeln', async () => {
+    mockSyncQueue.mockResolvedValue({
+      sent: 0,
+      failed: 0,
+      lost: 0,
+      rejected: 0,
+      remaining: 1,
+      blocked: 'not_active',
+    });
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+    fireEvent.press(await screen.findByText('Meldung absenden'));
+
+    fireEvent.press(await screen.findByText('Zu den Regeln'));
+    expect(mockRouterPush).toHaveBeenCalledWith('/regeln');
+  });
+
+  it('vom Server abgelehnte Meldung wird nicht als "offline" ausgegeben', async () => {
+    mockSyncQueue.mockResolvedValue({
+      sent: 0,
+      failed: 0,
+      lost: 0,
+      rejected: 1,
+      remaining: 0,
+      blocked: null,
+    });
+    await renderScreen();
+    fireEvent.press(await screen.findByLabelText(SHUTTER_A11Y));
+    fireEvent.press(await screen.findByText('Meldung absenden'));
+
+    expect(await screen.findByText('Meldung abgelehnt')).toBeTruthy();
   });
 });

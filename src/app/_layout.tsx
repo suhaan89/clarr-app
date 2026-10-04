@@ -21,8 +21,10 @@ function AppStack() {
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const { t } = useI18n();
   const { session } = useSession();
-  // Demo-Modus (Pitch-Video) ohne Hilfe-Chat und Tour-Overlay.
-  const isDemo = usePathname().startsWith('/demo');
+  // Ohne Hilfe-Chat und Tour-Overlay: Demo-Modus (Pitch-Video) und die
+  // Screens vor der eigentlichen App (Regeln bestaetigen, Passwort setzen).
+  const pathname = usePathname();
+  const isOverlayFree = ['/demo', '/regeln', '/passwort'].some((p) => pathname.startsWith(p));
   // Marken-Splash nur beim Kaltstart; blendet sich selbst aus.
   const [showSplash, setShowSplash] = useState(true);
 
@@ -34,6 +36,9 @@ function AppStack() {
     return startAutoSync((r) => {
       if (r.lost > 0) {
         Alert.alert(t('queue.lost_title'), t('queue.lost_body', { count: r.lost }));
+      }
+      if (r.rejected > 0) {
+        Alert.alert(t('queue.rejected_title'), t('queue.rejected_body', { count: r.rejected }));
       }
     });
   }, [t]);
@@ -74,6 +79,8 @@ function AppStack() {
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ title: t('stack.login'), headerShown: false }} />
+          <Stack.Screen name="regeln" options={{ title: t('stack.rules'), headerShown: false }} />
+          <Stack.Screen name="passwort" options={{ title: t('stack.password') }} />
           <Stack.Screen name="case/[id]" options={{ title: t('stack.case') }} />
           <Stack.Screen name="legal/datenschutz" options={{ title: t('stack.datenschutz') }} />
           <Stack.Screen name="legal/impressum" options={{ title: t('stack.impressum') }} />
@@ -83,10 +90,10 @@ function AppStack() {
           <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
           <Stack.Screen name="demo" options={{ headerShown: false }} />
         </Stack>
-        {session && !showSplash && !isDemo && <HelpChat />}
+        {session && !showSplash && !isOverlayFree && <HelpChat />}
         {showSplash && <BrandSplash onFinish={() => setShowSplash(false)} />}
         {/* Ueberlagert immer alles Weitere -> muss als letztes Kind stehen. */}
-        {session && !showSplash && !isDemo && <TourGuideOverlay />}
+        {session && !showSplash && !isOverlayFree && <TourGuideOverlay />}
       </TourGuideProvider>
     </ThemeProvider>
   );

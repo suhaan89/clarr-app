@@ -2,10 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,13 +24,29 @@ import { useVision, type VisionResult, type VisionStatus } from '@/lib/vision';
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 type Step = 'foto' | 'details' | 'fertig';
-type Result = 'ok-camera' | 'ok-gallery' | 'offline' | 'error';
+type Result =
+  | 'ok-camera'
+  | 'ok-gallery'
+  | 'offline'
+  | 'not-active'
+  | 'limit'
+  | 'rejected'
+  | 'error-location'
+  | 'error-save';
+
+type Position = Location.LocationObject;
 
 export default function MeldenScreen() {
   const colors = useThemeColors();
   const { t } = useI18n();
+  const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
+  // Sperrt den Ausloeser, solange eine Aufnahme laeuft (Doppel-Tipp).
+  const capturing = useRef(false);
+  // Standort im Moment der Aufnahme. Erst beim Absenden zu fragen hiesse:
+  // wer nach dem Foto weitergeht, meldet den falschen Ort.
+  const position = useRef<Promise<Position | null> | null>(null);
 
   const [step, setStep] = useState<Step>('foto');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -43,15 +61,28 @@ export default function MeldenScreen() {
     readQueue().then((q) => setQueueLength(q.length));
   }, [step]);
 
+  function capturePosition() {
+    position.current = Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    }).catch(() => null);
+  }
+
   async function takePhoto() {
-    // In-App-Kamera: Foto entsteht JETZT und HIER -> wertbar (Punkte).
-    const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
-    if (photo?.uri) {
-      setPhotoUri(photo.uri);
-      setSource('camera');
-      setStep('details');
-      // Advisory-Analyse on-device – rein informativ, blockiert nie die Meldung.
-      vision.analyze(photo.uri);
+    if (capturing.current) return;
+    capturing.current = true;
+    try {
+      capturePosition();
+      // In-App-Kamera: Foto entsteht JETZT und HIER -> wertbar (Punkte).
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
+      if (photo?.uri) {
+        setPhotoUri(photo.uri);
+        setSource('camera');
+        setStep('details');
+        // Advisory-Analyse on-device – rein informativ, blockiert nie die Meldung.
+        vision.analyze(photo.uri);
+      }
+    } finally {
+      capturing.current = false;
     }
   }
 
@@ -64,6 +95,7 @@ export default function MeldenScreen() {
     });
     if (!res.canceled && res.assets[0]?.uri) {
       const uri = res.assets[0].uri;
+      capturePosition();
       setPhotoUri(uri);
       setSource('gallery');
       setStep('details');
@@ -75,9 +107,18 @@ export default function MeldenScreen() {
     if (!photoUri) return;
     setBusy(true);
     try {
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      // Standort von der Aufnahme; war er dort nicht zu bekommen (z. B. die
+      // Erlaubnis kam erst danach), jetzt noch einmal versuchen.
+      let loc = await position.current;
+      if (!loc) {
+        capturePosition();
+        loc = await position.current;
+      }
+      if (!loc) {
+        setResult('error-location');
+        setStep('fertig');
+        return;
+      }
       const item: PendingReport = {
         clientKey: newClientKey(), // EINMAL erzeugt – verhindert Doppel-Sync
         description: description.trim().slice(0, 500),
@@ -99,11 +140,22 @@ export default function MeldenScreen() {
       await enqueueReport(item);
       const sync = await syncQueue();
       setResult(
-        sync.remaining === 0 ? (source === 'camera' ? 'ok-camera' : 'ok-gallery') : 'offline'
+        sync.blocked === 'not_active'
+          ? 'not-active'
+          : sync.blocked === 'limit'
+            ? 'limit'
+            : sync.rejected > 0
+              ? 'rejected'
+              : sync.remaining === 0
+                ? source === 'camera'
+                  ? 'ok-camera'
+                  : 'ok-gallery'
+                : 'offline'
       );
       setStep('fertig');
     } catch {
-      setResult('error');
+      // Standort ist hier schon da: gescheitert ist das Speichern in der Queue.
+      setResult('error-save');
       setStep('fertig');
     } finally {
       setBusy(false);
@@ -114,8 +166,12 @@ export default function MeldenScreen() {
     setPhotoUri(null);
     setDescription('');
     setStep('foto');
+    position.current = null;
     vision.reset();
   }
+
+  // Bei einem Fehler vor dem Speichern bleibt das Foto erhalten.
+  const canRetry = result === 'error-location' || result === 'error-save';
 
   useEffect(() => {
     Location.requestForegroundPermissionsAsync();
@@ -260,18 +316,36 @@ export default function MeldenScreen() {
     'ok-camera': { icon: 'checkmark-circle' as const, title: t('report.done_title'), body: t('report.done_camera') },
     'ok-gallery': { icon: 'checkmark-circle' as const, title: t('report.done_title'), body: t('report.done_gallery') },
     offline: { icon: 'cloud-offline-outline' as const, title: t('report.offline_title'), body: t('report.done_offline') },
-    error: { icon: 'location-outline' as const, title: t('report.error_title'), body: t('report.error_location') },
+    'not-active': { icon: 'document-text-outline' as const, title: t('report.not_active_title'), body: t('report.not_active_body') },
+    limit: { icon: 'time-outline' as const, title: t('report.offline_title'), body: t('report.limit_body') },
+    rejected: { icon: 'close-circle-outline' as const, title: t('report.rejected_title'), body: t('report.rejected_body') },
+    'error-location': { icon: 'location-outline' as const, title: t('report.error_title'), body: t('report.error_location') },
+    'error-save': { icon: 'alert-circle-outline' as const, title: t('report.error_save_title'), body: t('report.error_save') },
   }[result];
 
   return (
     <View style={[styles.centerScreen, { backgroundColor: colors.background }]}>
       <EmptyState icon={resultView.icon} title={resultView.title} body={resultView.body}>
         <View style={styles.permissionActions}>
+          {result === 'not-active' && (
+            <Button label={t('report.to_rules')} onPress={() => router.push('/regeln')} />
+          )}
+          {canRetry && (
+            <Button label={t('report.retry')} onPress={() => setStep('details')} icon="refresh" />
+          )}
+          {result === 'error-location' && (
+            <Button
+              label={t('report.open_settings')}
+              onPress={() => Linking.openSettings()}
+              variant="secondary"
+            />
+          )}
           <Button
             label={t('report.new')}
             accessibilityLabel={t('report.new_a11y')}
             onPress={reset}
             icon="camera-outline"
+            variant={canRetry || result === 'not-active' ? 'ghost' : 'primary'}
           />
         </View>
       </EmptyState>

@@ -431,6 +431,67 @@ export const de = {
   'queue.lost_body':
     '{count} wartende Meldung(en) konnten nicht gesendet werden, weil das Foto nicht mehr auf dem Gerät ist. Bitte erneut aufnehmen und melden.',
 
+  // Community-Regeln (Freischaltung des Kontos, activate_account)
+  'stack.rules': 'Community-Regeln',
+  'rules.title': 'Kurz die Regeln',
+  'rules.intro': 'Bevor du deine erste Meldung machst, bestätige bitte einmal unsere Community-Regeln.',
+  'rules.r1_title': 'Melde Müll, keine Menschen',
+  'rules.r1_body':
+    'Schreib keinen Verursacher in die Beschreibung und fotografiere nicht gezielt Personen, Kennzeichen oder Klingelschilder.',
+  'rules.r2_title': 'Nur eigene, echte Fotos',
+  'rules.r2_body':
+    'Fotografiere den Fund selbst und vor Ort. Erfundene oder doppelte Meldungen, um Punkte zu sammeln, sind nicht erlaubt.',
+  'rules.r3_title': 'Respektvoll bleiben',
+  'rules.r3_body': 'Keine Beleidigungen, kein Hass, keine Gewalt- oder Sexualdarstellungen, keine Werbung.',
+  'rules.r4_title': 'Deine Sicherheit geht vor',
+  'rules.r4_body':
+    'Betritt kein fremdes Grundstück, fotografiere nicht im Straßenverkehr und fass gefährliche Abfälle nicht an.',
+  'rules.full': 'Die vollständigen Regeln stehen in den Nutzungsbedingungen.',
+  'rules.open_terms': 'Nutzungsbedingungen lesen',
+  'rules.accept': 'Verstanden, los geht’s',
+  'rules.accept_a11y': 'Community-Regeln bestätigen und weiter zur App',
+  'rules.error_email':
+    'Bitte bestätige zuerst deine E-Mail-Adresse über den Link in unserer Mail. Danach kannst du hier weitermachen.',
+  'rules.error_generic': 'Das hat gerade nicht geklappt. Bitte prüfe deine Verbindung und versuch es erneut.',
+  'rules.signout': 'Abmelden',
+
+  // Melde-Flow: Fehlerfälle
+  'report.retry': 'Erneut versuchen',
+  'report.open_settings': 'Einstellungen öffnen',
+  'report.error_save_title': 'Nicht gespeichert',
+  'report.error_save': 'Die Meldung konnte nicht auf dem Gerät gespeichert werden. Bitte versuch es noch einmal.',
+  'report.not_active_title': 'Fast geschafft',
+  'report.not_active_body':
+    'Deine Meldung ist gespeichert. Bestätige noch kurz die Community-Regeln, dann senden wir sie automatisch.',
+  'report.to_rules': 'Zu den Regeln',
+  'report.limit_body':
+    'Du hast gerade sehr viele Meldungen gesendet. Diese ist gespeichert und wird später automatisch gesendet.',
+  'report.rejected_title': 'Meldung abgelehnt',
+  'report.rejected_body':
+    'Der Server konnte diese Meldung nicht annehmen. Bitte nimm ein neues Foto auf und versuch es erneut.',
+  'queue.rejected_title': 'Meldung nicht angenommen',
+  'queue.rejected_body':
+    '{count} wartende Meldung(en) hat der Server abgelehnt. Bitte erneut aufnehmen und melden.',
+
+  // Passwort zurücksetzen
+  'login.forgot': 'Passwort vergessen?',
+  'stack.password': 'Passwort zurücksetzen',
+  'password.intro':
+    'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Code, mit dem du ein neues Passwort festlegen kannst.',
+  'password.send': 'Code senden',
+  'password.sent': 'Falls es zu dieser Adresse ein Konto gibt, ist eine E-Mail mit einem Code unterwegs.',
+  'password.code': 'Code aus der E-Mail',
+  'password.code_a11y': 'Code aus der E-Mail eingeben',
+  'password.new': 'Neues Passwort (min. 8 Zeichen)',
+  'password.new_a11y': 'Neues Passwort, mindestens 8 Zeichen',
+  'password.link_intro': 'Lege jetzt dein neues Passwort fest.',
+  'password.save': 'Passwort speichern',
+  'password.resend': 'Neuen Code anfordern',
+  'password.error_code': 'Der Code ist falsch oder abgelaufen. Bitte fordere einen neuen an.',
+  'password.error_generic': 'Das hat nicht geklappt. Bitte versuch es später erneut.',
+  'password.done': 'Dein Passwort ist geändert.',
+  'password.continue': 'Weiter zur App',
+
   // Onboarding-Tour (Coachmarks)
   'tour.button_next': 'Weiter',
   'tour.button_back': 'Zurück',
@@ -461,6 +522,62 @@ export type TranslationKey = keyof typeof de;
 export type Catalog = Partial<Record<TranslationKey, string>>;
 
 const en: Catalog = {
+  // Community rules (account activation)
+  'stack.rules': 'Community rules',
+  'rules.title': 'The rules in short',
+  'rules.intro': 'Before your first report, please confirm our community rules once.',
+  'rules.r1_title': 'Report litter, not people',
+  'rules.r1_body':
+    'Do not name a culprit in the description and do not deliberately photograph people, number plates or doorbell signs.',
+  'rules.r2_title': 'Only your own, real photos',
+  'rules.r2_body':
+    'Take the photo yourself, on site. Made-up or repeated reports to collect points are not allowed.',
+  'rules.r3_title': 'Stay respectful',
+  'rules.r3_body': 'No insults, no hate, no violent or sexual content, no advertising.',
+  'rules.r4_title': 'Your safety comes first',
+  'rules.r4_body':
+    'Do not enter private property, do not take photos in traffic and do not touch hazardous waste.',
+  'rules.full': 'The complete rules are in the terms of use.',
+  'rules.open_terms': 'Read the terms of use',
+  'rules.accept': 'Got it, let’s go',
+  'rules.accept_a11y': 'Confirm the community rules and continue to the app',
+  'rules.error_email':
+    'Please confirm your email address first using the link in our email. Then you can continue here.',
+  'rules.error_generic': 'That did not work just now. Please check your connection and try again.',
+  'rules.signout': 'Sign out',
+
+  'report.retry': 'Try again',
+  'report.open_settings': 'Open settings',
+  'report.error_save_title': 'Not saved',
+  'report.error_save': 'The report could not be saved on this device. Please try again.',
+  'report.not_active_title': 'Almost there',
+  'report.not_active_body':
+    'Your report is saved. Confirm the community rules and we will send it automatically.',
+  'report.to_rules': 'Go to the rules',
+  'report.limit_body':
+    'You have sent a lot of reports just now. This one is saved and will be sent automatically later.',
+  'report.rejected_title': 'Report rejected',
+  'report.rejected_body': 'The server could not accept this report. Please take a new photo and try again.',
+  'queue.rejected_title': 'Report not accepted',
+  'queue.rejected_body': 'The server rejected {count} waiting report(s). Please take the photo again and report.',
+
+  'login.forgot': 'Forgot your password?',
+  'stack.password': 'Reset password',
+  'password.intro': 'Enter your email address. We will send you a code to set a new password.',
+  'password.send': 'Send code',
+  'password.sent': 'If there is an account for this address, an email with a code is on its way.',
+  'password.code': 'Code from the email',
+  'password.code_a11y': 'Enter the code from the email',
+  'password.new': 'New password (min. 8 characters)',
+  'password.new_a11y': 'New password, at least 8 characters',
+  'password.link_intro': 'Set your new password now.',
+  'password.save': 'Save password',
+  'password.resend': 'Request a new code',
+  'password.error_code': 'The code is wrong or has expired. Please request a new one.',
+  'password.error_generic': 'That did not work. Please try again later.',
+  'password.done': 'Your password has been changed.',
+  'password.continue': 'Continue to the app',
+
   'tabs.home': 'Home',
   'tabs.home_a11y': 'Home overview',
   'tabs.map': 'Map',

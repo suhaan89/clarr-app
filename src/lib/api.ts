@@ -29,6 +29,42 @@ export function newClientKey(): string {
     `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
 }
 
+/**
+ * Antwort des Servers, die sich durch Wiederholen NICHT aendert (oder erst,
+ * wenn der Nutzer etwas tut). Die Offline-Queue wertet `kind` aus, statt
+ * jeden Fehler als "offline" zu behandeln:
+ *   * not_active: Community-Regeln noch nicht bestaetigt -> Eintrag bleibt,
+ *                 die App fuehrt zum Regeln-Screen
+ *   * limit:      Rate-Limit oder Tageskontingent -> Eintrag bleibt, spaeter
+ *   * rejected:   Meldung ist ungueltig -> Eintrag wird entfernt
+ */
+export type ReportErrorKind = 'not_active' | 'limit' | 'rejected';
+
+export class ReportError extends Error {
+  constructor(
+    readonly kind: ReportErrorKind,
+    readonly code: string
+  ) {
+    super(code);
+    this.name = 'ReportError';
+  }
+}
+
+/** HTTP-Status + Fehlercode aus einem supabase-js-Functions-Fehler lesen. */
+async function readFunctionError(error: unknown): Promise<{ status: number; code: string } | null> {
+  const context = (error as { context?: unknown } | null)?.context;
+  if (!context || typeof (context as Response).status !== 'number') return null;
+  const response = context as Response;
+  let code = 'unknown';
+  try {
+    const body = (await response.clone().json()) as { error?: unknown };
+    if (typeof body?.error === 'string') code = body.error;
+  } catch {
+    // Antwort ohne JSON-Koerper: der Status allein entscheidet.
+  }
+  return { status: response.status, code };
+}
+
 async function requireUserId(): Promise<string> {
   const { data } = await supabase.auth.getUser();
   if (!data.user) throw new Error('not_signed_in');
@@ -58,10 +94,16 @@ async function stripMetadata(localUri: string): Promise<string> {
   return cleaned.uri;
 }
 
-/** Foto in den PRIVATEN originals-Bucket laden; Rueckgabe = storage_path. */
-export async function uploadOriginal(localUri: string): Promise<string> {
+/**
+ * Foto in den PRIVATEN originals-Bucket laden; Rueckgabe = storage_path.
+ *
+ * Der Dateiname haengt am `clientKey` der Meldung: ein Retry trifft denselben
+ * Pfad, statt bei jedem Versuch eine weitere, verwaiste Datei anzulegen.
+ * Liegt die Datei schon da, gilt das als Erfolg.
+ */
+export async function uploadOriginal(localUri: string, name: string): Promise<string> {
   const userId = await requireUserId();
-  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const path = `${userId}/${name}.jpg`;
   const sanitizedUri = await stripMetadata(localUri);
   const base64 = await FileSystem.readAsStringAsync(sanitizedUri, {
     encoding: FileSystem.EncodingType.Base64,
@@ -69,8 +111,17 @@ export async function uploadOriginal(localUri: string): Promise<string> {
   const { error } = await supabase.storage
     .from('originals')
     .upload(path, decode(base64), { contentType: 'image/jpeg' });
-  if (error) throw error;
+  if (error && !isAlreadyUploaded(error)) throw error;
   return path;
+}
+
+function isAlreadyUploaded(error: unknown): boolean {
+  const e = error as { statusCode?: unknown; status?: unknown; message?: unknown };
+  return (
+    String(e.statusCode) === '409' ||
+    e.status === 409 ||
+    (typeof e.message === 'string' && /already exists|duplicate/i.test(e.message))
+  );
 }
 
 export async function callFunction<T = Record<string, unknown>>(
@@ -85,13 +136,13 @@ export async function callFunction<T = Record<string, unknown>>(
 /** Meldung einreichen (Fotos hochladen + submit-report + process-photo). */
 export async function submitReport(item: PendingReport, deviceId: string | null) {
   const photoPaths: string[] = [];
-  for (const uri of item.photoUris) {
-    photoPaths.push(await uploadOriginal(uri));
+  for (const [i, uri] of item.photoUris.entries()) {
+    photoPaths.push(await uploadOriginal(uri, `${item.clientKey}-${i}`));
   }
 
-  const result = await callFunction<{ ok?: boolean; report_id?: string; idempotent?: boolean }>(
-    'submit-report',
-    {
+  let result: { ok?: boolean; report_id?: string; idempotent?: boolean };
+  try {
+    result = await callFunction('submit-report', {
       latitude: item.latitude,
       longitude: item.longitude,
       description: item.description,
@@ -102,8 +153,18 @@ export async function submitReport(item: PendingReport, deviceId: string | null)
       source: item.source,
       ondeviceScore: item.ondevice?.score ?? null,
       ondeviceModelVersion: item.ondevice?.modelVersion ?? null,
+    });
+  } catch (error) {
+    const info = await readFunctionError(error);
+    if (info?.status === 403 && info.code === 'not_active') {
+      throw new ReportError('not_active', info.code);
     }
-  );
+    if (info?.status === 429) throw new ReportError('limit', info.code);
+    // 400 = der Server lehnt genau diese Meldung ab; erneutes Senden aendert
+    // daran nichts. 401 und 5xx bleiben normale, wiederholbare Fehler.
+    if (info?.status === 400) throw new ReportError('rejected', info.code);
+    throw error;
+  }
 
   // Anonymisierungs-Pipeline anstossen – best effort; ohne Erfolg bleibt
   // das Foto ohnehin privat (fail-safe, Paket 5).

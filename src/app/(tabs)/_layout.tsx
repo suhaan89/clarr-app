@@ -10,10 +10,13 @@ import { useSession } from '@/lib/session';
 export default function TabLayout() {
   const colors = useThemeColors();
   const { t } = useI18n();
-  const { session, loading } = useSession();
+  const { session, loading, verificationLevel } = useSession();
 
   if (loading) return null;
   if (!session) return <Redirect href="/login" />;
+  // Einmal nach dem ersten Login: Community-Regeln bestaetigen. Nur wenn die
+  // Stufe sicher bekannt ist; ohne Netz bleibt die App benutzbar.
+  if (verificationLevel === 'mail_verifiziert') return <Redirect href="/regeln" />;
 
   return (
     <Tabs
