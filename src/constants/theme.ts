@@ -14,8 +14,6 @@
  * freundliches Werkzeug wirken. Kein KI-Blau/Lila.
  */
 
-import '@/global.css';
-
 import { Platform, useColorScheme, type TextStyle } from 'react-native';
 
 export const Colors = {

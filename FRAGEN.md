@@ -4,30 +4,17 @@ Hier stehen Änderungen, die ich NICHT blind umgesetzt habe, weil sie eine
 funktionierende Funktion ernsthaft gefährden könnten und eine Entscheidung
 bzw. einen Test am Gerät brauchen (siehe AGENTS-Regel).
 
-## 0. Konten werden nie 'aktiv' – Meldungen kommen nicht an (Fund 2026-10-01)
+## 0. ~~Konten werden nie 'aktiv'~~ (erledigt 2026-10-04)
 
-**Fund:** `submit-report` nimmt Meldungen nur von Konten mit
-`verification_level = 'aktiv'` an (sonst 403 `not_active`). `aktiv` wird ein
-Konto ausschliesslich ueber die RPC `activate_account(true)` (Migration 003,
-"Community-Regeln bestaetigt"). **Die App ruft diese RPC nirgends auf** und
-hat auch keinen Schritt, in dem Regeln bestaetigt werden.
+Umgesetzt wie vorgeschlagen: nach dem ersten Login fuehrt die App einmal auf
+`src/app/regeln.tsx` ("Community-Regeln"), der Knopf ruft
+`activate_account(true)` auf. Der Melde-Flow erkennt `not_active` und leitet
+auf denselben Screen. Als Nachweis dient `rules_accepted_at` aus der RPC; ein
+eigener Eintrag im Einwilligungs-Journal wurde NICHT angelegt, weil die Regeln
+Teil der Nutzungsbedingungen sind und keine Einwilligung. Falls das anders
+gewuenscht ist: `record_consent` um einen Schluessel erweitern (Migration).
 
-**Folge:** Ein neu registriertes Konto bleibt nach der Mail-Bestaetigung auf
-`mail_verifiziert`. Jede Meldung landet in der Offline-Queue, der Screen zeigt
-"offline", und die Queue versucht es bei jedem Netzwechsel erneut, jeweils
-mit neuem Foto-Upload in `originals` (verwaiste Dateien bis zum
-Storage-Cleanup). Nur Konten, die per SQL/Seed auf `aktiv` gesetzt wurden,
-koennen melden.
-
-**Warum nicht direkt gebaut:** Es braucht eine Entscheidung, wie und wo die
-Community-Regeln bestaetigt werden (eigener Schritt nach dem ersten Login?
-Haken bei der Registrierung neben der Altersbestaetigung? Welcher Text, und
-gehoert die Bestaetigung als eigener Eintrag ins Einwilligungs-Journal?).
-
-**Vorschlag:** Nach dem ersten Login mit bestaetigter Mail ein kurzer Screen
-"Community-Regeln" mit Link auf `/legal/agb` und Knopf "Verstanden", der
-`activate_account(true)` aufruft. Zusaetzlich im Melde-Flow den Fehler
-`not_active` erkennen und auf diesen Screen leiten statt "offline" zu zeigen.
+Offen: Test am Geraet gegen das echte Backend.
 
 ## 1. ~~Auth-Token in SecureStore statt AsyncStorage~~ (erledigt)
 
@@ -168,3 +155,40 @@ Gewaehlt: Art. 6 (1) f DSGVO (Qualitaetskontrolle, zusaetzliches Pruefsignal).
 Der Score darf serverseitig nur eine Vorlage bei einem Menschen ausloesen
 und das auch nur, wenn `system_settings.ondevice_disagree_below` gesetzt ist
 (Standard: aus).
+
+---
+
+# Offene Fragen aus dem Release-Durchgang (2026-10-04)
+
+## 15. Push-Benachrichtigungen: in der App nicht gebaut
+
+**Fund:** Das Backend ist vorbereitet (`set_push_preferences`, Versand in
+`close-case` und `confirm-case-done` ueber den Expo-Push-Dienst). In der App
+fehlen `expo-notifications`, das Opt-in und die Token-Registrierung.
+
+**Warum gestoppt:** Der Push-Token geht an Expo (exp.host) und von dort an
+Apple/Google. Dieser Empfaenger steht weder in der Datenschutzerklaerung noch
+im Verzeichnis der Verarbeitungstaetigkeiten; das Opt-in ist eine neue
+Einwilligung. Beides sind Rechtstext-Aenderungen (neue `POLICY_VERSION`).
+Technisch braucht es ausserdem die EAS-`projectId` und FCM-Zugangsdaten, die
+erst nach `eas init` existieren.
+
+**Vorschlag:** Nach `eas init`: Abschnitt "Benachrichtigungen" in
+Datenschutzerklaerung und VVT ergaenzen, dann einen Schalter im Profil
+(Standard: aus), der erst beim Einschalten die Systemerlaubnis anfragt und
+`set_push_preferences` aufruft.
+
+## 16. Absturz- und Fehlerberichte: kein Dienst angebunden
+
+**Fund:** Fehler landen nur in `console.error` (`ErrorBoundary.tsx`). Von
+Abstuerzen bei echten Nutzern erfaehrt niemand.
+
+**Warum gestoppt:** Ein Dienst wie Sentry ist ein weiterer
+Auftragsverarbeiter (AV-Vertrag, Drittland, Datenschutzerklaerung). Die
+Alternative ohne Dritten waere eine eigene Tabelle in Supabase, also eine
+Aenderung am Datenmodell. Beides braucht eine Entscheidung.
+
+**Vorschlag:** Eigene Tabelle `client_errors` mit RPC (nur Fehlermeldung,
+Stack, App-Version, Plattform; kein Nutzerinhalt, Rate-Limit, Loeschung nach
+30 Tagen), gestuetzt auf Art. 6 (1) f DSGVO, mit einem Absatz in der
+Datenschutzerklaerung. Kein neuer Auftragsverarbeiter noetig.

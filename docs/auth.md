@@ -61,3 +61,27 @@ Art. 8 fuer DE als Annahme, nicht rechtlich verifiziert), der exakte
 Wortlaut, und was bei einer Selbstauskunft unter 16 tatsaechlich passieren
 soll (aktuell: nur ein Hinweistext, keine serverseitige Sperre — das ist
 bewusst offen gelassen, bis die rechtliche Ausgestaltung klar ist).
+
+## Freischaltung in der App (2026-10-04)
+
+Nach dem Login liest `SessionProvider` (`src/lib/session.tsx`) die Stufe aus
+`user_profiles.verification_level`. Bei `mail_verifiziert` leitet das Gate in
+`src/app/(tabs)/_layout.tsx` auf `src/app/regeln.tsx`; der Knopf "Verstanden"
+ruft `activate_account(true)` auf. Laesst sich die Stufe nicht laden (offline),
+wird nicht gesperrt: der Server lehnt Meldungen dann mit `not_active` ab und
+der Melde-Screen fuehrt zu den Regeln.
+
+## Passwort zuruecksetzen (2026-10-04)
+
+Screen `src/app/passwort.tsx`, erreichbar vom Login. Zwei Wege, beide brauchen
+einmalig eine Einstellung im Supabase-Dashboard:
+
+1. **Code (empfohlen):** Authentication > Emails > "Reset Password": den Code
+   `{{ .Token }}` in die Vorlage aufnehmen. Die Person tippt Code und neues
+   Passwort in der App ein (`verifyOtp` mit `type: 'recovery'`).
+2. **Link:** Authentication > URL Configuration > Redirect URLs:
+   `clarrapp://passwort` eintragen. Der Link aus der Mail oeffnet die App
+   direkt beim neuen Passwort.
+
+Die Antwort auf "Code senden" ist immer dieselbe, egal ob es das Konto gibt
+(Anti-Enumeration). Noch nicht gegen das echte Projekt getestet.

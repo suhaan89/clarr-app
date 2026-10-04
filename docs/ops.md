@@ -134,4 +134,28 @@ Fristen eingehalten werden koennen.
   deshalb an den naechsten SDK-Wechsel gekoppelt.
 - Der Lizenz-Screen `src/app/legal/lizenzen.tsx` listet die direkten
   Abhaengigkeiten. Nach jedem Hinzufuegen oder Entfernen eines Pakets die
-  Liste nachziehen.
+  Liste nachziehen: `node scripts/lizenzen.mjs` gibt sie aus.
+
+## Release-Build mit EAS
+
+Einmalig, von Hand (braucht dein Expo-Konto):
+
+1. `npx eas login`, dann `npx eas init`: traegt die `projectId` in `app.json`
+   ein. Ohne sie startet kein Build.
+2. Umgebungsvariablen je EAS-Umgebung (`development`, `preview`,
+   `production`) setzen, z. B. `npx eas env:create`:
+   `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`,
+   `EXPO_PUBLIC_ONDEVICE_VISION`, `GOOGLE_MAPS_ANDROID_API_KEY`.
+   `EXPO_PUBLIC_DEMO` in `production` NICHT setzen.
+3. Google-Maps-Schluessel: Google Cloud Console > "Maps SDK for Android"
+   aktivieren, Schluessel auf das Paket `app.clar.mobile` und den
+   SHA-1-Fingerabdruck des Signaturschluessels beschraenken. `app.config.js`
+   reicht ihn an `react-native-maps` weiter; ohne ihn bleibt die Karte auf
+   Android leer.
+4. `eas.json` > `submit.production`: Apple-ID, App-Store-Connect-ID und
+   Team-ID eintragen, `play-service-account.json` ablegen (nicht einchecken).
+
+Build-Nummern zaehlt EAS selbst hoch (`appVersionSource: remote`,
+`autoIncrement`). `expo-doctor` meldet `@expo/config-plugins` als direkte
+Abhaengigkeit: das Paket bleibt, weil das Plugin von `react-native-maps` es
+so importiert.

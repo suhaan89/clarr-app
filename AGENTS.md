@@ -15,12 +15,14 @@ Navigations-Hooks kommen aus `expo-router/react-navigation`, nicht direkt aus
 
 ```bash
 npx expo start        # Dev-Server; Karte/Kamera/TFLite brauchen einen Dev-Build
-npm test              # Jest (jest-expo), Tests in __tests__-Ordnern unter src/
+npm test              # Jest (jest-expo), Tests in __tests__-Ordnern unter src/ (nie unter src/app)
 npm run typecheck     # tsc --noEmit, muss sauber sein
 npm run lint          # ESLint, muss ohne Fehler sein
 ```
 
-Vor jedem Commit alle drei laufen lassen. Edge Functions typprüfen mit
+Vor jedem Commit alle drei laufen lassen; `.github/workflows/ci.yml` prüft
+dasselbe bei jedem Push. Tests für Screens liegen in `src/__tests__`: unter
+`src/app` würde expo-router sie als Routen einbinden. Edge Functions typprüfen mit
 
 ```bash
 cd supabase/functions && npx deno check --node-modules-dir=none */index.ts
@@ -42,6 +44,10 @@ Fund, warum gestoppt, Vorschlag.
 - **Routing:** `src/app` (expo-router). Tabs in `src/app/(tabs)`, Auth-Gate in
   `(tabs)/_layout.tsx`. Rechtstexte unter `src/app/legal` liegen bewusst
   außerhalb des Gates.
+- **Freischaltung:** Ein Konto darf erst melden, wenn es `aktiv` ist. Das
+  Gate in `(tabs)/_layout.tsx` leitet Konten mit `mail_verifiziert` einmal
+  auf `src/app/regeln.tsx` (RPC `activate_account`). Die Stufe liefert
+  `useSession().verificationLevel`.
 - **Backend:** Client nur mit anon-Key (`src/lib/supabase.ts`). Alles
   Schreibende geht über RLS, RPCs oder Edge Functions (`src/lib/api.ts`);
   der Client schreibt nie direkt in `reports` oder `points_ledger`.
@@ -52,7 +58,9 @@ Fund, warum gestoppt, Vorschlag.
   `useProfilData.ts`), Abschnitte als Komponenten unter
   `src/components/<screen>/` (z. B. `src/components/profil`).
 - **Meldungen:** immer erst in die Offline-Queue (`src/lib/offline-queue.ts`),
-  dann Sync. Der `clientKey` entdoppelt Retries serverseitig. Fotos werden vor
+  dann Sync. Der `clientKey` entdoppelt Retries serverseitig und benennt die
+  Fotodatei. Antworten, die sich durch Wiederholen nicht ändern, kommen als
+  `ReportError` aus `src/lib/api.ts` (abgelehnt, nicht freigeschaltet, Limit). Fotos werden vor
   dem Upload neu kodiert (EXIF/GPS weg).
 - **On-Device-Erkennung:** `src/lib/vision` (Modell kommt zur Laufzeit aus
   `vision_models`). Das Ergebnis berät nur: es blockiert nie das Absenden und
@@ -65,10 +73,6 @@ Fund, warum gestoppt, Vorschlag.
   `useThemeColors`), Bausteine aus `src/components` (Barrel `index.ts`).
   Drückbares immer mit `PressableScale`, nie rohes `Pressable`. Status nie nur
   über Farbe (Icon + Text, siehe `src/constants/status.ts`).
-- **NativeWind / `src/components/ui`:** eingerichtet (Tailwind, Babel, Metro,
-  `global.css`), aber bisher von keinem Screen benutzt. Neue UI weiter mit
-  `StyleSheet` + Theme-Tokens bauen, bis entschieden ist, ob migriert oder
-  entfernt wird.
 - **Karte:** `react-native-maps` nur nativ; Import immer über
   `src/components/AppMap` (Web-Platzhalter `AppMap.web.tsx`).
 - **Onboarding-Tour:** `useFocusTour` aus `src/lib/tour.ts`; startet bei jedem
