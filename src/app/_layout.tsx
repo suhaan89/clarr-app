@@ -1,7 +1,7 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import { TourGuideOverlay, TourGuideProvider } from '@wrack/react-native-tour-guide';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -21,6 +21,8 @@ function AppStack() {
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const { t } = useI18n();
   const { session } = useSession();
+  // Demo-Modus (Pitch-Video) ohne Hilfe-Chat und Tour-Overlay.
+  const isDemo = usePathname().startsWith('/demo');
   // Marken-Splash nur beim Kaltstart; blendet sich selbst aus.
   const [showSplash, setShowSplash] = useState(true);
 
@@ -79,11 +81,12 @@ function AppStack() {
           <Stack.Screen name="legal/kontakt" options={{ title: t('stack.kontakt') }} />
           <Stack.Screen name="legal/lizenzen" options={{ title: t('stack.lizenzen') }} />
           <Stack.Screen name="moderation" options={{ title: t('moderation.title') }} />
+          <Stack.Screen name="demo" options={{ headerShown: false }} />
         </Stack>
-        {session && !showSplash && <HelpChat />}
+        {session && !showSplash && !isDemo && <HelpChat />}
         {showSplash && <BrandSplash onFinish={() => setShowSplash(false)} />}
         {/* Ueberlagert immer alles Weitere -> muss als letztes Kind stehen. */}
-        {session && !showSplash && <TourGuideOverlay />}
+        {session && !showSplash && !isDemo && <TourGuideOverlay />}
       </TourGuideProvider>
     </ThemeProvider>
   );

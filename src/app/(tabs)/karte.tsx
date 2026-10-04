@@ -85,7 +85,11 @@ export default function KarteScreen() {
       setLoaded(true);
       return;
     }
-    if (data) setReports(data as unknown as MapReport[]);
+    if (data) {
+      setReports(data as unknown as MapReport[]);
+      // Neue Marker kurz nachzeichnen lassen (siehe Effekt unten).
+      setTracksChanges(true);
+    }
     setLoaded(true);
   }, [t]);
 
@@ -102,7 +106,6 @@ export default function KarteScreen() {
   }
 
   useEffect(() => {
-    setTracksChanges(true);
     const timer = setTimeout(() => setTracksChanges(false), 900);
     return () => clearTimeout(timer);
   }, [reports]);

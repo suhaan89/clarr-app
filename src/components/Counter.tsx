@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Text, type StyleProp, type TextStyle } from 'react-native';
 
 type Props = {
@@ -15,7 +15,7 @@ type Props = {
  * JS-Thread setzen; kurze Dauer hält das unkritisch.
  */
 export function Counter({ value, style, suffix, duration = 750 }: Props) {
-  const anim = useRef(new Animated.Value(0)).current;
+  const [anim] = useState(() => new Animated.Value(0));
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {

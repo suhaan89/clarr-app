@@ -9,6 +9,9 @@ import { I18nProvider } from '@/lib/i18n';
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
+// Reanimated 4 laedt beim Import das native Worklets-Modul; in Jest gibt es
+// das nicht, deshalb der mitgelieferte Mock.
+jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'));
 
 const mockTakePictureAsync = jest.fn();
 jest.mock('expo-camera', () => {

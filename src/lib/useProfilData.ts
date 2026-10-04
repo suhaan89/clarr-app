@@ -4,7 +4,7 @@
 // der Client rechnet nichts in Punkte um.
 
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useI18n } from '@/lib/i18n';
@@ -41,6 +41,9 @@ export function useProfilData() {
   // löst die Feier aus. Keine künstlichen Trigger.
   const lastLevel = useRef<number | null>(null);
 
+  // "Erneut versuchen" im Fehler-Dialog ruft die jeweils aktuelle load-Fassung.
+  const retry = useRef<() => void>(() => {});
+
   // Async + Promise.all, damit RefreshControl weiss, wann der Refresh fertig ist.
   const load = useCallback(async () => {
     if (!session) return;
@@ -54,7 +57,7 @@ export function useProfilData() {
       .then(({ data, error }) => {
         if (error) {
           Alert.alert(t('profil.error_title'), t('profil.error_body'), [
-            { text: t('profil.error_retry'), onPress: () => load() },
+            { text: t('profil.error_retry'), onPress: () => retry.current() },
           ]);
           setLoaded(true);
           return;
@@ -126,6 +129,10 @@ export function useProfilData() {
 
     await Promise.all([levelP, ledgerP, profileP, boardP, consentsP, countsP, weekP]);
   }, [session, t]);
+
+  useEffect(() => {
+    retry.current = load;
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {

@@ -299,11 +299,9 @@ function VisionAdvisory({
   const { t } = useI18n();
   // „Trotzdem melden" klappt den Hinweis nur zu; gemeldet wird wie immer
   // über den Absende-Knopf.
+  // Der Zustand lebt nur fuer ein Foto: „Neues Foto"/Abbrechen fuehrt in den
+  // Kamera-Schritt, dabei wird diese Komponente abgebaut.
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    setDismissed(false);
-  }, [result]);
 
   if (status === 'idle' || status === 'skipped') return null;
 

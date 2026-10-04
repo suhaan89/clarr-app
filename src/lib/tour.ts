@@ -9,7 +9,7 @@
 // gefahrlos und starten nichts doppelt.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from 'expo-router/react-navigation';
 import { useTourPersistence, type TourGuideConfig, type TourStep } from '@wrack/react-native-tour-guide';
 import { useEffect, useRef } from 'react';
 
@@ -90,7 +90,10 @@ export function useFocusTour(
   const { t } = useI18n();
   const isFocused = useIsFocused();
   const latest = useRef({ start, t, buildSteps });
-  latest.current = { start, t, buildSteps };
+  // Steht vor dem Start-Effekt, laeuft also im selben Commit zuerst.
+  useEffect(() => {
+    latest.current = { start, t, buildSteps };
+  });
 
   useEffect(() => {
     if (!isFocused || !ready) return;

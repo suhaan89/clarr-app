@@ -105,6 +105,9 @@ export default function HomeScreen() {
     },
   ]);
 
+  // "Erneut versuchen" im Fehler-Dialog ruft die jeweils aktuelle load-Fassung.
+  const retry = useRef<() => void>(() => {});
+
   const load = useCallback(async () => {
     if (!session) return;
     // Held-Wert: Orte, die DU sauber gemacht hast (eigene Abschluss-Buchungen).
@@ -124,7 +127,7 @@ export default function HomeScreen() {
 
     if (placesRes.error || openRes.error || eventRes.error) {
       Alert.alert(t('home.error_title'), t('home.error_body'), [
-        { text: t('home.error_retry'), onPress: () => load() },
+        { text: t('home.error_retry'), onPress: () => retry.current() },
       ]);
       return;
     }
@@ -133,6 +136,10 @@ export default function HomeScreen() {
     setOpenCount(openRes.count ?? 0);
     setNextEvent((eventRes.data as EventRow[])?.[0] ?? null);
   }, [session, t]);
+
+  useEffect(() => {
+    retry.current = load;
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {

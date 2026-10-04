@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useRef } from 'react';
+import { useState } from 'react';
 import {
   Animated,
   Pressable,
@@ -60,7 +60,7 @@ export function PressableScale({
   disabled,
   ...rest
 }: Props) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const [scale] = useState(() => new Animated.Value(1));
 
   const spring = (to: number) =>
     Animated.spring(scale, {

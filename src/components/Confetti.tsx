@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -21,11 +21,26 @@ type PieceParams = {
   delay: number;
   duration: number;
   size: number;
-  color: string;
+  /** Index in die Farbpalette (die Palette selbst haengt am Theme). */
+  colorIndex: number;
   spin: number;
 };
 
-function ConfettiPiece({ p }: { p: PieceParams }) {
+const PALETTE_SIZE = 4;
+
+function makePieces(count: number): PieceParams[] {
+  return Array.from({ length: count }, () => ({
+    startX: Math.random() * SCREEN_W,
+    drift: (Math.random() - 0.5) * 140,
+    delay: Math.random() * 400,
+    duration: 1600 + Math.random() * 1200,
+    size: 7 + Math.random() * 7,
+    colorIndex: Math.floor(Math.random() * PALETTE_SIZE),
+    spin: (Math.random() - 0.5) * 720,
+  }));
+}
+
+function ConfettiPiece({ p, color }: { p: PieceParams; color: string }) {
   const progress = useSharedValue(0);
 
   // Einmaliger Fall beim Mounten (Feier ist ein kurzer Moment, keine Schleife).
@@ -48,7 +63,7 @@ function ConfettiPiece({ p }: { p: PieceParams }) {
   return (
     <Animated.View
       style={[
-        { width: p.size, height: p.size * 0.6, backgroundColor: p.color, borderRadius: 2 },
+        { width: p.size, height: p.size * 0.6, backgroundColor: color, borderRadius: 2 },
         style,
       ]}
     />
@@ -69,25 +84,17 @@ export function Confetti({ count = 80 }: { count?: number }) {
   const systemReduceMotion = useSystemReduceMotion();
   const reduceMotion = reanimatedReduceMotion || systemReduceMotion;
 
-  const pieces = useMemo<PieceParams[]>(() => {
-    const palette = [colors.primary, colors.primaryBright, colors.accent, '#FFFFFF'];
-    return Array.from({ length: count }, () => ({
-      startX: Math.random() * SCREEN_W,
-      drift: (Math.random() - 0.5) * 140,
-      delay: Math.random() * 400,
-      duration: 1600 + Math.random() * 1200,
-      size: 7 + Math.random() * 7,
-      color: palette[Math.floor(Math.random() * palette.length)],
-      spin: (Math.random() - 0.5) * 720,
-    }));
-  }, [count, colors.primary, colors.primaryBright, colors.accent]);
+  // Zufallswerte einmal beim Mounten wuerfeln (Lazy-Initializer), nicht bei
+  // jedem Render: die Feier ist ein einzelner kurzer Moment.
+  const [pieces] = useState(() => makePieces(count));
+  const palette = [colors.primary, colors.primaryBright, colors.accent, '#FFFFFF'];
 
   if (reduceMotion) return null;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {pieces.map((p, i) => (
-        <ConfettiPiece key={i} p={p} />
+        <ConfettiPiece key={i} p={p} color={palette[p.colorIndex]} />
       ))}
     </View>
   );

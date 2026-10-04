@@ -6,8 +6,10 @@ Kommentare und Commit-Nachrichten sind auf Deutsch.
 
 ## Versionen
 
-**Expo SDK 54** (React Native 0.81, expo-router 6, React 19.1). Bei Fragen zu
-Expo-APIs die versionierten Docs lesen: https://docs.expo.dev/versions/v54.0.0/
+**Expo SDK 57** (React Native 0.86, expo-router 57, React 19.2). Bei Fragen zu
+Expo-APIs die versionierten Docs lesen: https://docs.expo.dev/versions/v57.0.0/
+Navigations-Hooks kommen aus `expo-router/react-navigation`, nicht direkt aus
+`@react-navigation/native`.
 
 ## Befehle
 
