@@ -17,7 +17,7 @@
 
 # Datenschutzerklärung – CLAR
 
-**Fassung:** 2026-09-28-v1 · **Stand:** 28.09.2026
+**Fassung:** 2026-10-07-v1 · **Stand:** 07.10.2026
 
 Änderung gegenüber 2026-09-23-v1: eigenes On-Device-Modell (Abschnitt 8),
 freiwilliges KI-Training (neuer Abschnitt 8a), Tabellen in 3 und 9 ergänzt.
@@ -77,7 +77,7 @@ Standortbestimmung, die du beim Absenden erlaubst.
 | Empfänger | Übermittelte Daten | Rolle |
 |---|---|---|
 | **Supabase** | alle Konto- und Meldungsdaten, Fotos | Auftragsverarbeiter, Art. 28 DSGVO |
-| **Anthropic** | nur das verkleinerte Foto, kein Name, keine E-Mail, keine Konto-ID | Auftragsverarbeiter, Art. 28 DSGVO |
+| **Cloudflare** (Workers AI) | nur das verkleinerte Foto, kein Name, keine E-Mail, keine Konto-ID; laut Anbieter keine Nutzung zum Training von KI-Modellen | Auftragsverarbeiter, Art. 28 DSGVO |
 | **Zuständige Stelle** (Gemeinde, Bauhof) | Falltitel, Fundort, anonymisiertes Foto, Einmal-Link | eigenständig Verantwortliche |
 | **Resend** | Behörden-Adresse, Inhalt des Berichts | Auftragsverarbeiter, Art. 28 DSGVO |
 | **Google Maps** (Android) bzw. **Apple Maps** (iOS) | technisch der angezeigte Kartenausschnitt | eigenständig Verantwortliche, Art. 6 (1) f DSGVO |
@@ -90,8 +90,8 @@ Einordnung der Behörde als eigenständig Verantwortliche.
 
 ## 6. Übermittlung in Drittländer
 
-Anthropic hat seinen Sitz in den Vereinigten Staaten. Die Prüfung deines Fotos
-findet daher außerhalb der EU statt. Grundlage der Übermittlung sind die
+Cloudflare hat seinen Sitz in den Vereinigten Staaten und betreibt Rechenzentren
+weltweit. Die Prüfung deines Fotos kann daher außerhalb der EU stattfinden. Grundlage der Übermittlung sind die
 Standardvertragsklauseln der EU-Kommission beziehungsweise, soweit der Anbieter
 zertifiziert ist, das EU-US Data Privacy Framework.
 

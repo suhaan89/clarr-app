@@ -1,6 +1,6 @@
 """Auswertung auf dem Val-Satz: Precision, Recall, Confusion Matrix, Schwellenwert.
 
-    python evaluate.py --model runs/muell/weights/best.pt
+    python evaluate.py --model runs/muell/weights/best.keras
     python evaluate.py --model exports/<version>/model.tflite   # quantisiertes Modell pruefen
 
 Begriffe (positiv = "illegale Muellablagerung"):
@@ -28,15 +28,15 @@ import numpy as np
 from common import CLASSES, DATASET, IMG_SIZE, list_images, load_tflite_interpreter, preprocess, run_tflite
 
 
-def scores_pt(model_path: Path, images: list[Path]) -> np.ndarray:
-    from ultralytics import YOLO
+def scores_keras(model_path: Path, images: list[Path]) -> np.ndarray:
+    import keras
 
-    model = YOLO(str(model_path))
-    pos = [k for k, v in model.names.items() if v == "positiv"][0]
-    out = []
-    for img in images:
-        r = model.predict(str(img), imgsz=IMG_SIZE, verbose=False)[0]
-        out.append(float(r.probs.data[pos]))
+    model = keras.saving.load_model(model_path)
+    pos = CLASSES.index("positiv")
+    out: list[float] = []
+    for start in range(0, len(images), 32):
+        batch = np.concatenate([preprocess(p, IMG_SIZE) for p in images[start : start + 32]])
+        out += [float(row[pos]) for row in model.predict(batch, verbose=0)]
     return np.array(out)
 
 
@@ -64,7 +64,7 @@ def confusion(y_true: np.ndarray, scores: np.ndarray, t: float) -> dict:
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     return {
-        "threshold": round(t, 3),
+        "threshold": round(float(t), 3),
         "tp": tp, "fp": fp, "fn": fn, "tn": tn,
         "precision": round(precision, 4),
         "recall": round(recall, 4),
@@ -110,7 +110,7 @@ def main() -> int:
         return 1
     y_true = np.array(labels)
 
-    scores = scores_tflite(args.model, images) if args.model.suffix == ".tflite" else scores_pt(args.model, images)
+    scores = scores_tflite(args.model, images) if args.model.suffix == ".tflite" else scores_keras(args.model, images)
 
     sweep = [confusion(y_true, scores, t) for t in np.arange(0.05, 0.96, 0.05)]
     ok = [m for m in sweep if m["recall"] >= args.target_recall]

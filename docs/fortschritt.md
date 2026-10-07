@@ -470,3 +470,41 @@ inhaltlich blockiert):
 Alle anderen 33 Punkte sind inhaltlich umgesetzt, mit `npx tsc --noEmit`/
 `npm run lint`/`npm test` nach jedem Paket grün gehalten und in separaten
 Commits pro Paket festgehalten.
+
+---
+
+# Bilderkennung kostenlos (Stand 2026-10-07)
+
+## Phase 1 — kostenlose externe KI ✅ (ungetestet gegen Cloudflare)
+
+- `supabase/functions/_shared/vision.ts`: austauschbarer Anbieter
+  (`VISION_PROVIDER` = `cloudflare` Standard, `anthropic`, `none`).
+  `analyze-photo` und `process-photo` nutzen ihn; ohne Anbieter oder bei
+  Fehler geht die Meldung in die Review-Queue. Antworten werden streng
+  gelesen: eine unvollstaendige Antwort lehnt nichts mehr automatisch ab und
+  gibt kein Foto mehr automatisch frei.
+- Rechtstexte nennen Cloudflare, `POLICY_VERSION` 2026-10-07-v1,
+  Migration `024_policy_version_vision_provider.sql`.
+- Nur typgeprueft (`deno check`) und gegen einen nachgebauten Server
+  getestet. **Betreiber:** Cloudflare-Konto ohne Zahlungsart anlegen,
+  `CLOUDFLARE_ACCOUNT_ID` und `CLOUDFLARE_API_TOKEN` als Secrets setzen,
+  `ANTHROPIC_API_KEY` loeschen, Functions und Migration 024 ausrollen.
+  Offene Punkte: `FRAGEN.md` Nr. 17.
+- **Ausgerollt am 2026-10-07** auf das Projekt CLAR
+  (`uzbjknhmpbxtgvlclpqe`): Migrationen 022 bis 024 und alle zehn Edge
+  Functions (vorher war keine Function ausgerollt). Die Cloudflare-Secrets
+  sind gesetzt, ein Anthropic-Key existiert dort nicht. Noch offen: eine
+  echte Testmeldung aus der App.
+
+## Phase 2 — eigenes Modell vorbereiten ✅ (Fotos fehlen)
+
+- Training von Ultralytics YOLO (AGPL) auf MobileNetV2 mit Keras
+  (Apache 2.0) umgestellt: `train.py`, `evaluate.py`, `export.py`,
+  Notebook, README. Durchlauf Training, Auswertung, int8-Export und
+  Auswertung des `.tflite` mit einem kuenstlichen Mini-Datensatz geprueft
+  (Modell 2,7 MB, Format passt zu `vision_models`).
+- `training/fetch_taco.py`: 640 Fotos aus TACO liegen lokal unter
+  `training/data/manual/positiv` (nicht im Repo). **Betreiber:** durchsehen,
+  Negativbeispiele nach `training/data/manual/negativ` legen (mindestens
+  300), dann Phase 3.
+- Python 3.12 mit TensorFlow liegt in `training/.venv`.

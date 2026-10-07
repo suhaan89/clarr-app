@@ -35,9 +35,9 @@
   Foto zu sehen sind.
 - **Datenkategorien:** Koordinaten, Zeitpunkt, Beschreibung, Abfallart,
   Status, Fotos (Original privat, anonymisierte Kopie öffentlich).
-- **Empfänger:** Supabase, Anthropic (nur Bild), zuständige Stelle (nur
+- **Empfänger:** Supabase, Cloudflare (nur Bild), zuständige Stelle (nur
   anonymisiert), Resend, Kartenanbieter.
-- **Drittland:** Anthropic (USA), Grundlage siehe `datenschutzerklaerung.md`
+- **Drittland:** Cloudflare (USA, Rechenzentren weltweit), Grundlage siehe `datenschutzerklaerung.md`
   Abschnitt 6.
 - **Löschfrist:** mit der Kontolöschung.
 - **Rechtsgrundlage:** Art. 6 (1) b und f DSGVO.
@@ -52,8 +52,8 @@
 - **Betroffene:** meldende Personen; abgebildete Dritte.
 - **Datenkategorien:** verkleinertes Bild, Ergebnis (Konfidenz, Abfallart,
   Grund-Code), Kosten- und Modellprotokoll.
-- **Empfänger:** Anthropic (Auftragsverarbeiter).
-- **Drittland:** USA.
+- **Empfänger:** Cloudflare (Auftragsverarbeiter).
+- **Drittland:** USA, Rechenzentren weltweit.
 - **Löschfrist:** Ergebnis mit dem Report; Kostenprotokoll bis 24 Monate, nach
   Kontolöschung ohne Personenbezug.
 - **Rechtsgrundlage:** Art. 6 (1) b DSGVO, Art. 22 (2) DSGVO

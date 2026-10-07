@@ -8,7 +8,7 @@ lädt, steht in `docs/vision-ondevice.md`.
 
 | Begriff | Bedeutung |
 |---|---|
-| **Transfer Learning** | Wir starten mit einem Modell, das auf Millionen Alltagsfotos schon „sehen“ gelernt hat (`yolo11n-cls.pt`), und bringen ihm nur noch unsere eine Frage bei. Dafür reichen einige hundert Fotos pro Klasse. |
+| **Transfer Learning** | Wir starten mit einem Modell, das auf Millionen Alltagsfotos schon „sehen“ gelernt hat (MobileNetV2), und bringen ihm nur noch unsere eine Frage bei. Dafür reichen einige hundert Fotos pro Klasse. |
 | **Klasse / Label** | `positiv` = illegale Müllablagerung, `negativ` = alles andere. |
 | **Train / Val** | Mit *train* lernt das Modell, mit *val* prüfen wir es. Val-Fotos sieht es beim Lernen nie. |
 | **Epoche** | Ein Durchlauf durch alle Trainingsfotos. |
@@ -32,8 +32,10 @@ pip install -r requirements.txt
 copy .env.example .env    # nur für Fotos aus der App, siehe unten
 ```
 
-Eine NVIDIA-Grafikkarte beschleunigt das Training stark. Ohne läuft es auf
-dem Prozessor, dauert dann aber Stunden statt Minuten (`--device cpu`).
+Unter Windows rechnet TensorFlow nur auf dem Prozessor. Das reicht: mit
+einigen hundert Fotos dauert ein Lauf Minuten, mit einigen tausend etwa eine
+Stunde. Schneller geht es mit einer GPU in Colab (nur öffentliche oder eigene
+Fotos, siehe unten) oder mit einer NVIDIA-Karte unter WSL2.
 
 ## Daten reinlegen
 
@@ -62,8 +64,20 @@ viele auf beiden Seiten.
 zusammen in train oder zusammen in val.
 
 **Keine** fremden Personen oder lesbaren Kennzeichen erkennbar ins
-Trainingsmaterial legen. Öffentliche Datensätze nur mit passender Lizenz
-(z. B. TACO: CC BY 4.0) und Lizenzhinweis.
+Trainingsmaterial legen. Öffentliche Datensätze nur mit passender Lizenz und
+Lizenzhinweis.
+
+### Startmaterial aus TACO
+
+```powershell
+python fetch_taco.py
+```
+
+lädt rund 640 Fotos aus dem offenen Datensatz TACO verkleinert nach
+`data/manual/positiv/taco-*.jpg` (nur Fotos, die TACO selbst unter CC BY 4.0
+stellt, ohne reine Innenaufnahmen). Danach **durchsehen**: TACO zeigt oft
+einzelne Flaschen oder Dosen. Löschen, was für CLAR keine Meldung wäre.
+Negativbeispiele liefert TACO nicht, die musst du selbst sammeln.
 
 ## Neu trainieren
 
@@ -71,8 +85,8 @@ Trainingsmaterial legen. Öffentliche Datensätze nur mit passender Lizenz
 python sync_dataset.py                 # nur wenn du App-Fotos nutzt (Löschabgleich!)
 python prepare_dataset.py              # oder: --no-app für nur eigene Fotos
 python train.py --name muell-v1
-python evaluate.py --model runs\muell-v1\weights\best.pt
-python export.py --model runs\muell-v1\weights\best.pt --version 2026-10-01-a
+python evaluate.py --model runs\muell-v1\weights\best.keras
+python export.py --model runs\muell-v1\weights\best.keras --version 2026-10-01-a
 python evaluate.py --model exports\2026-10-01-a\model.tflite
 ```
 
@@ -121,12 +135,19 @@ Regeln, die aus der Datenschutzerklärung folgen:
 gemachten Fotos** gedacht (Colab läuft bei Google). Das Notebook bricht
 ab, wenn `data/app` oder `.env` im hochgeladenen Ordner liegen.
 
-## Lizenz: bitte vor dem ersten Release klären
+## Lizenzen
 
-Ultralytics YOLO steht unter **AGPL-3.0**. Ultralytics vertritt, dass auch
-damit trainierte und in einer App ausgelieferte Modelle darunter fallen,
-außer man hat eine Enterprise-Lizenz. Für eine nicht quelloffene App ist
-das ein echtes Problem. Möglichkeiten: CLAR unter AGPL veröffentlichen,
-eine Lizenz kaufen, oder das Training auf ein Apache-2.0-Modell umstellen
-(MobileNetV3/EfficientNet-Lite mit Keras). Die App-Seite ist davon
-unabhängig: Sie liest nur `.tflite` und die Metadaten.
+Alles hier ist auch gewerblich kostenlos nutzbar:
+
+| Baustein | Lizenz | Pflicht |
+|---|---|---|
+| TensorFlow, Keras, MobileNetV2 samt ImageNet-Gewichten | Apache 2.0 | Lizenztext beilegen, wenn Code weitergegeben wird |
+| TACO-Fotos (`fetch_taco.py`, Standard) | CC BY 4.0 | Namensnennung: „TACO: Trash Annotations in Context, Proença & Simões, tacodataset.org“ |
+| eigene Fotos und App-Fotos mit Einwilligung | eure | keine |
+
+Bis September 2026 lief das Training mit Ultralytics YOLO (AGPL-3.0). Das
+ist ersetzt; `.pt`-Dateien aus alten Läufen nicht mehr ausliefern.
+
+`fetch_taco.py --all-licenses` holt zusätzlich Fotos mit ODbL- oder
+ungenauem CC-Vermerk. Das vor einer gewerblichen Nutzung erst klären
+(`FRAGEN.md`, Punkt 12).

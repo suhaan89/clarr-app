@@ -23,7 +23,7 @@ DATASET = DATA / "dataset"       # fertiger Train/Val-Split (prepare_dataset.py)
 RUNS = ROOT / "runs"
 EXPORTS = ROOT / "exports"
 
-CLASSES = ("negativ", "positiv")  # alphabetisch = Reihenfolge, die YOLO vergibt
+CLASSES = ("negativ", "positiv")  # Reihenfolge = Index der Modell-Ausgabe
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
 IMG_SIZE = 224
 

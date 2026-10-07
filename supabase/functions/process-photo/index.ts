@@ -14,20 +14,19 @@
 // uebersehen. Deshalb liegt VOR der oeffentlichen Anzeige ein Pruefschritt:
 //   * Meldet das Modell Personen/Kennzeichen, bleibt das Foto approved=FALSE
 //     und geht in die manuelle Review (Paket 8), auch wenn gepixelt wurde.
-//   * Ist die Erkennung nicht moeglich (Budget/Kill-Switch/Fehler), wird das
-//     Foto NICHT veroeffentlicht (fail-safe).
+//   * Ist die Erkennung nicht moeglich (kein Anbieter/Budget/Kill-Switch/
+//     Fehler), wird das Foto NICHT veroeffentlicht (fail-safe).
+// Der Anbieter kommt aus _shared/vision.ts (Standard: Cloudflare Workers AI).
+// Kleinere Modelle treffen die Regionen ungenauer als grosse; die Freigabe
+// durch einen Menschen bei jedem Personen-/Kennzeichen-Treffer faengt das ab.
 // Das ist eine technische Vorsichtsmassnahme, keine rechtliche Bewertung.
 //
 // Aktion 'delete': entfernt Original + ALLE Derivate + DB-Zeile (Owner only).
 
-import Anthropic from "npm:@anthropic-ai/sdk";
 import { Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 import { serveUserFunction } from "../_shared/http.ts";
+import { extractJsonObject, getVisionProvider } from "../_shared/vision.ts";
 
-const MODEL = "claude-sonnet-4-6";
-const USD_PER_INPUT_TOKEN = 3 / 1_000_000;
-const USD_PER_OUTPUT_TOKEN = 15 / 1_000_000;
-const ESTIMATED_COST_USD = 0.012;
 const MAX_PUBLIC_DIMENSION = 1600;
 const MAX_DETECT_DIMENSION = 1024;
 const PIXELATE_BLOCK = 24;
@@ -42,15 +41,6 @@ Antworte NUR mit gueltigem JSON:
 Koordinaten normalisiert auf 0-1000 (x,y = linke obere Ecke der Region, bezogen auf das Gesamtbild).
 Sei grosszuegig: lieber eine Region zu viel oder zu gross als eine uebersehen.
 "peopleVisible": true, wenn Personen erkennbar sind (auch ohne klares Gesicht).`;
-
-function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
 
 // dHash: 9x8-Graustufen, horizontale Gradienten -> 64 bit als Hex-String.
 function dHash(img: Image): string {
@@ -176,6 +166,7 @@ serveUserFunction("process-photo", async ({ req, user, admin, json }) => {
     return json(200, { processed: 0, note: "nothing_to_process" });
   }
 
+  const provider = getVisionProvider();
   const results: Array<Record<string, unknown>> = [];
 
   for (const photo of photos) {
@@ -221,14 +212,16 @@ serveUserFunction("process-photo", async ({ req, user, admin, json }) => {
       }
 
       // 3. Gesichter/Kennzeichen erkennen (budgetiert, race-sicher)
-      const { data: reservation } = await admin.rpc("reserve_vision_budget", {
-        p_user_id: user.id,
-        p_report_id: reportId,
-        p_model: MODEL,
-        p_estimated_cost_usd: ESTIMATED_COST_USD,
-      });
+      const { data: reservation } = provider
+        ? await admin.rpc("reserve_vision_budget", {
+          p_user_id: user.id,
+          p_report_id: reportId,
+          p_model: provider.model,
+          p_estimated_cost_usd: provider.estimatedCostUsd,
+        })
+        : { data: { allowed: false, reason: "no_provider" } };
 
-      if (!reservation?.allowed) {
+      if (!provider || !reservation?.allowed) {
         // FAIL-SAFE: ohne Erkennung keine Veroeffentlichung. Metadaten
         // (EXIF-Strip, pHash) speichern wir trotzdem; approved bleibt FALSE.
         await admin.from("report_photos").update({
@@ -254,41 +247,30 @@ serveUserFunction("process-photo", async ({ req, user, admin, json }) => {
       let detectionOk = false;
 
       try {
-        const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
-        const response = await anthropic.messages.create({
-          model: MODEL,
-          max_tokens: 500,
+        const reply = await provider.run({
           system: DETECT_PROMPT,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: "image/jpeg", data: toBase64(detectJpeg) } },
-              { type: "text", text: "Finde Gesichter und Kennzeichen, antworte als JSON." },
-            ],
-          }],
+          userText: "Finde Gesichter und Kennzeichen, antworte als JSON.",
+          jpeg: detectJpeg,
+          maxTokens: 500,
         });
-
-        const actualCost =
-          response.usage.input_tokens * USD_PER_INPUT_TOKEN +
-          response.usage.output_tokens * USD_PER_OUTPUT_TOKEN;
         await admin.rpc("finalize_vision_usage", {
           p_usage_id: reservation.usage_id,
-          p_input_tokens: response.usage.input_tokens,
-          p_output_tokens: response.usage.output_tokens,
-          p_cost_usd: actualCost,
+          p_input_tokens: reply.inputTokens,
+          p_output_tokens: reply.outputTokens,
+          p_cost_usd: reply.costUsd,
           p_success: true,
         });
 
-        const textContent = response.content.find((c) => c.type === "text");
-        const match = textContent && textContent.type === "text"
-          ? textContent.text.match(/\{[\s\S]*\}/)
-          : null;
-        if (match) {
-          const parsed = JSON.parse(match[0]);
-          regions = Array.isArray(parsed.regions) ? parsed.regions : [];
-          peopleVisible = parsed.peopleVisible === true;
-          detectionOk = true;
+        // Streng lesen: ohne "regions"-Liste UND "peopleVisible" gilt die
+        // Erkennung als fehlgeschlagen. Sonst wuerde eine halbe Antwort wie
+        // "niemand im Bild" wirken und das Foto automatisch freigeben.
+        const parsed = extractJsonObject(reply.text);
+        if (!Array.isArray(parsed.regions) || typeof parsed.peopleVisible !== "boolean") {
+          throw new Error("incomplete detection result");
         }
+        regions = parsed.regions.filter((r) => typeof r === "object" && r !== null);
+        peopleVisible = parsed.peopleVisible;
+        detectionOk = true;
       } catch (detectError) {
         console.error(
           "process-photo detection error:",

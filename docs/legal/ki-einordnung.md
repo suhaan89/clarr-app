@@ -7,14 +7,17 @@
 
 # KI-Einordnung und KI-Kompetenz
 
-**Stand:** 28.09.2026
+**Stand:** 07.10.2026
 
 ## 1. Rolle von CLAR
 
 Für `analyze-photo` und `process-photo` **betreibt** CLAR ein zugekauftes
 Modell in eigener Verantwortung. Damit ist CLAR insoweit **Betreiber** im
-Sinne von Art. 3 Nr. 4 der Verordnung (EU) 2024/1689. Anbieter dieses Modells
-ist Anthropic.
+Sinne von Art. 3 Nr. 4 der Verordnung (EU) 2024/1689. Seit 07.10.2026 ist das
+ein offenes Modell von Mistral AI (Mistral Small 3.1, Apache 2.0), das
+Cloudflare über Workers AI bereitstellt; vorher war es ein Modell von
+Anthropic. Der Anbieter ist per Secret umstellbar
+(`supabase/functions/_shared/vision.ts`).
 
 Seit 28.09.2026 trainiert CLAR zusätzlich ein **eigenes** kleines Modell für
 die Vorab-Erkennung auf dem Gerät (`training/`, `src/lib/vision`) und bringt
@@ -33,7 +36,7 @@ insoweit nicht.
 
 ### 2.1 `supabase/functions/analyze-photo`
 
-- **Was:** Bildklassifikation über die Anthropic-API. Entscheidet über
+- **Was:** Bildklassifikation über Cloudflare Workers AI. Entscheidet über
   Veröffentlichung, Ablehnung oder Vorlage bei einem Menschen.
 - **Einstufung:** KI-System. **Kein Hochrisiko-System.** Anhang III nennt
   biometrische Identifizierung, kritische Infrastruktur, allgemeine und
@@ -61,7 +64,7 @@ insoweit nicht.
 
 ### 2.3 `src/lib/vision` (On-Device, TFLite)
 
-- **Was:** eigenes Bildklassifikationsmodell (YOLO11n-cls, TFLite int8),
+- **Was:** eigenes Bildklassifikationsmodell (MobileNetV2, TFLite int8),
   „illegale Müllablagerung ja/nein“. Unverbindlicher Hinweis vor dem
   Absenden. Modellupdates kommen aus `public.vision_models` und dem Bucket
   `ml-models`, ohne App-Update.
@@ -75,7 +78,7 @@ insoweit nicht.
 - **Trainingsdaten:** nur mit Einwilligung (`consents.ki_training`), nur
   verpixelte und freigegebene Kopien, lokal trainiert. Details und
   Löschlogik: `docs/vision-ondevice.md`, Datenschutzerklärung 8a.
-- **Lizenz:** Ultralytics steht unter AGPL-3.0, siehe `FRAGEN.md`.
+- **Lizenz:** TensorFlow/Keras und MobileNetV2 stehen unter Apache 2.0. Zu den Trainingsfotos aus TACO siehe `FRAGEN.md`, Punkt 12.
 
 ### 2.4 `src/components/HelpChat.tsx`
 

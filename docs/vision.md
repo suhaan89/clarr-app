@@ -1,10 +1,27 @@
 # Vision-Pipeline + Kill-Switch (Paket 4)
 
-## Schluessel-Handling
+## Anbieter und Schluessel
 
-`ANTHROPIC_API_KEY` existiert ausschliesslich als **Supabase Function Secret**
-(`supabase secrets set ANTHROPIC_API_KEY=...`). Er steht nie im Client, nie im
-Repo, und Fehler-Logs geben nur `error.message` aus, nie Request-Details.
+Welche KI das Foto sieht, entscheidet `supabase/functions/_shared/vision.ts`
+ueber das Function Secret `VISION_PROVIDER`. `analyze-photo` und
+`process-photo` nutzen denselben Anbieter.
+
+| `VISION_PROVIDER` | Anbieter | Secrets | Kosten |
+|---|---|---|---|
+| `cloudflare` (Standard) | Cloudflare Workers AI, Modell `@cf/mistralai/mistral-small-3.1-24b-instruct` (Apache 2.0) | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, optional `CLOUDFLARE_VISION_MODEL` | keine, solange im Cloudflare-Konto keine Zahlungsart hinterlegt ist (10 000 Neurons pro Tag, Reset 00:00 UTC) |
+| `anthropic` | Claude Sonnet 4.6 | `ANTHROPIC_API_KEY` | pro Aufruf, gedeckelt durch das Budget unten |
+| `none` | keiner | keine | keine |
+
+Ohne Anbieter, ohne dessen Secrets und bei jedem Fehler des Anbieters (auch
+"Tageskontingent verbraucht") gilt dasselbe wie beim Kill-Switch: die Meldung
+geht ungeprueft in die Review-Queue, das Foto bleibt privat.
+
+Die Secrets existieren ausschliesslich als **Supabase Function Secrets**
+(`supabase secrets set ...`). Sie stehen nie im Client, nie im Repo, und
+Fehler-Logs geben nur `error.message` aus, nie Request-Details.
+
+Der Anbieter steht in der Datenschutzerklaerung. Wer ihn wechselt, zieht die
+Rechtstexte und `POLICY_VERSION` mit. Offene Punkte: `FRAGEN.md` Nr. 17.
 
 ## Aufrufkette
 
@@ -20,7 +37,7 @@ bestandene submit-report-Pruefung. Doppelaufrufe sind idempotent (409
 `reserve_vision_budget()` (Migration 005):
 
 * **Ein** Advisory-Lock (`vision_budget`) serialisiert alle Reservierungen.
-* Pessimistische Reservierung ($0.015) wird VOR dem API-Call als Zeile in
+* Pessimistische Reservierung (Anthropic: $0.015, Cloudflare: $0) wird VOR dem API-Call als Zeile in
   `vision_usage` eingetragen und zaehlt sofort in beide Tagessummen —
   parallele Requests koennen den Deckel nicht durchbrechen.
 * Deckel: `vision_user_daily_usd` (Default $0.50/Nutzer/Tag) und

@@ -1,6 +1,6 @@
 import type { ModelManifest } from '../types';
 
-/** Gültiges Test-Manifest wie aus dem YOLO-Export (float32-Ein-/Ausgang, Werte 0..1). */
+/** Gültiges Test-Manifest wie aus einem Export ohne Quantisierung (float32-Ein-/Ausgang, Werte 0..1). */
 export function makeManifest(overrides: Partial<ModelManifest> = {}): ModelManifest {
   return {
     version: 'test-1',

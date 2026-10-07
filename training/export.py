@@ -1,6 +1,6 @@
 """Export als TFLite int8 + Metadaten fuer die App.
 
-    python export.py --model runs/muell/weights/best.pt --version 2026-10-01-a [--threshold 0.45]
+    python export.py --model runs/muell/weights/best.keras --version 2026-10-01-a [--threshold 0.45]
 
 int8-Quantisierung: Die Gewichte werden von 32-Bit-Kommazahlen auf 8-Bit-
 Ganzzahlen gerundet. Das Modell wird dadurch etwa viermal kleiner und
@@ -22,15 +22,35 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import shutil
 import sys
 from pathlib import Path
 
 import numpy as np
 
-from common import DATASET, EXPORTS, IMG_SIZE, list_images, load_tflite_interpreter, preprocess, run_tflite, sha256_file
+from common import CLASSES, DATASET, EXPORTS, IMG_SIZE, list_images, load_tflite_interpreter, preprocess, run_tflite, sha256_file
 
 MAX_BYTES = 5 * 1024 * 1024
+CALIBRATION_IMAGES = 200
+
+
+def convert_int8(model_path: Path, calibration: list[Path]) -> bytes:
+    """Keras-Modell -> TFLite mit int8-Gewichten und int8-Ein-/Ausgang."""
+    import keras
+    import tensorflow as tf
+
+    model = keras.saving.load_model(model_path)
+
+    def representative():
+        for path in calibration:
+            yield [preprocess(path)]
+
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter.representative_dataset = representative
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter.inference_input_type = tf.int8
+    converter.inference_output_type = tf.int8
+    return converter.convert()
 
 
 def quant_params(detail: dict) -> dict | None:
@@ -71,26 +91,20 @@ def main() -> int:
         print("Schwellenwert muss zwischen 0 und 1 liegen.")
         return 1
 
-    from ultralytics import YOLO
-
-    model = YOLO(str(args.model))
-    labels = [model.names[i] for i in range(len(model.names))]
-    if "positiv" not in labels:
-        print("Das Modell hat keine Klasse 'positiv':", labels)
-        return 1
+    labels = list(CLASSES)
     positive_index = labels.index("positiv")
 
-    exported = Path(model.export(format="tflite", int8=True, imgsz=IMG_SIZE, data=str(DATASET)))
-    # Ultralytics legt mehrere Varianten ab; wir nehmen die int8-Datei.
-    candidates = sorted(exported.parent.glob("*int8*.tflite")) if exported.is_file() else []
-    tflite_src = candidates[0] if candidates else exported
-    if not tflite_src.is_file():
-        print("TFLite-Datei nicht gefunden:", exported)
+    # Kalibrierbilder gleichmaessig aus beiden Klassen ziehen.
+    train_images = list_images(DATASET / "train")
+    if not train_images:
+        print("Keine Kalibrierbilder unter", DATASET / "train", "- erst `python prepare_dataset.py`.")
         return 1
+    step = max(1, len(train_images) // CALIBRATION_IMAGES)
+    tflite_bytes = convert_int8(args.model, train_images[::step][:CALIBRATION_IMAGES])
 
     out_dir.mkdir(parents=True)
     tflite = out_dir / "model.tflite"
-    shutil.copy2(tflite_src, tflite)
+    tflite.write_bytes(tflite_bytes)
     size = tflite.stat().st_size
     if size > MAX_BYTES:
         print(f"Warnung: {size / 1e6:.1f} MB, Ziel war unter 5 MB.")

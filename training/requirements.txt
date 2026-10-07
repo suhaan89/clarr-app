@@ -1,7 +1,6 @@
-# Python 3.11 oder 3.12 empfohlen (siehe README).
-# Ultralytics installiert beim ersten TFLite-Export selbst noch TensorFlow
-# und onnx2tf nach; das dauert einmalig ein paar Minuten.
-ultralytics>=8.3.0,<9
+# Python 3.11 oder 3.12 (siehe README). TensorFlow bringt Keras 3 mit.
+# Alles hier steht unter Apache 2.0, BSD, MIT oder aehnlich freien Lizenzen.
+tensorflow>=2.17,<3
 supabase>=2.0.0,<3
 python-dotenv>=1.0.0
 pillow>=10.0.0

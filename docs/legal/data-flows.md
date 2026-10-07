@@ -13,7 +13,9 @@ App (Expo)
  ├─ Edge Functions       submit-report, analyze-photo, process-photo,
  │                       close-case, close-event-cases, export-my-data,
  │                       delete-account, authority-digest, confirm-case-done
- ├─ Anthropic API        Foto (verkleinert) zur Müll-/PII-Erkennung
+ ├─ Cloudflare Workers AI  Foto (verkleinert) zur Müll-/PII-Erkennung;
+ │                       Anbieter per Secret VISION_PROVIDER umstellbar
+ │                       (supabase/functions/_shared/vision.ts)
  ├─ On-Device (TFLite)   Foto bleibt auf dem Gerät; nur Score + Modellversion
  │                       gehen mit der Meldung an submit-report. Modell wird
  │                       aus vision_models / Bucket ml-models geladen.
@@ -38,7 +40,7 @@ sind beide Dokumente und `store-angaben.md` zuerst zu ergänzen.
 | Empfänger | Daten | Zweck | Hinweise |
 |---|---|---|---|
 | Supabase (Hosting) | E-Mail, Passwort-Hash, Meldungen (Lat/Lng, Zeit, Text), Fotos, Punkte, Consents, Gerät-/IP-HASHES (Rate-Limit), Audit | Betrieb der App | Auftragsverarbeiter [JURISTISCH PRUEFEN: Region/AVV] |
-| Anthropic (Vision) | verkleinertes Foto, KEIN Name/Account-Bezug im Prompt | Müll-Klassifikation, Gesichter/Kennzeichen-Erkennung fürs Blurring | Nur serverseitig, Budget/Kill-Switch; [JURISTISCH PRUEFEN: AVV, Drittland] |
+| Cloudflare Workers AI (Vision, Modell Mistral Small 3.1) | verkleinertes Foto, KEIN Name/Account-Bezug im Prompt | Müll-Klassifikation, Gesichter/Kennzeichen-Erkennung fürs Blurring | Nur serverseitig, Gratis-Kontingent, Kill-Switch; laut Anbieter kein Training mit Kundendaten; [JURISTISCH PRUEFEN: AVV, Drittland, Verarbeitungsort, Speicherdauer] |
 | Behörde (E-Mail-Digest) | Fall-Titel, Fallort, GEBLURRTES Foto, Erledigt-Link | Beseitigung | KEINE Melder-Daten, keine Originale |
 | Google Maps (Android) / Apple Maps (iOS) | angesehener Kartenausschnitt | Kartendarstellung über `react-native-maps` | eigenständig Verantwortliche, Art. 6 (1) f DSGVO |
 | Resend (Mail) | Behörden-Adresse, Digest-Inhalt | Digest-Versand | optional; ohne Key nur Protokoll |
@@ -107,5 +109,5 @@ Stand nach dem Legal-Audit 2026-09-23. Erledigte Punkte sind gestrichen.
 5. Web-Löschroute und öffentliche Datenschutz-URL hosten (Betreiberaufgabe,
    `hosting-checkliste.md`, `FRAGEN.md`).
 6. KI-Training mit Nutzerfotos (Datenschutzerklärung 8a): Einwilligung als
-   Grundlage, Umgang mit trainierten Modellen nach Widerruf, AGPL-Lizenz von
-   Ultralytics (`FRAGEN.md`).
+   Grundlage, Umgang mit trainierten Modellen nach Widerruf, Lizenzen der
+   Trainingsfotos (`FRAGEN.md`).

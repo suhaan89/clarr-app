@@ -50,7 +50,8 @@ Melde-Adresse fuer Inhalte, Behoerden-Kontaktadresse.
 
 ## 3. Gibt es unterschriebene AV-Vertraege?
 
-Fuer Supabase, Anthropic und Resend ist je ein Vertrag nach Art. 28 DSGVO
+Fuer Supabase, Cloudflare (seit 07.10.2026 statt Anthropic, siehe 17) und
+Resend ist je ein Vertrag nach Art. 28 DSGVO
 noetig. Ob sie abgeschlossen sind, steht nirgends im Repo. Ohne sie ist jede
 Uebermittlung an diese Dienste ohne Rechtsgrundlage.
 
@@ -61,7 +62,11 @@ EU-Region entfaellt fuer Supabase die Transferfrage weitgehend; bei einer
 US-Region braucht es eine Grundlage. Die Angabe steht in `supabase/.temp/`
 nicht und ist im Dashboard nachzusehen.
 
-## 5. Gilt bei Anthropic Zero Data Retention?
+## 5. Wie lange liegt das Foto beim KI-Anbieter?
+
+Seit 07.10.2026 ist der Anbieter Cloudflare Workers AI (siehe 17). Cloudflare
+schreibt, Kundeninhalte nicht zum Training zu nutzen; eine Speicherdauer fuer
+die Anfrage selbst ist dort nicht genannt und muss geklaert werden.
 
 Relevant fuer die Speicherdauer-Angabe in der Datenschutzerklaerung: wie
 lange liegt das uebermittelte Foto beim Auftragsverarbeiter? Ohne Zusage ist
@@ -127,18 +132,20 @@ schwerer zu rechtfertigende Richtung ist.
 Umgesetzt ist alles, was sich ohne diese Entscheidungen bauen laesst
 (Branch `ondevice-model`, `docs/vision-ondevice.md`).
 
-## 12. Ultralytics YOLO steht unter AGPL-3.0
+## 12. Lizenzen rund ums eigene Modell
 
-Das Training in `training/` nutzt, wie gewuenscht, Ultralytics YOLO11n-cls.
-Ultralytics vertritt, dass auch damit trainierte und in einer App
-ausgelieferte Modelle unter die AGPL fallen, sofern keine Enterprise-Lizenz
-besteht. Fuer eine nicht quelloffene App ist das ein Risiko.
+**Erledigt (2026-10-07):** Das Training nutzt nicht mehr Ultralytics YOLO
+(AGPL-3.0), sondern MobileNetV2 mit Keras/TensorFlow (Apache 2.0). An der App
+hat sich dafuer nichts geaendert.
 
-Optionen: (a) CLAR quelloffen unter AGPL, (b) Lizenz kaufen, (c) Training auf
-ein Apache-2.0-Modell umstellen (MobileNetV3/EfficientNet-Lite mit Keras).
-Fuer (c) aendert sich in der App nichts: sie liest nur `.tflite` plus
-Metadaten aus `vision_models`. VOR dem ersten Release mit ausgeliefertem
-Modell entscheiden.
+**Offen:** `training/fetch_taco.py` holt Startfotos aus dem Datensatz TACO.
+Standardmaessig nur die Fotos ohne fremden Lizenzvermerk, die TACO nach
+eigener Angabe unter CC BY 4.0 stellt (Namensnennung noetig, steht in
+`training/README.md`). Weitere 785 Fotos tragen den Vermerk "ODBL (c)
+OpenLitterMap" oder nur "CC" und werden ohne `--all-licenses` nicht geladen.
+Zu pruefen vor einem Release mit einem damit trainierten Modell: ob die
+Namensnennung im README genuegt oder in die Lizenzliste der App gehoert, und
+ob die ODbL-Fotos gewerblich nutzbar sind.
 
 ## 13. KI-Training mit Nutzerfotos: Einwilligung ausreichend?
 
@@ -192,3 +199,38 @@ Aenderung am Datenmodell. Beides braucht eine Entscheidung.
 Stack, App-Version, Plattform; kein Nutzerinhalt, Rate-Limit, Loeschung nach
 30 Tagen), gestuetzt auf Art. 6 (1) f DSGVO, mit einem Absatz in der
 Datenschutzerklaerung. Kein neuer Auftragsverarbeiter noetig.
+
+---
+
+# Offene Fragen: kostenlose Bild-KI auf dem Server (2026-10-07)
+
+## 17. Cloudflare Workers AI statt Anthropic
+
+**Umgesetzt:** `analyze-photo` und `process-photo` rufen die KI ueber
+`supabase/functions/_shared/vision.ts` auf. Standard ist Cloudflare Workers
+AI (Modell Mistral Small 3.1, Apache 2.0) im Gratis-Kontingent; `anthropic`
+und `none` sind per Secret `VISION_PROVIDER` waehlbar. Die Rechtstexte nennen
+jetzt Cloudflare (`POLICY_VERSION` 2026-10-07-v1, Migration 024).
+
+**Nicht getestet:** Ein echter Aufruf gegen Cloudflare. Das Anfrageformat
+(Bild als data-URL in `image_url`) folgt der Dokumentation und ist nur gegen
+einen nachgebauten Server geprueft. Nach dem Anlegen des Kontos einmal eine
+Meldung absenden und in `vision_usage` nachsehen, ob `success = true` steht.
+
+**Zu klaeren:**
+
+* **AV-Vertrag und Drittland:** Cloudflare sitzt in den USA und rechnet in
+  Rechenzentren weltweit. Vertrag nach Art. 28 DSGVO, Transfergrundlage und
+  Speicherdauer der Anfrage sind offen (siehe auch 3 und 5).
+* **Reichweite des Gratis-Kontingents:** 10 000 "Neurons" pro Tag. Jede
+  Meldung braucht zwei Aufrufe (Muell, Gesichter). Grob geschaetzt reicht das
+  fuer einige Dutzend Meldungen am Tag; gemessen ist das nicht. Danach gehen
+  Meldungen ungeprueft in die Review-Queue und Fotos bleiben privat.
+* **Erkennung von Gesichtern und Kennzeichen:** Ein kleineres Modell
+  uebersieht eher eine Person als das bisherige. Dann wuerde ein Foto ohne
+  Verpixelung automatisch freigegeben. Strengere Variante, falls gewuenscht:
+  jedes Foto erst nach Freigabe durch einen Menschen veroeffentlichen. Das
+  braucht einen neuen Grund in `review_queue` (Datenmodell), deshalb nicht
+  einfach umgesetzt.
+* **Zurueck zu Anthropic:** geht per Secret, dann muessen aber die
+  Rechtstexte wieder Anthropic nennen (neue `POLICY_VERSION`).

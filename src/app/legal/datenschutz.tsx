@@ -5,7 +5,7 @@
 // und docs/legal/data-flows.md. Wer hier etwas aendert, aendert beides.
 //
 // [ANWALT PRÜFEN] Rechtsgrundlagen je Kategorie (Art. 6 (1) b vs. f vs. a),
-// [ANWALT PRÜFEN] Drittlandtransfer Anthropic (SCC/DPF), Aufbewahrungsfristen,
+// [ANWALT PRÜFEN] Drittlandtransfer Cloudflare (SCC/DPF), Aufbewahrungsfristen,
 // [ANWALT PRÜFEN] Einordnung der automatisierten Entscheidung unter Art. 22 (2),
 // [ANWALT PRÜFEN] Altersgrenze und Ausgestaltung der elterlichen Einwilligung.
 // [ANWALT PRÜFEN] 8a: Einwilligung (Art. 6 (1) a) als Grundlage fuers Training,
@@ -61,7 +61,7 @@ const SECTIONS: LegalSection[] = [
     heading: '5. Wer deine Daten bekommt',
     paragraphs: [
       'Supabase: Hosting, Datenbank, Anmeldung und Dateispeicher. Dort liegen alle oben genannten Konto- und Meldungsdaten. Auftragsverarbeiter nach Art. 28 DSGVO.',
-      'Anthropic: prüft dein Foto automatisch auf Müll und erkennt Gesichter und Kennzeichen, damit wir sie unkenntlich machen können. Übermittelt wird nur eine verkleinerte Kopie des Bildes, ohne deinen Namen, deine E-Mail-Adresse oder deine Konto-Nummer. Auftragsverarbeiter nach Art. 28 DSGVO.',
+      'Cloudflare: stellt das KI-Modell bereit, das dein Foto automatisch auf Müll prüft und Gesichter und Kennzeichen erkennt, damit wir sie unkenntlich machen können. Cloudflare nutzt die Bilder nach eigenen Angaben nicht zum Training von KI-Modellen. Übermittelt wird nur eine verkleinerte Kopie des Bildes, ohne deinen Namen, deine E-Mail-Adresse oder deine Konto-Nummer. Auftragsverarbeiter nach Art. 28 DSGVO.',
       'Zuständige Stelle (Gemeinde, Bauhof, Behörde): erhält einen wöchentlichen Sammel-Bericht mit Falltitel, Fundort, dem anonymisierten Foto und einem einmaligen Link, um den Fall als erledigt zu melden. Es gehen keine Daten über dich mit: kein Name, keine E-Mail-Adresse, keine Konto-Nummer, kein Originalfoto.',
       'Resend: versendet diesen Bericht per E-Mail. Auftragsverarbeiter nach Art. 28 DSGVO.',
       'Kartenanbieter: die Karte in der App wird auf Android von Google Maps und auf iPhone und iPad von Apple Maps dargestellt. Beim Laden der Kartenausschnitte erfahren diese Anbieter technisch bedingt, welchen Bereich du ansiehst. Grundlage: Art. 6 (1) f DSGVO.',
@@ -71,7 +71,7 @@ const SECTIONS: LegalSection[] = [
   {
     heading: '6. Übermittlung in Drittländer',
     paragraphs: [
-      'Anthropic hat seinen Sitz in den Vereinigten Staaten. Die Prüfung deines Fotos findet daher außerhalb der EU statt. Grundlage der Übermittlung sind die Standardvertragsklauseln der EU-Kommission beziehungsweise, soweit der Anbieter zertifiziert ist, das EU-US Data Privacy Framework.',
+      'Cloudflare hat seinen Sitz in den Vereinigten Staaten und betreibt Rechenzentren weltweit. Die Prüfung deines Fotos kann daher außerhalb der EU stattfinden. Grundlage der Übermittlung sind die Standardvertragsklauseln der EU-Kommission beziehungsweise, soweit der Anbieter zertifiziert ist, das EU-US Data Privacy Framework.',
       'Übermittelt wird ausschließlich das verkleinerte Bild. Wenn auf deinem Foto zufällig Menschen zu sehen sind, werden deren Abbildungen mitübermittelt, um sie anschließend unkenntlich machen zu können.',
       'Für Supabase und Resend gilt: ob und in welchem Umfang eine Verarbeitung außerhalb der EU stattfindet, hängt von der gewählten Region ab. [BETREIBER EINTRAGEN: Region und Transfergrundlage je Dienst].',
     ],

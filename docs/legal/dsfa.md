@@ -96,6 +96,14 @@ Bildübermittlung (R8). [ANWALT PRÜFEN]
 des freiwilligen KI-Trainings (R10, R11). Die Gesamtbewertung ändert sich
 nach hiesiger Einschätzung nicht. [ANWALT PRÜFEN]
 
+**Nachtrag 07.10.2026:** Wechsel des KI-Anbieters für die serverseitige
+Foto-Prüfung von Anthropic zu Cloudflare Workers AI (offenes Modell Mistral
+Small 3.1). Neu zu bewerten sind R1 (ein kleineres Modell kann Gesichter und
+Kennzeichen eher übersehen; die menschliche Freigabe bei jedem Treffer und
+der Fail-safe bei Fehlern bleiben) und R8 (anderer Empfänger, Rechenzentren
+weltweit). Diese Überprüfung steht aus, siehe `FRAGEN.md` Punkt 17.
+[ANWALT PRÜFEN]
+
 ## 7. Überprüfung
 
 Die DSFA wird überprüft, wenn sich die Verarbeitung ändert, mindestens aber

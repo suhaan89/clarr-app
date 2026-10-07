@@ -29,7 +29,7 @@ Review-Queue entscheidet ──► vision_training_samples (nur mit Einwilligung
 | | |
 |---|---|
 | **Bibliothek** | [`react-native-fast-tflite`](https://github.com/mrousavy/react-native-fast-tflite) v3 (JSI/Nitro, nativ, New Architecture) |
-| **Modell** | eigenes YOLO11n-cls, TFLite int8, Ziel unter 5 MB, **nicht** gebündelt, sondern per Download |
+| **Modell** | eigenes MobileNetV2 (Keras, Apache 2.0), TFLite int8, rund 2,7 MB, **nicht** gebündelt, sondern per Download |
 | **Vorverarbeitung** | `expo-image-manipulator` (Zuschnitt + Resize) + `jpeg-js` (JPEG → RGB), Normalisierung laut Metadaten |
 | **Dev-Build nötig?** | Ja. In Expo Go läuft die Erkennung nicht (die App funktioniert dort trotzdem, nur ohne Hinweis). |
 

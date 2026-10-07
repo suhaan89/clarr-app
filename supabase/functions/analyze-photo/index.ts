@@ -1,7 +1,9 @@
 // CLAR — Edge Function: analyze-photo (Paket 4)
 //
-// KI-Pruefung eines eingereichten Reports. Der Anthropic-Key liegt NUR als
-// Supabase Function Secret (ANTHROPIC_API_KEY) — nie im Client, nie in Logs.
+// KI-Pruefung eines eingereichten Reports. Welcher Anbieter das Bild sieht,
+// entscheidet _shared/vision.ts (Standard: Cloudflare Workers AI im
+// Gratis-Kontingent). Die Zugangsdaten liegen NUR als Supabase Function
+// Secrets vor — nie im Client, nie in Logs.
 //
 // Aufruf nur nach bestandener submit-report-Pruefung: Voraussetzung ist ein
 // existierender Report des Aufrufers im Zustand 'gemeldet' ohne bisheriges
@@ -13,6 +15,8 @@
 //   * Kill-Switch/Budget erschoepft -> KEIN Vision-Call; Meldung geht
 //     unklassifiziert in die Review-Queue (status in_pruefung,
 //     vision_skipped) — die App bleibt nutzbar. Alert ab 80 % via audit_log.
+//   * Dasselbe gilt ohne konfigurierten Anbieter und bei jedem Fehler des
+//     Anbieters (z. B. Gratis-Kontingent fuer heute verbraucht).
 //   * Bild wird vorher serverseitig verkleinert (max. 1024 px, JPEG).
 //
 // Ergebnis-Routing (apply_vision_result):
@@ -21,16 +25,10 @@
 //   On-Device-Score (optional, vom Client) darf nur verschaerfen: "ok" ->
 //   Review, wenn er unter ondevice_disagree_below liegt (Standard: aus).
 
-import Anthropic from "npm:@anthropic-ai/sdk";
 import { Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 import { serveUserFunction } from "../_shared/http.ts";
+import { extractJsonObject, getVisionProvider } from "../_shared/vision.ts";
 
-const MODEL = "claude-sonnet-4-6";
-// Sonnet-Preise: $3 / 1M Input-Tokens, $15 / 1M Output-Tokens
-const USD_PER_INPUT_TOKEN = 3 / 1_000_000;
-const USD_PER_OUTPUT_TOKEN = 15 / 1_000_000;
-// Pessimistische Reservierung pro Call (Bild ~1024px + Prompt + Antwort)
-const ESTIMATED_COST_USD = 0.015;
 const CONFIDENCE_THRESHOLD = 0.6;
 const MAX_IMAGE_DIMENSION = 1024;
 
@@ -71,6 +69,51 @@ Antworte NUR mit gueltigem JSON:
 wasteType aus: "Hausmuell", "Sperrgut", "Bauschutt", "Gefaehrlicher Abfall", "Verpackungsmuell", "Elektroschrott", "Organischer Abfall", "Sonstiger Muell" (oder null).
 "reason" auf Deutsch, 1-2 Saetze.`;
 
+const WASTE_TYPES = [
+  "Hausmuell",
+  "Sperrgut",
+  "Bauschutt",
+  "Gefaehrlicher Abfall",
+  "Verpackungsmuell",
+  "Elektroschrott",
+  "Organischer Abfall",
+  "Sonstiger Muell",
+];
+
+type VisionVerdict = {
+  isWaste: boolean;
+  confidence: number;
+  wasteType: string | null;
+  reason: string;
+  unsafeContent: "violence" | "nudity" | null;
+  containsPeople: boolean;
+  privateContext: boolean;
+};
+
+// Streng lesen: fehlt "isWaste" oder "confidence", gilt die Antwort als
+// unbrauchbar (wirft -> Review-Queue). Sonst wuerde eine kaputte Antwort
+// als "kein Muell" durchgehen und die Meldung automatisch ablehnen.
+function parseVerdict(text: string): VisionVerdict {
+  const raw = extractJsonObject(text);
+  const confidence = Number(raw.confidence);
+  if (typeof raw.isWaste !== "boolean" || !Number.isFinite(confidence)) {
+    throw new Error("incomplete vision verdict");
+  }
+  return {
+    isWaste: raw.isWaste,
+    confidence: Math.max(0, Math.min(1, confidence)),
+    wasteType: typeof raw.wasteType === "string" && WASTE_TYPES.includes(raw.wasteType)
+      ? raw.wasteType
+      : null,
+    reason: typeof raw.reason === "string" ? raw.reason.slice(0, 500) : "",
+    unsafeContent: raw.unsafeContent === "violence" || raw.unsafeContent === "nudity"
+      ? raw.unsafeContent
+      : null,
+    containsPeople: raw.containsPeople === true,
+    privateContext: raw.privateContext === true,
+  };
+}
+
 // Serverseitig verkleinern: senkt Kosten und entfernt nebenbei Metadaten
 // aus dem an die API gesendeten Bild.
 async function downscaleImage(bytes: Uint8Array): Promise<Uint8Array> {
@@ -83,15 +126,6 @@ async function downscaleImage(bytes: Uint8Array): Promise<Uint8Array> {
     }
   }
   return await img.encodeJPEG(75);
-}
-
-function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
 }
 
 serveUserFunction("analyze-photo", async ({ req, user, admin, json }) => {
@@ -127,14 +161,27 @@ serveUserFunction("analyze-photo", async ({ req, user, admin, json }) => {
   });
   if (rlOk === false) return json(429, { error: "rate_limited" });
 
-  // Budget race-sicher reservieren — VOR dem teuren Call
+  const provider = getVisionProvider();
+  if (!provider) {
+    // Kein Anbieter konfiguriert: ein Mensch prueft.
+    await admin.rpc("apply_vision_result", {
+      p_report_id: reportId,
+      p_outcome: "skipped",
+      p_waste_type: null,
+      p_confidence: null,
+    });
+    return json(200, { analyzed: false, queued_for_review: true, reason: "no_provider" });
+  }
+
+  // Budget race-sicher reservieren — VOR dem Call. Bei einem kostenlosen
+  // Anbieter ist die Schaetzung 0; der Kill-Switch greift trotzdem.
   const { data: reservation, error: reserveError } = await admin.rpc(
     "reserve_vision_budget",
     {
       p_user_id: user.id,
       p_report_id: reportId,
-      p_model: MODEL,
-      p_estimated_cost_usd: ESTIMATED_COST_USD,
+      p_model: provider.model,
+      p_estimated_cost_usd: provider.estimatedCostUsd,
     },
   );
   if (reserveError) throw reserveError;
@@ -183,53 +230,21 @@ serveUserFunction("analyze-photo", async ({ req, user, admin, json }) => {
     }
     const resized = await downscaleImage(original);
 
-    const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
-    const response = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: 300,
+    const reply = await provider.run({
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: "image/jpeg", data: toBase64(resized) },
-            },
-            { type: "text", text: "Analysiere dieses Bild und gib das JSON-Ergebnis zurueck." },
-          ],
-        },
-      ],
+      userText: "Analysiere dieses Bild und gib das JSON-Ergebnis zurueck.",
+      jpeg: resized,
+      maxTokens: 300,
     });
-
-    const actualCost =
-      response.usage.input_tokens * USD_PER_INPUT_TOKEN +
-      response.usage.output_tokens * USD_PER_OUTPUT_TOKEN;
     await admin.rpc("finalize_vision_usage", {
       p_usage_id: usageId,
-      p_input_tokens: response.usage.input_tokens,
-      p_output_tokens: response.usage.output_tokens,
-      p_cost_usd: actualCost,
+      p_input_tokens: reply.inputTokens,
+      p_output_tokens: reply.outputTokens,
+      p_cost_usd: reply.costUsd,
       p_success: true,
     });
 
-    const textContent = response.content.find((c) => c.type === "text");
-    if (!textContent || textContent.type !== "text") {
-      throw new Error("no text response");
-    }
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("no JSON in response");
-
-    const result = JSON.parse(jsonMatch[0]) as {
-      isWaste: boolean;
-      confidence: number;
-      wasteType: string | null;
-      reason: string;
-      unsafeContent: "violence" | "nudity" | null;
-      containsPeople?: boolean;
-      privateContext?: boolean;
-    };
-    result.confidence = Math.max(0, Math.min(1, Number(result.confidence) || 0));
+    const result = parseVerdict(reply.text);
 
     // Routing zentral in SQL (apply_vision_result)
     let outcome: string;
@@ -237,7 +252,7 @@ serveUserFunction("analyze-photo", async ({ req, user, admin, json }) => {
       outcome = "unsafe";
     } else if (!result.isWaste) {
       outcome = "not_waste";
-    } else if (result.privateContext === true) {
+    } else if (result.privateContext) {
       // Privatgrund-/Wohnkontext-Verdacht: nie automatisch oeffentlich
       outcome = "private_context";
     } else if (result.confidence < CONFIDENCE_THRESHOLD) {
@@ -289,7 +304,7 @@ serveUserFunction("analyze-photo", async ({ req, user, admin, json }) => {
       wasteType: result.wasteType,
       confidence: result.confidence,
       reason: outcome === "ok" ? result.reason : undefined,
-      containsPeople: result.containsPeople === true,
+      containsPeople: result.containsPeople,
     });
   } catch (visionError) {
     // API-/Bildfehler: Reservierung als fehlgeschlagen finalisieren

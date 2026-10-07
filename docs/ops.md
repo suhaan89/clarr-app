@@ -33,7 +33,8 @@ supabase functions deploy submit-report analyze-photo process-photo \
 supabase functions deploy confirm-case-done --no-verify-jwt   # Behoerden-Link ohne Login
 
 # 5. Secrets (nur Dashboard/CLI, NIE im Repo)
-supabase secrets set ANTHROPIC_API_KEY=... RESEND_API_KEY=... DIGEST_FROM_EMAIL=...
+supabase secrets set CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... RESEND_API_KEY=... DIGEST_FROM_EMAIL=...
+# Bild-KI: Anbieterwahl und Alternativen in docs/vision.md
 ```
 
 ## Tests
@@ -83,7 +84,7 @@ gehalten, dass eine einzelne Person ihn unter Stress durchhalten kann.
 ### Ablauf bei einem Verdacht
 
 1. **Stunde 0 bis 1 — Eindaemmen.** Betroffenen Zugang sperren, Schluessel
-   rotieren (Supabase service_role, ANTHROPIC_API_KEY, RESEND_API_KEY ueber
+   rotieren (Supabase service_role, CLOUDFLARE_API_TOKEN, RESEND_API_KEY ueber
    die jeweilige Konsole), bei Bedarf den Vision-Kill-Switch in
    `system_settings` setzen. Nichts loeschen: Logs sind Beweismittel.
 2. **Stunde 1 bis 4 — Feststellen.** Was ist betroffen (Tabellen, Buckets,

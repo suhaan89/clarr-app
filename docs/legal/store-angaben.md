@@ -3,7 +3,7 @@
   verifizierten Datenflüsse (docs/legal/data-flows.md). Die endgültigen
   Angaben im Store trifft der Betreiber; Kategorien/Zwecke rechtlich prüfen.
   „Geteilt" (shared) = an Dritte übermittelt; „gesammelt" (collected) = vom
-  Betreiber/Auftragsverarbeiter verarbeitet. Anthropic/Resend/Supabase sind
+  Betreiber/Auftragsverarbeiter verarbeitet. Cloudflare/Resend/Supabase sind
   Auftragsverarbeiter — ob das als „sharing" i. S. der Store-Formulare zählt,
   ist je Store unterschiedlich und JURISTISCH zu bewerten.
 -->
@@ -74,7 +74,7 @@ Falsche Angaben in den Store-Formularen sind ein eigener Ablehnungsgrund.
   Identifikation statt. In den Formularen daher **nicht** als biometrische
   Datenerhebung angeben. [JURISTISCH PRÜFEN]
 
-\* „Nein" bei *geteilt* nur zutreffend, wenn Supabase/Anthropic/Resend als
+\* „Nein" bei *geteilt* nur zutreffend, wenn Supabase/Cloudflare/Resend als
 **Auftragsverarbeiter** (nicht als „Dritte" i. S. des Formulars) gewertet
 werden — **JURISTISCH PRÜFEN** und ggf. auf „Ja/geteilt" korrigieren.
 
