@@ -22,7 +22,7 @@
     "expo-glass-effect": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-image": "~57.0.5",
-    "expo-image-manipulator": "~57.0.20",
+    "expo-image-manipulator": "~57.0.21",
     "expo-image-picker": "~57.0.20",
     "expo-linear-gradient": "~57.0.2",
     "expo-linking": "~57.0.11",
@@ -82,7 +82,6 @@
     ],
     "clearMocks": true,
     "moduleNameMapper": {
-      "^expo-modules-core(.*)$": "<rootDir>/node_modules/expo/node_modules/expo-modules-core$1",
       "^@/(.*)$": "<rootDir>/src/$1"
     }
   },
