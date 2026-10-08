@@ -77,7 +77,59 @@ lädt rund 640 Fotos aus dem offenen Datensatz TACO verkleinert nach
 `data/manual/positiv/taco-*.jpg` (nur Fotos, die TACO selbst unter CC BY 4.0
 stellt, ohne reine Innenaufnahmen). Danach **durchsehen**: TACO zeigt oft
 einzelne Flaschen oder Dosen. Löschen, was für CLAR keine Meldung wäre.
-Negativbeispiele liefert TACO nicht, die musst du selbst sammeln.
+Negativbeispiele liefert TACO nicht.
+
+### Negativbeispiele und weitere Müll-Fotos aus Open Images
+
+```powershell
+python fetch_openimages.py
+```
+
+holt aus dem Datensatz Open Images (Fotos laut Datensatz unter CC BY 2.0)
+rund 4000 Negativfotos nach `data/manual/negativ/oi-*.jpg`: Mülltonnen und
+Container, Boden, Laub, Wege, Wald, Wasser, Straßen, Menschen, Tiere, Essen,
+Innenräume, Screenshots. Dazu rund 770 Fotos mit den Schlagworten
+„Litter“, „Waste“ oder „Bin bag“ nach `data/manual/positiv`.
+Die Quellen stehen in `data/manual/openimages-quellen.csv`.
+
+Die Schlagworte sind grob, vor allem bei den Müll-Fotos: In der Durchsicht
+vom 08.10.2026 blieb davon nicht einmal jedes vierte übrig. Deshalb vor dem
+Training immer prüfen (siehe „Fotos durchsehen“).
+
+### Weitere Müll-Fotos aus Wikimedia Commons
+
+```powershell
+python fetch_commons.py
+```
+
+holt Fotos echter wilder Ablagerungen aus den Commons-Kategorien „Illegal
+dumping“, „Littering“ und „Litter“ nach `data/manual/positiv/wc-*.jpg`, nur
+gemeinfrei, CC0 oder CC BY. Quellen mit Urheber und Lizenz stehen in
+`data/manual/commons-quellen.csv`.
+
+### Fotos durchsehen
+
+Heruntergeladene Fotos sind grob vorsortiert und müssen geprüft werden,
+bevor sie ins Training gehen:
+
+```powershell
+python review_sheets.py     # baut nummerierte Bögen aller ungeprüften Fotos
+# Prüfen lassen: Auftrag in PRUEFAUFTRAG.md, Ergebnis als CSV nach
+# data/review/entscheidungen/
+python apply_review.py      # übernimmt die Entscheidungen
+```
+
+Die Prüfung kann ein Mensch machen oder ein KI-Agent mit dem Text aus
+`PRUEFAUFTRAG.md` (so ist es am 08.10.2026 gelaufen: mehrere Agenten, jeder
+mit einem Paket Bögen). Aussortierte Fotos werden nicht gelöscht, sondern
+nach `data/aussortiert/` verschoben; die Download-Skripte holen sie nicht
+erneut. Wer von Hand aussortiert, verschiebt Fotos ebenfalls dorthin statt
+sie zu löschen, sonst kommen sie beim nächsten Download zurück.
+
+**Grenze von Internet-Fotos:** Sie sehen anders aus als Handyfotos aus der
+App (anderer Abstand, andere Länder, andere Kameras). Ein Modell nur aus
+diesen Daten ist ein Startpunkt. Wirklich gut wird es erst mit eigenen Fotos
+und mit Meldungen aus der App.
 
 ## Neu trainieren
 
@@ -143,6 +195,8 @@ Alles hier ist auch gewerblich kostenlos nutzbar:
 |---|---|---|
 | TensorFlow, Keras, MobileNetV2 samt ImageNet-Gewichten | Apache 2.0 | Lizenztext beilegen, wenn Code weitergegeben wird |
 | TACO-Fotos (`fetch_taco.py`, Standard) | CC BY 4.0 | Namensnennung: „TACO: Trash Annotations in Context, Proença & Simões, tacodataset.org“ |
+| Open-Images-Fotos (`fetch_openimages.py`) | CC BY 2.0 laut Datensatz, ohne Gewähr | Namensnennung: „Open Images Dataset V7, Google“; die einzelnen Fotos stehen in `data/manual/openimages-quellen.csv` |
+| Commons-Fotos (`fetch_commons.py`) | gemeinfrei, CC0 oder CC BY je Foto | Namensnennung je Foto laut `data/manual/commons-quellen.csv` |
 | eigene Fotos und App-Fotos mit Einwilligung | eure | keine |
 
 Bis September 2026 lief das Training mit Ultralytics YOLO (AGPL-3.0). Das

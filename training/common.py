@@ -20,6 +20,8 @@ DATA = ROOT / "data"
 APP_DATA = DATA / "app"          # aus Supabase synchronisiert (sync_dataset.py)
 MANUAL_DATA = DATA / "manual"    # von dir selbst eingelegt
 DATASET = DATA / "dataset"       # fertiger Train/Val-Split (prepare_dataset.py)
+REJECTED = DATA / "aussortiert"  # bei der Durchsicht entfernt (apply_review.py)
+REVIEW = DATA / "review"         # Kontaktboegen und Entscheidungen der Durchsicht
 RUNS = ROOT / "runs"
 EXPORTS = ROOT / "exports"
 
@@ -32,6 +34,26 @@ def list_images(folder: Path) -> list[Path]:
     if not folder.exists():
         return []
     return sorted(p for p in folder.rglob("*") if p.suffix.lower() in IMAGE_SUFFIXES)
+
+
+def already_sorted(name: str) -> bool:
+    """Liegt ein Foto dieses Namens schon irgendwo: in einer Klasse oder aussortiert?
+
+    Die fetch-Skripte fragen das vor jedem Download. Sonst kaeme ein Foto, das
+    bei der Durchsicht entfernt oder in die andere Klasse verschoben wurde, beim
+    naechsten Lauf einfach zurueck.
+    """
+    if any((MANUAL_DATA / cls / name).exists() for cls in CLASSES):
+        return True
+    return REJECTED.exists() and any(REJECTED.rglob(name))
+
+
+def current_place(name: str) -> str | None:
+    """"positiv/<name>" oder "negativ/<name>", je nachdem wo das Foto jetzt liegt."""
+    for cls in CLASSES:
+        if (MANUAL_DATA / cls / name).exists():
+            return f"{cls}/{name}"
+    return None
 
 
 def stable_fraction(key: str) -> float:

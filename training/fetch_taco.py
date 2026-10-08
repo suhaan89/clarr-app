@@ -33,7 +33,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PIL import Image, ImageOps
 
-from common import MANUAL_DATA
+from common import MANUAL_DATA, already_sorted
 
 ANNOTATIONS_URL = "https://raw.githubusercontent.com/pedropro/TACO/master/data/annotations.json"
 INDOOR = 1  # scene_categories: "Indoor, Man-made"
@@ -49,7 +49,7 @@ def fetch(url: str) -> bytes:
 
 def download(image: dict) -> str:
     target = MANUAL_DATA / "positiv" / f"taco-{image['id']:04d}.jpg"
-    if target.exists():
+    if already_sorted(target.name):
         return "vorhanden"
     try:
         data = fetch(image.get("flickr_640_url") or image["flickr_url"])

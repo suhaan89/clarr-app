@@ -7,8 +7,9 @@ lernt in zwei Phasen nur noch "Muell ja/nein":
 
   1. Kopf: Das vortrainierte Netz bleibt eingefroren, nur die neue letzte
      Schicht lernt. Schnell und stabil, auch mit wenigen Fotos.
-  2. Feintuning: Die oberen Schichten des Netzes lernen mit kleiner
-     Lernrate mit. Bringt meist noch ein paar Prozentpunkte.
+  2. Feintuning: Die oberen Schichten des Netzes lernen mit sehr kleiner
+     Lernrate mit. Kann noch ein paar Prozentpunkte bringen. Gespeichert
+     wird immer die beste Epoche aus beiden Phasen, schaden kann es also nicht.
 
 Ergebnis: runs/<name>/weights/best.keras (die Epoche mit dem kleinsten
 Val-Fehler) und runs/<name>/history.json.
@@ -33,7 +34,9 @@ from common import CLASSES, DATASET, IMG_SIZE, RUNS, list_images, preprocess
 # Trainingsbilder werden etwas groesser geladen und dann zufaellig auf
 # IMG_SIZE zugeschnitten (leichte Variation von Ausschnitt und Abstand).
 AUG_SIZE = 256
-FINE_TUNE_FRACTION = 0.3  # so viel vom oberen Teil des Netzes lernt in Phase 2 mit
+FINE_TUNE_FRACTION = 0.2  # so viel vom oberen Teil des Netzes lernt in Phase 2 mit
+# Mit 1e-4 kippte die Val-Genauigkeit bei unsauberen Labels sofort (90 % -> 75 %).
+FINE_TUNE_LEARNING_RATE = 2e-5
 
 
 def load_split(split: str) -> tuple[list, np.ndarray]:
@@ -113,7 +116,7 @@ def build_model(keras):
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=40, help="Obergrenze fuer Phase 2 (stoppt meist frueher)")
-    parser.add_argument("--head-epochs", type=int, default=8, help="Epochen fuer Phase 1")
+    parser.add_argument("--head-epochs", type=int, default=10, help="Epochen fuer Phase 1")
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--name", default="muell")
     parser.add_argument("--seed", type=int, default=0)
@@ -169,7 +172,7 @@ def main() -> int:
     for layer in base.layers[: int(len(base.layers) * (1 - FINE_TUNE_FRACTION))]:
         layer.trainable = False
     done = len(history["loss"])
-    for key, values in fit(1e-4, done + args.epochs, done).history.items():
+    for key, values in fit(FINE_TUNE_LEARNING_RATE, done + args.epochs, done).history.items():
         history[key] += values
 
     (run_dir / "history.json").write_text(json.dumps({"arch": "mobilenet_v2", "classes": CLASSES, **history}, indent=2))

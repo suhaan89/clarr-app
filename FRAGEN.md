@@ -138,7 +138,16 @@ Umgesetzt ist alles, was sich ohne diese Entscheidungen bauen laesst
 (AGPL-3.0), sondern MobileNetV2 mit Keras/TensorFlow (Apache 2.0). An der App
 hat sich dafuer nichts geaendert.
 
-**Offen:** `training/fetch_taco.py` holt Startfotos aus dem Datensatz TACO.
+**Offen (ergaenzt 2026-10-08):** Trainingsfotos kommen jetzt aus drei offenen
+Quellen: TACO (CC BY 4.0), Open Images (laut Datensatz CC BY 2.0, "ohne
+Gewaehr") und Wikimedia Commons (nur gemeinfrei, CC0, CC BY; CC BY-SA bleibt
+draussen). Die Quellenlisten liegen lokal unter `training/data/manual/`. Zu
+pruefen vor einem Release: ob die Namensnennung im README genuegt oder in die
+Lizenzliste der App gehoert, und ob die Angabe "CC BY 2.0" von Open Images
+fuer jedes einzelne Foto traegt. Die Fotos zeigen teils lesbare
+Kfz-Kennzeichen; sie bleiben lokal und werden nicht weitergegeben.
+
+`training/fetch_taco.py` holt Startfotos aus dem Datensatz TACO.
 Standardmaessig nur die Fotos ohne fremden Lizenzvermerk, die TACO nach
 eigener Angabe unter CC BY 4.0 stellt (Namensnennung noetig, steht in
 `training/README.md`). Weitere 785 Fotos tragen den Vermerk "ODBL (c)

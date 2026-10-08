@@ -508,3 +508,28 @@ Commits pro Paket festgehalten.
   Negativbeispiele nach `training/data/manual/negativ` legen (mindestens
   300), dann Phase 3.
 - Python 3.12 mit TensorFlow liegt in `training/.venv`.
+
+## Phase 2b — Trainingsfotos aus offenen Quellen, geprueft (2026-10-08)
+
+- Neue Download-Skripte: `fetch_openimages.py` (Negativbeispiele, dazu
+  Muell-Fotos nach Schlagwort) und `fetch_commons.py` (Muell-Fotos aus
+  Wikimedia Commons, ohne CC BY-SA).
+- Durchsicht als fester Ablauf: `review_sheets.py` baut nummerierte Boegen,
+  KI-Agenten pruefen nach `PRUEFAUFTRAG.md`, `apply_review.py` uebernimmt.
+  Aussortiertes liegt unter `data/aussortiert/` und wird nicht erneut geladen.
+- Ergebnis der zwei Pruefrunden (12 Agenten, 7182 Fotos): Von 2908
+  heruntergeladenen Muell-Fotos blieben 523, von 4274 Nicht-Muell-Fotos 3187
+  (davon 51 aus den Muell-Fotos umsortiert). Hauptgruende fuers Aussortieren:
+  Truemmer und Deponien statt Ablagerung, Muell zu klein im Bild, Beifang der
+  Commons-Kategorien, erkennbare Personen.
+- Training: Feintuning vorsichtiger (Lernrate 2e-5), weil es mit unsauberen
+  Labels kippte.
+- Modell `2026-10-08-a` (lokal unter `training/exports/`, nicht hochgeladen):
+  auf 770 Prueffotos 98 % richtig, 117 von 126 Muell-Fotos erkannt, 4
+  Fehlalarme bei 644 Nicht-Muell-Fotos (int8-Modell, Schwelle 0,5). Vorher,
+  auf den ungeprueften Fotos, 90 %. Die Prueffotos stammen aus denselben
+  Quellen wie die Trainingsfotos; wie gut das Modell bei echten Meldungen
+  ist, zeigt erst der Test auf dem Handy.
+- Was fehlt: Fotos aus dem echten Einsatzumfeld (deutsche Wald- und Feldwege
+  mit und ohne Muell). Die kommen erst mit eigenen Fotos und mit Meldungen aus
+  der App.
