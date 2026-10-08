@@ -524,7 +524,9 @@ Commits pro Paket festgehalten.
   Commons-Kategorien, erkennbare Personen.
 - Training: Feintuning vorsichtiger (Lernrate 2e-5), weil es mit unsauberen
   Labels kippte.
-- Modell `2026-10-08-a` (lokal unter `training/exports/`, nicht hochgeladen):
+- Modell `2026-10-08-a`, seit 2026-10-08 im Bucket `ml-models` und in
+  `vision_models` auf `aktiv` (Download und Pruefsumme mit dem anon-Key
+  gegengeprueft; auf einem Geraet noch nicht getestet):
   auf 770 Prueffotos 98 % richtig, 117 von 126 Muell-Fotos erkannt, 4
   Fehlalarme bei 644 Nicht-Muell-Fotos (int8-Modell, Schwelle 0,5). Vorher,
   auf den ungeprueften Fotos, 90 %. Die Prueffotos stammen aus denselben
