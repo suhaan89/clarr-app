@@ -92,6 +92,13 @@
     ],
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8e9e26e7-82db-4a05-88c1-ddab62cc0dfe"
+      }
+    },
+    "owner": "suhan89"
   }
 }
